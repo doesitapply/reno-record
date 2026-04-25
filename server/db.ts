@@ -638,3 +638,63 @@ export async function documentVisibilityCounts() {
   for (const r of aiPolicyRows) out[`ai:${String(r.p)}`] = Number(r.c);
   return out;
 }
+
+/* ================= Actor Dossier ================= */
+/**
+ * Aggregates all public timeline events, documents, and PRRs that mention
+ * an actor by name. Used to build the dossier view on actor detail pages.
+ */
+export async function getActorDossier(actorName: string) {
+  const db = await getDb();
+  if (!db) return { events: [], documents: [], prrs: [] };
+
+  // Timeline events where actors JSON array contains the actor name
+  const allEvents = await db
+    .select()
+    .from(timelineEvents)
+    .where(eq(timelineEvents.publicStatus, true))
+    .orderBy(asc(timelineEvents.eventDate));
+
+  const events = allEvents.filter((e) => {
+    if (!e.actors) return false;
+    const arr = Array.isArray(e.actors) ? e.actors : [];
+    return arr.some((a: string) => a.toLowerCase().includes(actorName.toLowerCase()));
+  });
+
+  // Documents where actorNames text contains the actor name
+  const allDocs = await db
+    .select()
+    .from(documents)
+    .where(
+      and(
+        eq(documents.publicStatus, true),
+        eq(documents.reviewStatus, "approved"),
+      ),
+    )
+    .orderBy(desc(documents.documentDate));
+
+  const actorDocs = allDocs.filter((d) => {
+    if (!d.actorNames) return false;
+    return d.actorNames.toLowerCase().includes(actorName.toLowerCase());
+  });
+
+  // PRRs where agency or description contains the actor name
+  const allPrrs = await db
+    .select()
+    .from(publicRecordsRequests)
+    .where(eq(publicRecordsRequests.publicStatus, true))
+    .orderBy(desc(publicRecordsRequests.dateSent));
+
+  const actorPrrs = allPrrs.filter((p) => {
+    const haystack = `${p.agency ?? ""} ${p.description ?? ""} ${p.title ?? ""}`.toLowerCase();
+    return haystack.includes(actorName.toLowerCase());
+  });
+
+  return { events, documents: actorDocs, prrs: actorPrrs };
+}
+
+export async function listAllActors() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(actors).orderBy(asc(actors.name));
+}

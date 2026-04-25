@@ -1,3 +1,4 @@
+import { useSEO } from "@/hooks/useSEO";
 import SiteShell from "@/components/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
@@ -15,6 +16,7 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 export default function PublicRecordsPage() {
+  useSEO({ title: "Public Records Tracker", description: "Live status of all public records requests filed with Washoe County courts, the DA, and related agencies.", canonicalPath: "/public-records" });
   const prrs = trpc.prr.listPublic.useQuery();
 
   return (

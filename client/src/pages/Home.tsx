@@ -1,3 +1,4 @@
+import { useSEO } from "@/hooks/useSEO";
 import { Link } from "wouter";
 import {
   ArrowRight,
@@ -88,6 +89,7 @@ function PullQuote({ children }: { children: React.ReactNode }) {
 }
 
 export default function Home() {
+  useSEO({ title: "Home", canonicalPath: "/" });
   const featured = trpc.story.featured.useQuery();
   const metrics = trpc.patterns.metrics.useQuery();
   const timeline = trpc.timeline.listPublic.useQuery(undefined);
@@ -107,7 +109,7 @@ export default function Home() {
               <span className="stamp text-[var(--amber)]">Vol. 1 · Washoe County</span>
               <span className="eyebrow !text-background/70">Receipts for Due Process</span>
             </div>
-            <h1 className="display-serif text-5xl md:text-6xl lg:text-7xl text-background leading-[0.98]">
+            <h1 className="display-serif hero-headline text-5xl md:text-6xl lg:text-7xl text-background leading-[0.98]">
               The Reno
               <br />
               Record.

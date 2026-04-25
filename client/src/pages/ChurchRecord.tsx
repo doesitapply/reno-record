@@ -1,3 +1,4 @@
+import { useSEO } from "@/hooks/useSEO";
 import { Link } from "wouter";
 import { ArrowRight, FileText } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
@@ -20,6 +21,7 @@ const SECTIONS = [
 ];
 
 export default function ChurchRecord() {
+  useSEO({ title: "The Church Record", description: "The documented case of systemic due process failures in Washoe County — court delay, ignored filings, pretrial detention, and the record that proves it.", ogType: "article", canonicalPath: "/the-church-record" });
   const featured = trpc.story.featured.useQuery();
   const events = trpc.timeline.listPublic.useQuery(undefined);
   const churchEvents = (events.data ?? []).filter(
@@ -33,7 +35,7 @@ export default function ChurchRecord() {
         <div className="container py-16 md:py-24 grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8">
             <div className="eyebrow !text-background/70">Featured Case · Vol. 1</div>
-            <h1 className="display-serif text-5xl md:text-6xl mt-3 leading-[1.02]">
+            <h1 className="display-serif hero-headline text-5xl md:text-6xl mt-3 leading-[1.02]">
               The Church Record
             </h1>
             <p className="mt-5 max-w-2xl text-background/80 text-lg leading-relaxed">

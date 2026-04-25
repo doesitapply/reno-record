@@ -1,3 +1,4 @@
+import { useSEO } from "@/hooks/useSEO";
 import { useState } from "react";
 import { Link } from "wouter";
 import { FileText, ArrowRight } from "lucide-react";
@@ -22,6 +23,7 @@ const CATEGORIES = [
 ] as const;
 
 export default function TimelinePage() {
+  useSEO({ title: "Timeline", description: "A chronological record of every documented event — hearings, filings, orders, and delays — with source documents.", canonicalPath: "/timeline" });
   const [cat, setCat] = useState<(typeof CATEGORIES)[number]["value"]>("all");
   const events = trpc.timeline.listPublic.useQuery({ category: cat });
 

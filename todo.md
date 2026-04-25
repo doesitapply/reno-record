@@ -80,3 +80,35 @@ Receipts for Due Process. A public-interest accountability archive for Washoe Co
 - [x] Tests: audit list filters + CSV row shape, user counts, email helper skips when env missing, email body contains no private fields
 - [x] Run full suite, save v3.5 checkpoint
 - [x] Write docs/V4_MONETIZATION.md (spec only — no Stripe code)
+
+## v3.6 — Launch Readiness Packet
+
+### Public Launch Blockers (build now)
+- [x] Per-page SEO: dynamic title/description/OG/Twitter tags on every route
+- [x] sitemap.xml + robots.txt
+- [x] Actor detail dossier pages: aggregate timeline events, documents, PRRs, editorial summary
+- [x] Admin CRUD: create/edit/delete timeline events with actor + document + case relationships
+- [x] Admin CRUD: create/edit/delete actors with role, institution, judicialActor flag
+- [x] Admin CRUD: create/edit/delete public records requests with status history
+- [x] Mobile QA pass: all public pages responsive
+- [x] Public promotional ad image generated (16:9 + 9:16 vertical for Stories)
+- [x] Operator launch checklist doc (evidence upload steps, SMTP, domain)
+- [x] Tests updated, checkpoint saved
+
+### Operator Tasks (requires real files/credentials — not buildable by code)
+- [ ] Upload 10 core evidence PDFs via Docket Goblin ingest
+- [ ] Set SMTP credentials in Secrets panel
+- [ ] Connect custom domain (therenorecord.com or equivalent)
+
+### Post-Launch Revenue
+- [ ] Stripe paywall: subscriber role + Receipts tier gating
+- [ ] Pricing page
+- [ ] Subscriber receipt unlocks
+- [ ] Weekly Docket Goblin digest email
+
+### Later Power Features
+- [ ] Case comparison view
+- [ ] Print/PDF case packets
+- [ ] PRR status history timeline
+- [ ] Public read rate limiting
+- [ ] Bulk evidence export for admin

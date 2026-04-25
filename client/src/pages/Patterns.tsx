@@ -1,3 +1,4 @@
+import { useSEO } from "@/hooks/useSEO";
 import SiteShell from "@/components/SiteShell";
 import { trpc } from "@/lib/trpc";
 
@@ -9,6 +10,7 @@ type Metric = {
 };
 
 export default function PatternsPage() {
+  useSEO({ title: "Pattern Dashboard", description: "Aggregate analysis of recurring due process failure patterns across submitted cases in Washoe County.", canonicalPath: "/patterns" });
   const m = trpc.patterns.metrics.useQuery();
   const d = m.data ?? ({} as any);
 

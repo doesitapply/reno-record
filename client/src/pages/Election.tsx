@@ -1,3 +1,4 @@
+import { useSEO } from "@/hooks/useSEO";
 import SiteShell from "@/components/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
@@ -14,6 +15,7 @@ const QUESTIONS = [
 ];
 
 export default function ElectionPage() {
+  useSEO({ title: "Election & Accountability", description: "Neutral, public-record-based information on elected officials relevant to documented cases in Washoe County.", canonicalPath: "/election" });
   const actors = trpc.actor.listPublic.useQuery();
   const officials = (actors.data ?? []).filter(
     (a) =>

@@ -928,3 +928,137 @@ describe("v3.5 — gap fixes", () => {
     vi.restoreAllMocks();
   });
 });
+
+/* =====================================================================
+   v3.6 — Actor dossier, Admin CRUD, SEO, Mobile QA
+   ===================================================================== */
+
+describe("v3.6 — Actor dossier", () => {
+  beforeEach(() => { vi.restoreAllMocks(); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it("actor.dossier is publicly accessible (no auth required)", async () => {
+    vi.spyOn(db, "getActorDossier").mockResolvedValue({
+      actor: { id: 1, name: "Barry Breslow", role: "Judge", agency: "Washoe County", slug: "barry-breslow", bio: null, notes: null, status: "documented", publicStatus: true, judicialActor: false, createdAt: new Date(), updatedAt: new Date() },
+      relatedEvents: [],
+      relatedDocuments: [],
+      relatedPRRs: [],
+    } as any);
+    const caller = appRouter.createCaller(makeCtx(undefined)); // unauthenticated
+    const result = await caller.actor.dossier({ name: "Barry Breslow" });
+    expect(result.actor.name).toBe("Barry Breslow");
+  });
+
+  it("actor.dossier returns null actor when name not found", async () => {
+    vi.spyOn(db, "getActorDossier").mockResolvedValue({ actor: null, relatedEvents: [], relatedDocuments: [], relatedPRRs: [] } as any);
+    const caller = appRouter.createCaller(makeCtx(undefined));
+    const result = await caller.actor.dossier({ name: "Nobody" });
+    expect(result.actor).toBeNull();
+  });
+});
+
+describe("v3.6 — Admin CRUD: timeline events", () => {
+  beforeEach(() => { vi.restoreAllMocks(); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it("timeline.adminCreate requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser)); // user, not admin
+    await expect(
+      caller.timeline.adminCreate({
+        eventDate: new Date("2023-01-01"),
+        title: "Test event",
+        category: "motion",
+        status: "confirmed",
+        publicStatus: false,
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("timeline.adminCreate succeeds for admin and returns id", async () => {
+    vi.spyOn(db, "insertTimelineEvent").mockResolvedValue(99 as any);
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    const result = await adminCaller.timeline.adminCreate({
+      eventDate: new Date("2023-06-15"),
+      title: "Hearing on motion to suppress",
+      category: "motion",
+      status: "confirmed",
+      publicStatus: true,
+    });
+    expect(result.id).toBe(99);
+  });
+
+  it("timeline.adminDelete requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(caller.timeline.adminDelete({ id: 1 })).rejects.toThrow();
+  });
+});
+
+describe("v3.6 — Admin CRUD: actors", () => {
+  beforeEach(() => { vi.restoreAllMocks(); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it("actor.adminCreate requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(
+      caller.actor.adminCreate({ name: "Test Judge", status: "documented", publicStatus: true }),
+    ).rejects.toThrow();
+  });
+
+  it("actor.adminCreate succeeds for admin and returns id + slug", async () => {
+    vi.spyOn(db, "insertActor").mockResolvedValue(55 as any);
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    const result = await adminCaller.actor.adminCreate({
+      name: "Judge Doe",
+      role: "District Judge",
+      agency: "Second Judicial District",
+      status: "documented",
+      publicStatus: true,
+    });
+    expect(result.id).toBe(55);
+    expect(result.slug).toBe("judge-doe");
+  });
+
+  it("actor.adminUpdate requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(caller.actor.adminUpdate({ id: 1, patch: { bio: "updated" } })).rejects.toThrow();
+  });
+
+  it("actor.adminDelete requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(caller.actor.adminDelete({ id: 1 })).rejects.toThrow();
+  });
+});
+
+describe("v3.6 — Admin CRUD: public records requests", () => {
+  beforeEach(() => { vi.restoreAllMocks(); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it("prr.adminCreate requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(
+      caller.prr.adminCreate({
+        title: "DA Communications — 23-CR-0001",
+        agency: "Washoe County DA",
+        description: "All communications re: case 23-CR-0001",
+        status: "draft",
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("prr.adminCreate succeeds for admin and returns id", async () => {
+    vi.spyOn(db, "insertPRR").mockResolvedValue(77 as any);
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    const result = await adminCaller.prr.adminCreate({
+      title: "Sheriff Incident Reports 2023",
+      agency: "Washoe County Sheriff",
+      description: "Incident reports for 2023",
+      status: "sent",
+    });
+    expect(result.id).toBe(77);
+  });
+
+  it("prr.adminDelete requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(caller.prr.adminDelete({ id: 1 })).rejects.toThrow();
+  });
+});

@@ -26,6 +26,7 @@ import {
   ArrowLeft,
   Check,
   Loader2,
+  Plus,
   Shield,
   Sparkles,
   Trash2,
@@ -101,9 +102,16 @@ function AdminDashboard() {
             <div className="eyebrow">Editor desk</div>
             <h1 className="display-serif text-4xl mt-2">Moderation</h1>
           </div>
-          <Badge variant="outline" className="font-mono uppercase text-[10px]">
-            Nothing publishes without you
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="font-mono uppercase text-[10px]">
+              Nothing publishes without you
+            </Badge>
+            <Link href="/admin/manage">
+              <Button variant="outline" size="sm" className="gap-2 text-xs">
+                <Plus className="h-3.5 w-3.5" /> Content Management
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <Tabs defaultValue="stories">
@@ -559,7 +567,7 @@ function StoryReview({ id }: { id: number }) {
                   />
                 </div>
               </div>
-              <div className="mt-5 grid grid-cols-2 gap-2">
+              <div className="mt-5 grid sm:grid-cols-2 gap-2">
                 <Button
                   className="bg-foreground text-background gap-2"
                   onClick={() => setStatus("approved")}
@@ -789,7 +797,7 @@ function DocumentsTab() {
           <Label className="eyebrow !text-[0.62rem] mb-1.5 block">Description</Label>
           <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 gap-3">
           <div>
             <Label className="eyebrow !text-[0.62rem] mb-1.5 block">Source type</Label>
             <Select value={sourceType} onValueChange={setSourceType}>
@@ -1014,7 +1022,7 @@ function DocumentReview({ id }: { id: number }) {
               <Button onClick={save} disabled={update.isPending} variant="outline" className="w-full">
                 Save metadata
               </Button>
-              <div className="grid grid-cols-2 gap-2 pt-2">
+              <div className="grid sm:grid-cols-2 gap-2 pt-2">
                 <Button
                   className="bg-foreground text-background gap-2"
                   onClick={approveAndPublish}
@@ -1154,7 +1162,7 @@ function TimelineTab() {
     <div className="mt-6 grid lg:grid-cols-12 gap-6">
       <form onSubmit={add} className="lg:col-span-5 paper-card p-6 space-y-3">
         <h3 className="display-serif text-xl rule-amber">Add timeline event</h3>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 gap-3">
           <div>
             <Label className="eyebrow !text-[0.62rem] mb-1.5 block">Date *</Label>
             <Input
@@ -1183,7 +1191,7 @@ function TimelineTab() {
             onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 gap-3">
           <div>
             <Label className="eyebrow !text-[0.62rem] mb-1.5 block">Category</Label>
             <Select value={draft.category} onValueChange={(v) => setDraft({ ...draft, category: v })}>
@@ -1347,7 +1355,7 @@ function ActorsTab() {
         <Field label="Conduct on record (notes)">
           <Textarea rows={4} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 gap-3">
           <Field label="Status">
             <Select value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v as any })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1481,7 +1489,7 @@ function PrrTab() {
         <Field label="Description">
           <Textarea rows={3} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 gap-3">
           <Field label="Date sent">
             <Input
               type="date"
@@ -1497,7 +1505,7 @@ function PrrTab() {
             />
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid sm:grid-cols-2 gap-3">
           <Field label="Status">
             <Select value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v as any })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1779,7 +1787,7 @@ function AuditTab() {
           </DialogHeader>
           {open && (
             <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid sm:grid-cols-2 gap-3">
                 <div><Label>Actor</Label><div>{open.actorUserId ?? "—"} ({open.actorRole ?? "—"})</div></div>
                 <div><Label>Action</Label><div>{open.action}</div></div>
                 <div><Label>Target</Label><div>{open.targetType} #{open.targetId}</div></div>

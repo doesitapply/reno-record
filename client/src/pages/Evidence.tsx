@@ -1,3 +1,4 @@
+import { useSEO } from "@/hooks/useSEO";
 import { useMemo, useState } from "react";
 import { Link, useRoute } from "wouter";
 import { ArrowLeft, FileText, ExternalLink, Search, X } from "lucide-react";
@@ -25,6 +26,7 @@ const SOURCE_TYPES = [
 ];
 
 export default function EvidencePage() {
+  useSEO({ title: "Evidence Archive", description: "Searchable archive of source documents: transcripts, orders, motions, and filings. Every claim has a receipt.", canonicalPath: "/evidence" });
   const [, params] = useRoute("/evidence/:id");
   if (params?.id) return <EvidenceDetail id={Number(params.id)} />;
   return <EvidenceList />;
@@ -308,9 +310,9 @@ function DocumentViewer({ url, mime, title }: { url: string; mime: string; title
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid grid-cols-3 gap-2">
-      <div className="eyebrow !text-[0.62rem] col-span-1 pt-0.5">{label}</div>
-      <div className="col-span-2 text-sm">{value}</div>
+    <div className="flex flex-wrap gap-x-3 gap-y-0.5 items-baseline">
+      <div className="eyebrow !text-[0.62rem] shrink-0">{label}</div>
+      <div className="text-sm">{value}</div>
     </div>
   );
 }

@@ -1,6 +1,9 @@
+import { useSEO } from "@/hooks/useSEO";
+import { useEffect } from "react";
 import SiteShell from "@/components/SiteShell";
 
 export default function PrivacyPage() {
+  useSEO({ title: "Privacy & Methodology", description: "How The Reno Record handles submissions, protects sources, and maintains editorial standards.", canonicalPath: "/privacy" });
   return (
     <SiteShell>
       <section className="container py-14 md:py-20 max-w-3xl">

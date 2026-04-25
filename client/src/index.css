@@ -232,8 +232,27 @@
   .paper-card {
     background: var(--card);
     border: 1px solid var(--border);
+    border-radius: var(--radius);
     box-shadow:
       0 1px 0 rgba(0,0,0,0.02),
       0 8px 24px -16px rgba(20,20,40,0.18);
+  }
+
+  /* Mobile-first responsive helpers */
+  @media (max-width: 639px) {
+    /* Prevent horizontal overflow from fixed-width elements */
+    .container { overflow-x: hidden; }
+    /* Hero text scale-down */
+    .hero-headline { font-size: clamp(2.5rem, 10vw, 4rem); }
+    /* Ensure tab lists wrap on small screens */
+    [role="tablist"] {
+      flex-wrap: wrap;
+      height: auto;
+      gap: 0.25rem;
+    }
+    /* Inline PDF viewer full-width on mobile */
+    .pdf-viewer-container { min-height: 60vh; }
+    /* Admin manage forms stack on mobile */
+    .admin-form-grid { grid-template-columns: 1fr !important; }
   }
 }

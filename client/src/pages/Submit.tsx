@@ -1,3 +1,4 @@
+import { useSEO } from "@/hooks/useSEO";
 import { useRef, useState } from "react";
 import { Link } from "wouter";
 import { ArrowRight, Check, FileUp, Loader2, LogIn, ShieldAlert, Trash2 } from "lucide-react";
@@ -65,6 +66,7 @@ function SignInGate() {
 }
 
 export default function SubmitPage() {
+  useSEO({ title: "Submit Your Story", description: "Experienced similar patterns in Washoe County courts? Submit your account securely. All submissions reviewed before publication.", canonicalPath: "/submit" });
   const { isAuthenticated, loading: authLoading } = useAuth();
   if (authLoading) return null;
   if (!isAuthenticated) return <SignInGate />;
@@ -359,7 +361,7 @@ function SubmitForm() {
                     onChange={(e) => set("custodyDays", e.target.value)}
                   />
                 </Field>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid sm:grid-cols-2 gap-3">
                   <Toggle
                     label="Still pending"
                     value={form.stillPending}

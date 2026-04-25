@@ -15,6 +15,7 @@ import ElectionPage from "./pages/Election";
 import PatternsPage from "./pages/Patterns";
 import PrivacyPage from "./pages/Privacy";
 import AdminPage from "./pages/Admin";
+import AdminManagePage from "./pages/AdminManage";
 import DocketGoblinBubble from "./components/DocketGoblinBubble";
 
 function Router() {
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/admin" component={AdminPage} />
       <Route path="/admin/story/:id" component={AdminPage} />
       <Route path="/admin/document/:id" component={AdminPage} />
+      <Route path="/admin/manage" component={AdminManagePage} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

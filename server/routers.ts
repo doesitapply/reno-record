@@ -707,7 +707,10 @@ const actorRouter = router({
   bySlug: publicProcedure.input(z.object({ slug: z.string() })).query(async ({ input }) =>
     db.getActorBySlug(input.slug),
   ),
-  adminList: adminProcedure.query(async () => db.listPublicActors()),
+  adminList: adminProcedure.query(async () => db.listAllActors()),
+  dossier: publicProcedure
+    .input(z.object({ name: z.string() }))
+    .query(async ({ input }) => db.getActorDossier(input.name)),
   adminCreate: adminProcedure
     .input(
       z.object({
