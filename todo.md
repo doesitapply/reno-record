@@ -67,16 +67,16 @@ Receipts for Due Process. A public-interest accountability archive for Washoe Co
 - [x] Verify, checkpoint v3, then PLAN v4 (do not build)
 
 ## v3.5 — Admin operational control + SMTP + v4 spec
-- [ ] Backend: audit.list (filters: actorUserId, action, targetType, dateFrom, dateTo, q), audit.exportCsv (admin), audit.byId
-- [ ] Backend: user.adminListWithCounts (joins submission count, document upload count, last-signed-in)
-- [ ] Backend: document.adminCounts (visibility buckets: pending_review / needs_redaction / no_ai_processing-tag / goblin_allowed / rejected / receipts_only / public_preview / private_admin_only)
-- [ ] Admin UI: Audit Log tab with filters, search, pagination, detail modal, CSV export
-- [ ] Admin UI: Users tab with role toggle, lockout-guard message, submission/upload counts
-- [ ] Admin UI: visibility quick-counters bar in Documents tab (click-to-filter)
-- [ ] Server: server/_email.ts — lazy nodemailer transport behind SMTP env (host/port/user/pass/from); skip + log if missing
-- [ ] Email templates (plain text + minimal html): story-received, files-received, story-decision, document-decision; never include private content
-- [ ] Wire emails: story.submit success → submitter; document.adminUpdate decision → uploader; story.adminUpdate decision → submitter
-- [ ] Audit metadata records email_sent | email_skipped with reason
-- [ ] Tests: audit list filters + CSV row shape, user counts, email helper skips when env missing, email body contains no private fields
-- [ ] Run full suite, save v3.5 checkpoint
-- [ ] Write docs/V4_MONETIZATION.md (spec only — no Stripe code)
+- [x] Backend: audit.list (filters: actorUserId, action, targetType, dateFrom, dateTo, q), audit.exportCsv (admin), audit.byId
+- [x] Backend: user.adminListWithCounts (joins submission count, document upload count, last-signed-in)
+- [x] Backend: document.adminCounts (visibility buckets: pending_review / needs_redaction / no_ai_processing-tag / goblin_allowed / rejected / receipts_only / public_preview / private_admin_only)
+- [x] Admin UI: Audit Log tab with filters, search, pagination, detail modal, CSV export
+- [x] Admin UI: Users tab with role toggle, lockout-guard message, submission/upload counts
+- [x] Admin UI: visibility quick-counters bar in Documents tab (click-to-filter)
+- [x] Server: server/_email.ts — lazy nodemailer transport behind SMTP env (host/port/user/pass/from); skip + log if missing
+- [x] Email templates (plain text + minimal html): story-received, files-received, story-decision, document-decision; never include private content
+- [x] Wire emails: story.submit success → submitter; document.adminUpdate decision → uploader; story.adminUpdate decision → submitter
+- [x] Audit metadata records email_sent | email_skipped with reason
+- [x] Tests: audit list filters + CSV row shape, user counts, email helper skips when env missing, email body contains no private fields
+- [x] Run full suite, save v3.5 checkpoint
+- [x] Write docs/V4_MONETIZATION.md (spec only — no Stripe code)

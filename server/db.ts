@@ -166,10 +166,19 @@ export async function listPublicDocuments(opts: {
     .orderBy(desc(documents.documentDate))
     .limit(opts.limit ?? 200);
 }
-export async function listAllDocuments() {
+export async function listAllDocuments(filter?: {
+  visibility?: string;
+  aiPolicy?: string;
+}) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(documents).orderBy(desc(documents.createdAt));
+  const conds: any[] = [];
+  if (filter?.visibility) conds.push(eq(documents.visibility, filter.visibility as any));
+  if (filter?.aiPolicy) conds.push(eq(documents.aiPolicy, filter.aiPolicy as any));
+  let q: any = db.select().from(documents);
+  if (conds.length === 1) q = q.where(conds[0]);
+  else if (conds.length > 1) q = q.where(and(...conds));
+  return q.orderBy(desc(documents.createdAt));
 }
 export async function getDocumentById(id: number) {
   const db = await getDb();

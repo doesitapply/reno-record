@@ -867,3 +867,64 @@ describe("v3.5 — Document admin counts", () => {
     vi.restoreAllMocks();
   });
 });
+
+
+describe("v3.5 — gap fixes", () => {
+  it("document.adminList accepts visibility/aiPolicy filter args", async () => {
+    const spy = vi.spyOn(db, "listAllDocuments").mockResolvedValue([] as any);
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await adminCaller.document.adminList({
+      visibility: "pending_review",
+      aiPolicy: "no_ai_processing",
+    });
+    expect(spy).toHaveBeenCalledWith({
+      visibility: "pending_review",
+      aiPolicy: "no_ai_processing",
+    });
+    vi.restoreAllMocks();
+  });
+
+  it("story decision audit entry records email outcome (skipped when no recipient + no SMTP)", async () => {
+    vi.spyOn(db, "getStoryById").mockResolvedValue({
+      id: 11,
+      ownerUserId: 99,
+      email: null,
+    } as any);
+    vi.spyOn(db, "getUserById").mockResolvedValue({ id: 99, email: null } as any);
+    vi.spyOn(db, "updateStory").mockResolvedValue(undefined as any);
+    const audits: any[] = [];
+    const guard = await import("./_uploadGuard");
+    vi.spyOn(guard, "writeAudit").mockImplementation(async (e: any) => {
+      audits.push(e);
+    });
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await adminCaller.story.adminUpdate({ id: 11, patch: { status: "approved" } });
+    const decisionAudit = audits.find((a) => a.action === "story_approved");
+    expect(decisionAudit).toBeDefined();
+    expect(decisionAudit.metadata?.email).toMatch(/email_skipped:/);
+    vi.restoreAllMocks();
+  });
+
+  it("document decision audit entry records email outcome", async () => {
+    vi.spyOn(db, "getDocumentById").mockResolvedValue({
+      id: 22,
+      uploadedBy: 7,
+    } as any);
+    vi.spyOn(db, "getUserById").mockResolvedValue({ id: 7, email: null } as any);
+    vi.spyOn(db, "updateDocument").mockResolvedValue(undefined as any);
+    const audits: any[] = [];
+    const guard = await import("./_uploadGuard");
+    vi.spyOn(guard, "writeAudit").mockImplementation(async (e: any) => {
+      audits.push(e);
+    });
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await adminCaller.document.adminUpdate({
+      id: 22,
+      patch: { reviewStatus: "rejected" },
+    });
+    const decisionAudit = audits.find((a) => a.action === "document_rejected");
+    expect(decisionAudit).toBeDefined();
+    expect(decisionAudit.metadata?.email).toMatch(/email_skipped:/);
+    vi.restoreAllMocks();
+  });
+});

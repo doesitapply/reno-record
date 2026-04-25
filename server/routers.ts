@@ -299,6 +299,37 @@ const storyRouter = router({
         patch.slug = `${base}-${input.id}`;
       }
       await db.updateStory(input.id, patch);
+
+      // Resolve recipient + send decision email first; then audit decision with email outcome.
+      let emailOutcome: string | null = null;
+      if (patch.status && patch.status !== "pending") {
+        emailOutcome = "email_skipped:no_recipient";
+        try {
+          const story = await db.getStoryById(input.id);
+          let recipient: string | null = story?.email ?? null;
+          if (!recipient && story?.ownerUserId) {
+            const ownerUser = await db.getUserById(story.ownerUserId);
+            recipient = ownerUser?.email ?? null;
+          }
+          if (recipient) {
+            const r = await emailStoryDecision({
+              to: recipient,
+              storyId: input.id,
+              decision:
+                patch.status === "approved"
+                  ? "approved"
+                  : patch.status === "rejected"
+                    ? "rejected"
+                    : "changes_requested",
+            });
+            emailOutcome = r.sent ? "email_sent" : `email_skipped:${(r as any).reason}`;
+          }
+        } catch (e) {
+          console.warn("[story.adminUpdate] decision email failed", e);
+          emailOutcome = "email_skipped:exception";
+        }
+      }
+
       if (patch.status === "approved") {
         await writeAudit({
           actorUserId: ctx.user.id,
@@ -306,6 +337,7 @@ const storyRouter = router({
           action: "story_approved",
           targetType: "story",
           targetId: input.id,
+          metadata: emailOutcome ? { email: emailOutcome } : undefined,
         });
       } else if (patch.status === "rejected") {
         await writeAudit({
@@ -314,7 +346,7 @@ const storyRouter = router({
           action: "story_rejected",
           targetType: "story",
           targetId: input.id,
-          metadata: { reviewerNote: patch.reviewerNote },
+          metadata: { reviewerNote: patch.reviewerNote, email: emailOutcome ?? undefined },
         });
       } else if (patch.status === "needs_changes") {
         await writeAudit({
@@ -323,32 +355,8 @@ const storyRouter = router({
           action: "story_changes_requested",
           targetType: "story",
           targetId: input.id,
-          metadata: { reviewerNote: patch.reviewerNote },
+          metadata: { reviewerNote: patch.reviewerNote, email: emailOutcome ?? undefined },
         });
-      }
-
-      // Notify submitter (redaction-safe template)
-      if (patch.status && patch.status !== "pending") {
-        try {
-          const story = await db.getStoryById(input.id);
-          let recipient: string | null = story?.email ?? null;
-          if (!recipient && story?.ownerUserId) {
-            const ownerUser = await db.getUserById(story.ownerUserId);
-            recipient = ownerUser?.email ?? null;
-          }
-          await emailStoryDecision({
-            to: recipient,
-            storyId: input.id,
-            decision:
-              patch.status === "approved"
-                ? "approved"
-                : patch.status === "rejected"
-                  ? "rejected"
-                  : "changes_requested",
-          });
-        } catch (e) {
-          console.warn("[story.adminUpdate] decision email failed", e);
-        }
       }
       return { ok: true };
     }),
@@ -376,7 +384,28 @@ const documentRouter = router({
   }),
 
   /* Admin */
-  adminList: adminProcedure.query(async () => db.listAllDocuments()),
+  adminList: adminProcedure
+    .input(
+      z
+        .object({
+          visibility: z
+            .enum([
+              "private_admin_only",
+              "pending_review",
+              "needs_redaction",
+              "public_preview",
+              "receipts_only",
+              "goblin_allowed",
+              "rejected",
+            ])
+            .optional(),
+          aiPolicy: z.enum(["no_ai_processing", "goblin_allowed"]).optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ input }) =>
+      db.listAllDocuments({ visibility: input?.visibility, aiPolicy: input?.aiPolicy }),
+    ),
   adminCounts: adminProcedure.query(async () => db.documentVisibilityCounts()),
   adminGet: adminProcedure.input(z.object({ id: z.number() })).query(async ({ input }) =>
     db.getDocumentById(input.id),
@@ -549,6 +578,28 @@ const documentRouter = router({
           metadata: { aiPolicy: patch.aiPolicy },
         });
       }
+      // Send decision email first, attach outcome to the audit entry below
+      let docEmailOutcome: string | null = null;
+      if (patch.reviewStatus === "approved" || patch.reviewStatus === "rejected") {
+        docEmailOutcome = "email_skipped:no_recipient";
+        try {
+          const docNow = await db.getDocumentById(input.id);
+          if (docNow?.uploadedBy) {
+            const uploader = await db.getUserById(docNow.uploadedBy);
+            if (uploader?.email) {
+              const r = await emailDocumentDecision({
+                to: uploader.email,
+                documentId: input.id,
+                decision: patch.reviewStatus,
+              });
+              docEmailOutcome = r.sent ? "email_sent" : `email_skipped:${(r as any).reason}`;
+            }
+          }
+        } catch (e) {
+          console.warn("[document.adminUpdate] decision email failed", e);
+          docEmailOutcome = "email_skipped:exception";
+        }
+      }
       if (patch.reviewStatus === "approved" && !patch.visibility) {
         await writeAudit({
           actorUserId: ctx.user.id,
@@ -556,6 +607,7 @@ const documentRouter = router({
           action: "document_approved",
           targetType: "document",
           targetId: input.id,
+          metadata: docEmailOutcome ? { email: docEmailOutcome } : undefined,
         });
       }
       if (patch.reviewStatus === "rejected" && !patch.visibility) {
@@ -565,26 +617,8 @@ const documentRouter = router({
           action: "document_rejected",
           targetType: "document",
           targetId: input.id,
+          metadata: docEmailOutcome ? { email: docEmailOutcome } : undefined,
         });
-      }
-
-      // Email uploader on decision (redaction-safe)
-      if (patch.reviewStatus === "approved" || patch.reviewStatus === "rejected") {
-        try {
-          const docNow = await db.getDocumentById(input.id);
-          if (docNow?.uploadedBy) {
-            const uploader = await db.getUserById(docNow.uploadedBy);
-            if (uploader?.email) {
-              await emailDocumentDecision({
-                to: uploader.email,
-                documentId: input.id,
-                decision: patch.reviewStatus,
-              });
-            }
-          }
-        } catch (e) {
-          console.warn("[document.adminUpdate] decision email failed", e);
-        }
       }
       return { ok: true };
     }),

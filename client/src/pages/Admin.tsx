@@ -654,7 +654,12 @@ function StoryReview({ id }: { id: number }) {
 
 /* ============= Documents ============= */
 function DocumentsTab() {
-  const list = trpc.document.adminList.useQuery();
+  const [vizFilter, setVizFilter] = useState<string | null>(null);
+  const [aiFilter, setAiFilter] = useState<string | null>(null);
+  const list = trpc.document.adminList.useQuery({
+    visibility: (vizFilter as any) ?? undefined,
+    aiPolicy: (aiFilter as any) ?? undefined,
+  });
   const counts = trpc.document.adminCounts.useQuery();
   const fileToBase64 = (f: File) =>
     new Promise<string>((resolve, reject) => {
@@ -718,16 +723,60 @@ function DocumentsTab() {
   return (
     <div className="mt-6 space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
-        {counterCells.map(([label, key]) => (
-          <div key={key} className="paper-card p-3">
-            <div className="eyebrow !text-[0.6rem] text-muted-foreground">{label}</div>
-            <div className="display-serif text-2xl">{Number((c as any)[key] ?? 0)}</div>
-          </div>
-        ))}
+        {counterCells.map(([label, key]) => {
+          const active = vizFilter === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setVizFilter(active ? null : key)}
+              className={`paper-card p-3 text-left transition ${
+                active ? "ring-2 ring-[var(--amber)] -translate-y-0.5" : "hover:-translate-y-0.5"
+              }`}
+            >
+              <div className="eyebrow !text-[0.6rem] text-muted-foreground">{label}</div>
+              <div className="display-serif text-2xl">{Number((c as any)[key] ?? 0)}</div>
+            </button>
+          );
+        })}
       </div>
-      <div className="flex gap-2 text-xs">
-        <Badge variant="outline">AI: goblin_allowed {goblinAllowedAi}</Badge>
-        <Badge variant="outline">AI: no_ai_processing {noAi}</Badge>
+      <div className="flex gap-2 text-xs flex-wrap items-center">
+        <button
+          type="button"
+          onClick={() =>
+            setAiFilter(aiFilter === "goblin_allowed" ? null : "goblin_allowed")
+          }
+        >
+          <Badge
+            variant={aiFilter === "goblin_allowed" ? "default" : "outline"}
+          >
+            AI: goblin_allowed {goblinAllowedAi}
+          </Badge>
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            setAiFilter(aiFilter === "no_ai_processing" ? null : "no_ai_processing")
+          }
+        >
+          <Badge
+            variant={aiFilter === "no_ai_processing" ? "default" : "outline"}
+          >
+            AI: no_ai_processing {noAi}
+          </Badge>
+        </button>
+        {(vizFilter || aiFilter) && (
+          <button
+            type="button"
+            onClick={() => {
+              setVizFilter(null);
+              setAiFilter(null);
+            }}
+            className="text-muted-foreground hover:text-foreground underline ml-2"
+          >
+            reset filters
+          </button>
+        )}
       </div>
       <div className="grid lg:grid-cols-12 gap-6">
       <form className="lg:col-span-5 paper-card p-6 space-y-3" onSubmit={submit}>
@@ -792,7 +841,7 @@ function DocumentsTab() {
       </form>
 
       <div className="lg:col-span-7 space-y-3">
-        {(list.data ?? []).map((d) => (
+        {(list.data ?? []).map((d: any) => (
           <Link key={d.id} href={`/admin/document/${d.id}`}>
             <article className="paper-card p-5 hover:-translate-y-0.5 transition-transform">
               <div className="flex items-center gap-3 flex-wrap">
