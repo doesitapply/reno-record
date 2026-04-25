@@ -5,6 +5,12 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
+import {
+  emailDocumentDecision,
+  emailFilesReceived,
+  emailStoryDecision,
+  emailStoryReceived,
+} from "./_email";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
 import * as db from "./db";
@@ -202,6 +208,26 @@ const storyRouter = router({
       } catch {
         // ignore
       }
+
+      // Email confirmations — fail-safe (skip if SMTP not configured)
+      const recipientEmail = payload.email ?? ctx.user.email ?? null;
+      const storyMail = await emailStoryReceived({ to: recipientEmail, storyId });
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "story_submitted",
+        targetType: "story",
+        targetId: storyId,
+        ipHash,
+        metadata: { email: storyMail.sent ? "email_sent" : `email_skipped:${(storyMail as any).reason ?? "unknown"}` },
+      });
+      if (validated.length > 0) {
+        await emailFilesReceived({
+          to: recipientEmail,
+          storyId,
+          fileCount: validated.length,
+        });
+      }
       return { id: storyId };
     }),
 
@@ -300,6 +326,30 @@ const storyRouter = router({
           metadata: { reviewerNote: patch.reviewerNote },
         });
       }
+
+      // Notify submitter (redaction-safe template)
+      if (patch.status && patch.status !== "pending") {
+        try {
+          const story = await db.getStoryById(input.id);
+          let recipient: string | null = story?.email ?? null;
+          if (!recipient && story?.ownerUserId) {
+            const ownerUser = await db.getUserById(story.ownerUserId);
+            recipient = ownerUser?.email ?? null;
+          }
+          await emailStoryDecision({
+            to: recipient,
+            storyId: input.id,
+            decision:
+              patch.status === "approved"
+                ? "approved"
+                : patch.status === "rejected"
+                  ? "rejected"
+                  : "changes_requested",
+          });
+        } catch (e) {
+          console.warn("[story.adminUpdate] decision email failed", e);
+        }
+      }
       return { ok: true };
     }),
 });
@@ -327,6 +377,7 @@ const documentRouter = router({
 
   /* Admin */
   adminList: adminProcedure.query(async () => db.listAllDocuments()),
+  adminCounts: adminProcedure.query(async () => db.documentVisibilityCounts()),
   adminGet: adminProcedure.input(z.object({ id: z.number() })).query(async ({ input }) =>
     db.getDocumentById(input.id),
   ),
@@ -515,6 +566,25 @@ const documentRouter = router({
           targetType: "document",
           targetId: input.id,
         });
+      }
+
+      // Email uploader on decision (redaction-safe)
+      if (patch.reviewStatus === "approved" || patch.reviewStatus === "rejected") {
+        try {
+          const docNow = await db.getDocumentById(input.id);
+          if (docNow?.uploadedBy) {
+            const uploader = await db.getUserById(docNow.uploadedBy);
+            if (uploader?.email) {
+              await emailDocumentDecision({
+                to: uploader.email,
+                documentId: input.id,
+                decision: patch.reviewStatus,
+              });
+            }
+          }
+        } catch (e) {
+          console.warn("[document.adminUpdate] decision email failed", e);
+        }
       }
       return { ok: true };
     }),
@@ -1190,6 +1260,7 @@ Submitter narrative: ${s.summary ?? ""}`;
 /* =============== User role management (audited) =============== */
 const userRouter = router({
   adminList: adminProcedure.query(async () => db.listUsers()),
+  adminListWithCounts: adminProcedure.query(async () => db.listUsersWithCounts()),
   setRole: adminProcedure
     .input(
       z.object({
@@ -1221,6 +1292,57 @@ const userRouter = router({
     }),
 });
 
+/* =============== Audit log router =============== */
+const auditRouter = router({
+  list: adminProcedure
+    .input(
+      z
+        .object({
+          actorUserId: z.number().optional(),
+          action: z.string().optional(),
+          targetType: z.string().optional(),
+          dateFrom: z.coerce.date().optional(),
+          dateTo: z.coerce.date().optional(),
+          q: z.string().optional(),
+          limit: z.number().int().min(1).max(500).optional(),
+          offset: z.number().int().min(0).optional(),
+        })
+        .default({}),
+    )
+    .query(async ({ input }) => db.listAuditLog(input ?? {})),
+  exportCsv: adminProcedure
+    .input(
+      z
+        .object({
+          actorUserId: z.number().optional(),
+          action: z.string().optional(),
+          targetType: z.string().optional(),
+          dateFrom: z.coerce.date().optional(),
+          dateTo: z.coerce.date().optional(),
+          q: z.string().optional(),
+        })
+        .default({}),
+    )
+    .query(async ({ input }) => {
+      const rows = await db.exportAuditLog(input ?? {});
+      // Return rows; the client serializes to CSV. (Keeps streaming simple via tRPC.)
+      return rows.map((r) => ({
+        id: r.id,
+        createdAt: r.createdAt,
+        actorUserId: r.actorUserId,
+        actorRole: r.actorRole,
+        action: r.action,
+        targetType: r.targetType,
+        targetId: r.targetId,
+        metadata: r.metadata ?? null,
+        ipHash: r.ipHash,
+      }));
+    }),
+});
+
+/* =============== Document admin counts =============== */
+// Mounted into documentRouter via patch below; declared early so it sees auditRouter scope
+
 /* =============== Root =============== */
 export const appRouter = router({
   system: systemRouter,
@@ -1240,6 +1362,7 @@ export const appRouter = router({
   patterns: patternRouter,
   docketGoblin: docketGoblinRouter,
   user: userRouter,
+  audit: auditRouter,
 });
 
 export type AppRouter = typeof appRouter;

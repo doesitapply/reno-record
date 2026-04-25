@@ -35,6 +35,13 @@ import {
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
@@ -107,6 +114,8 @@ function AdminDashboard() {
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="actors">Actors</TabsTrigger>
             <TabsTrigger value="prr">Public records</TabsTrigger>
+            <TabsTrigger value="audit">Audit log</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
           </TabsList>
           <TabsContent value="ingest"><IngestTab /></TabsContent>
           <TabsContent value="stories"><StoriesTab /></TabsContent>
@@ -114,6 +123,8 @@ function AdminDashboard() {
           <TabsContent value="timeline"><TimelineTab /></TabsContent>
           <TabsContent value="actors"><ActorsTab /></TabsContent>
           <TabsContent value="prr"><PrrTab /></TabsContent>
+          <TabsContent value="audit"><AuditTab /></TabsContent>
+          <TabsContent value="users"><UsersTab /></TabsContent>
         </Tabs>
       </section>
     </SiteShell>
@@ -644,6 +655,7 @@ function StoryReview({ id }: { id: number }) {
 /* ============= Documents ============= */
 function DocumentsTab() {
   const list = trpc.document.adminList.useQuery();
+  const counts = trpc.document.adminCounts.useQuery();
   const fileToBase64 = (f: File) =>
     new Promise<string>((resolve, reject) => {
       const r = new FileReader();
@@ -690,8 +702,34 @@ function DocumentsTab() {
     setFile(null);
   };
 
+  const c = counts.data ?? {};
+  const counterCells: Array<[string, string]> = [
+    ["Pending review", "pending_review"],
+    ["Needs redaction", "needs_redaction"],
+    ["Public preview", "public_preview"],
+    ["Receipts only", "receipts_only"],
+    ["Goblin allowed", "goblin_allowed"],
+    ["Private (admin only)", "private_admin_only"],
+    ["Rejected", "rejected"],
+  ];
+  const goblinAllowedAi = c["ai:goblin_allowed"] ?? 0;
+  const noAi = c["ai:no_ai_processing"] ?? 0;
+
   return (
-    <div className="mt-6 grid lg:grid-cols-12 gap-6">
+    <div className="mt-6 space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+        {counterCells.map(([label, key]) => (
+          <div key={key} className="paper-card p-3">
+            <div className="eyebrow !text-[0.6rem] text-muted-foreground">{label}</div>
+            <div className="display-serif text-2xl">{Number((c as any)[key] ?? 0)}</div>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2 text-xs">
+        <Badge variant="outline">AI: goblin_allowed {goblinAllowedAi}</Badge>
+        <Badge variant="outline">AI: no_ai_processing {noAi}</Badge>
+      </div>
+      <div className="grid lg:grid-cols-12 gap-6">
       <form className="lg:col-span-5 paper-card p-6 space-y-3" onSubmit={submit}>
         <h3 className="display-serif text-xl rule-amber">Add evidence</h3>
         <div>
@@ -786,6 +824,7 @@ function DocumentsTab() {
             No documents yet.
           </div>
         )}
+      </div>
       </div>
     </div>
   );
@@ -1506,6 +1545,313 @@ function KV({ label, value }: { label: string; value: string }) {
     <div className="border-l-2 border-[var(--amber)] pl-3">
       <div className="eyebrow !text-[0.62rem]">{label}</div>
       <div className="text-sm mt-0.5 font-medium">{value}</div>
+    </div>
+  );
+}
+
+
+/* ===================== Audit Log Tab ===================== */
+
+const AUDIT_ACTIONS = [
+  "all",
+  "story_submitted",
+  "story_approved",
+  "story_rejected",
+  "story_changes_requested",
+  "document_uploaded",
+  "document_ingested",
+  "document_approved",
+  "document_rejected",
+  "visibility_changed",
+  "ai_policy_changed",
+  "admin_role_changed",
+  "upload_rejected",
+  "rate_limit_triggered",
+] as const;
+
+const AUDIT_TARGET_TYPES = ["all", "story", "document", "user", "ingest_job"] as const;
+
+function toCsv(rows: any[]): string {
+  if (rows.length === 0) return "";
+  const cols = ["id", "createdAt", "actorUserId", "actorRole", "action", "targetType", "targetId", "metadata", "ipHash"];
+  const esc = (v: any) => {
+    if (v === null || v === undefined) return "";
+    const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+    return `"${s.replace(/"/g, '""')}"`;
+  };
+  const lines = [cols.join(",")];
+  for (const r of rows) lines.push(cols.map((c) => esc(r[c])).join(","));
+  return lines.join("\n");
+}
+
+function AuditTab() {
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(50);
+  const [actorUserId, setActorUserId] = useState<string>("");
+  const [action, setAction] = useState<string>("all");
+  const [targetType, setTargetType] = useState<string>("all");
+  const [q, setQ] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [open, setOpen] = useState<null | any>(null);
+
+  const filterArgs = useMemo(
+    () => ({
+      actorUserId: actorUserId ? Number(actorUserId) : undefined,
+      action,
+      targetType,
+      q: q.trim() || undefined,
+      dateFrom: dateFrom ? new Date(dateFrom) : undefined,
+      dateTo: dateTo ? new Date(dateTo) : undefined,
+      limit: pageSize,
+      offset: page * pageSize,
+    }),
+    [actorUserId, action, targetType, q, dateFrom, dateTo, page, pageSize],
+  );
+
+  const { data, isLoading, refetch } = trpc.audit.list.useQuery(filterArgs);
+  const trpcUtils = trpc.useUtils();
+
+  async function downloadCsv() {
+    const rows = await trpcUtils.audit.exportCsv.fetch({
+      actorUserId: filterArgs.actorUserId,
+      action: filterArgs.action,
+      targetType: filterArgs.targetType,
+      q: filterArgs.q,
+      dateFrom: filterArgs.dateFrom,
+      dateTo: filterArgs.dateTo,
+    });
+    const csv = toCsv(rows);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reno-record-audit-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${rows.length} rows`);
+  }
+
+  const total = data?.total ?? 0;
+  const rows = data?.rows ?? [];
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 md:grid-cols-6">
+        <div className="md:col-span-2">
+          <Label>Search</Label>
+          <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} placeholder="action / metadata / target type" />
+        </div>
+        <div>
+          <Label>Action</Label>
+          <Select value={action} onValueChange={(v) => { setAction(v); setPage(0); }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {AUDIT_ACTIONS.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Target</Label>
+          <Select value={targetType} onValueChange={(v) => { setTargetType(v); setPage(0); }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {AUDIT_TARGET_TYPES.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Actor user ID</Label>
+          <Input value={actorUserId} onChange={(e) => { setActorUserId(e.target.value.replace(/\D/g, "")); setPage(0); }} placeholder="" />
+        </div>
+        <div>
+          <Label>From</Label>
+          <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(0); }} />
+        </div>
+        <div>
+          <Label>To</Label>
+          <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(0); }} />
+        </div>
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          {isLoading ? "Loading..." : `${total.toLocaleString()} events`}
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => refetch()}>Refresh</Button>
+          <Button onClick={downloadCsv}>Export CSV</Button>
+        </div>
+      </div>
+      <Card className="p-0 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-xs uppercase tracking-wider text-muted-foreground border-b">
+            <tr>
+              <th className="text-left p-3">When</th>
+              <th className="text-left p-3">Actor</th>
+              <th className="text-left p-3">Action</th>
+              <th className="text-left p-3">Target</th>
+              <th className="text-left p-3">Metadata</th>
+              <th className="p-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r: any) => (
+              <tr key={r.id} className="border-b last:border-0 hover:bg-muted/30">
+                <td className="p-3 whitespace-nowrap font-mono text-xs">{new Date(r.createdAt).toLocaleString()}</td>
+                <td className="p-3 whitespace-nowrap">{r.actorUserId ?? "—"} <Badge variant="outline" className="ml-1">{r.actorRole ?? "—"}</Badge></td>
+                <td className="p-3 whitespace-nowrap"><Badge>{r.action}</Badge></td>
+                <td className="p-3 whitespace-nowrap">{r.targetType ?? "—"} #{r.targetId ?? "—"}</td>
+                <td className="p-3 max-w-[300px] truncate text-xs text-muted-foreground">
+                  {r.metadata ? JSON.stringify(r.metadata).slice(0, 120) : "—"}
+                </td>
+                <td className="p-3"><Button variant="ghost" size="sm" onClick={() => setOpen(r)}>Detail</Button></td>
+              </tr>
+            ))}
+            {rows.length === 0 && !isLoading && (
+              <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No events match these filters.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </Card>
+      <div className="flex items-center justify-between">
+        <Button variant="outline" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>Previous</Button>
+        <div className="text-sm text-muted-foreground">Page {page + 1} of {pages}</div>
+        <Button variant="outline" disabled={page + 1 >= pages} onClick={() => setPage((p) => p + 1)}>Next</Button>
+      </div>
+
+      <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Audit event #{open?.id}</DialogTitle>
+            <DialogDescription>{open?.createdAt && new Date(open.createdAt).toLocaleString()}</DialogDescription>
+          </DialogHeader>
+          {open && (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Actor</Label><div>{open.actorUserId ?? "—"} ({open.actorRole ?? "—"})</div></div>
+                <div><Label>Action</Label><div>{open.action}</div></div>
+                <div><Label>Target</Label><div>{open.targetType} #{open.targetId}</div></div>
+                <div><Label>IP hash</Label><div className="font-mono text-xs break-all">{open.ipHash ?? "—"}</div></div>
+              </div>
+              {open.metadata && (
+                <div>
+                  <Label>Metadata</Label>
+                  {open.metadata.from !== undefined && open.metadata.to !== undefined ? (
+                    <div className="rounded border p-3 space-y-1 bg-muted/30">
+                      <div><span className="text-muted-foreground">From:</span> <span className="font-mono">{JSON.stringify(open.metadata.from)}</span></div>
+                      <div><span className="text-muted-foreground">To:</span> <span className="font-mono">{JSON.stringify(open.metadata.to)}</span></div>
+                    </div>
+                  ) : null}
+                  <pre className="mt-2 text-xs bg-muted/40 rounded p-3 overflow-x-auto whitespace-pre-wrap">{JSON.stringify(open.metadata, null, 2)}</pre>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/* ===================== Users Tab ===================== */
+
+function UsersTab() {
+  const { user: me } = useAuth();
+  const { data, isLoading, refetch } = trpc.user.adminListWithCounts.useQuery();
+  const setRole = trpc.user.setRole.useMutation({
+    onSuccess: () => { toast.success("Role updated"); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const [confirm, setConfirm] = useState<null | { userId: number; name: string; role: "user" | "admin" }>(null);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          {isLoading ? "Loading..." : `${data?.length ?? 0} users`}
+        </div>
+        <Button variant="outline" onClick={() => refetch()}>Refresh</Button>
+      </div>
+      <Card className="p-0 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-xs uppercase tracking-wider text-muted-foreground border-b">
+            <tr>
+              <th className="text-left p-3">User</th>
+              <th className="text-left p-3">Email</th>
+              <th className="text-left p-3">Role</th>
+              <th className="text-left p-3">Submissions</th>
+              <th className="text-left p-3">Uploads</th>
+              <th className="text-left p-3">Last sign-in</th>
+              <th className="p-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {(data ?? []).map((u: any) => {
+              const isMe = me?.id === u.id;
+              return (
+                <tr key={u.id} className="border-b last:border-0 hover:bg-muted/30">
+                  <td className="p-3 whitespace-nowrap">{u.name ?? "—"} <span className="text-muted-foreground text-xs">#{u.id}</span></td>
+                  <td className="p-3">{u.email ?? "—"}</td>
+                  <td className="p-3"><Badge variant={u.role === "admin" ? "default" : "outline"}>{u.role}</Badge></td>
+                  <td className="p-3">{u.submissionCount}</td>
+                  <td className="p-3">{u.uploadCount}</td>
+                  <td className="p-3 text-xs text-muted-foreground">{u.lastSignedIn ? new Date(u.lastSignedIn).toLocaleString() : "—"}</td>
+                  <td className="p-3 text-right">
+                    {u.role === "admin" ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={isMe || setRole.isPending}
+                        title={isMe ? "Cannot demote yourself (lockout protection)" : ""}
+                        onClick={() => setConfirm({ userId: u.id, name: u.name ?? u.email ?? `#${u.id}`, role: "user" })}
+                      >
+                        Demote to user
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        disabled={setRole.isPending}
+                        onClick={() => setConfirm({ userId: u.id, name: u.name ?? u.email ?? `#${u.id}`, role: "admin" })}
+                      >
+                        Promote to admin
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
+      <p className="text-xs text-muted-foreground">
+        Lockout protection: you cannot remove your own admin role. Every role change is written to the audit log.
+      </p>
+
+      <Dialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm role change</DialogTitle>
+            <DialogDescription>
+              {confirm && `Set ${confirm.name} to "${confirm.role}". This is audited.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setConfirm(null)}>Cancel</Button>
+            <Button
+              onClick={async () => {
+                if (!confirm) return;
+                await setRole.mutateAsync({ userId: confirm.userId, role: confirm.role });
+                setConfirm(null);
+              }}
+            >
+              Confirm
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

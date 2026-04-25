@@ -1,8 +1,9 @@
-import { and, asc, desc, eq, like, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, like, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   actors,
   agentTasks,
+  auditLog,
   documents,
   InsertActor,
   InsertAgentTask,
@@ -514,4 +515,117 @@ export async function getUserById(id: number) {
   if (!db) return undefined;
   const r = await db.select().from(users).where(eq(users.id, id)).limit(1);
   return r[0];
+}
+
+
+/* ================= Audit log queries ================= */
+export type AuditFilter = {
+  actorUserId?: number;
+  action?: string;
+  targetType?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  q?: string;
+  limit?: number;
+  offset?: number;
+};
+
+function buildAuditWhere(opts: AuditFilter) {
+  const filters: any[] = [];
+  if (opts.actorUserId) filters.push(eq(auditLog.actorUserId, opts.actorUserId));
+  if (opts.action && opts.action !== "all") filters.push(eq(auditLog.action, opts.action as any));
+  if (opts.targetType && opts.targetType !== "all")
+    filters.push(eq(auditLog.targetType, opts.targetType));
+  if (opts.dateFrom) filters.push(gte(auditLog.createdAt, opts.dateFrom));
+  if (opts.dateTo) filters.push(lte(auditLog.createdAt, opts.dateTo));
+  if (opts.q && opts.q.trim()) {
+    const q = `%${opts.q.trim()}%`;
+    filters.push(
+      or(
+        like(auditLog.action, q),
+        like(auditLog.targetType, q),
+        like(sql`CAST(${auditLog.metadata} AS CHAR)`, q),
+      ),
+    );
+  }
+  return filters.length ? and(...filters) : undefined;
+}
+
+export async function listAuditLog(opts: AuditFilter) {
+  const db = await getDb();
+  if (!db) return { rows: [], total: 0 };
+  const where = buildAuditWhere(opts);
+  const limit = Math.min(opts.limit ?? 50, 500);
+  const offset = opts.offset ?? 0;
+
+  const baseSelect = db.select().from(auditLog);
+  const baseCount = db.select({ c: count() }).from(auditLog);
+
+  const [rows, totalRow] = await Promise.all([
+    where
+      ? baseSelect.where(where).orderBy(desc(auditLog.createdAt)).limit(limit).offset(offset)
+      : baseSelect.orderBy(desc(auditLog.createdAt)).limit(limit).offset(offset),
+    where ? baseCount.where(where) : baseCount,
+  ]);
+
+  return { rows, total: Number(totalRow[0]?.c ?? 0) };
+}
+
+export async function exportAuditLog(opts: AuditFilter) {
+  // Same filter, no pagination, capped at 10k rows for safety.
+  const { rows } = await listAuditLog({ ...opts, limit: 10000, offset: 0 });
+  return rows;
+}
+
+/* ================= User management with counts ================= */
+export async function listUsersWithCounts() {
+  const db = await getDb();
+  if (!db) return [];
+  const allUsers = await db.select().from(users).orderBy(desc(users.createdAt)).limit(500);
+  if (allUsers.length === 0) return [];
+
+  const ids = allUsers.map((u) => u.id);
+
+  // Story counts per ownerUserId
+  const storyCounts = await db
+    .select({ id: stories.ownerUserId, c: count() })
+    .from(stories)
+    .where(or(...ids.map((id) => eq(stories.ownerUserId, id))))
+    .groupBy(stories.ownerUserId);
+
+  // Document counts per uploadedBy
+  const docCounts = await db
+    .select({ id: documents.uploadedBy, c: count() })
+    .from(documents)
+    .where(or(...ids.map((id) => eq(documents.uploadedBy, id))))
+    .groupBy(documents.uploadedBy);
+
+  const sMap = new Map<number, number>();
+  for (const r of storyCounts) if (r.id) sMap.set(r.id, Number(r.c));
+  const dMap = new Map<number, number>();
+  for (const r of docCounts) if (r.id) dMap.set(r.id, Number(r.c));
+
+  return allUsers.map((u) => ({
+    ...u,
+    submissionCount: sMap.get(u.id) ?? 0,
+    uploadCount: dMap.get(u.id) ?? 0,
+  }));
+}
+
+/* ================= Document review-state counters ================= */
+export async function documentVisibilityCounts() {
+  const db = await getDb();
+  if (!db) return {};
+  const rows = await db
+    .select({ v: documents.visibility, c: count() })
+    .from(documents)
+    .groupBy(documents.visibility);
+  const aiPolicyRows = await db
+    .select({ p: documents.aiPolicy, c: count() })
+    .from(documents)
+    .groupBy(documents.aiPolicy);
+  const out: Record<string, number> = {};
+  for (const r of rows) out[String(r.v)] = Number(r.c);
+  for (const r of aiPolicyRows) out[`ai:${String(r.p)}`] = Number(r.c);
+  return out;
 }

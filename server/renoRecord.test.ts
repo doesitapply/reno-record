@@ -678,3 +678,192 @@ describe("v3 — Goblin AI-policy enforcement", () => {
     expect(anyForbidden).toBe(false);
   });
 });
+
+
+/* =============================================================
+   v3.5 — Audit, user mgmt, SMTP fail-safe, redaction discipline
+   ============================================================= */
+
+describe("v3.5 — SMTP fail-safe", () => {
+  it("isEmailConfigured returns false when SMTP env is missing", async () => {
+    const { __resetEmail, isEmailConfigured } = await import("./_email");
+    const saved = {
+      h: process.env.SMTP_HOST, p: process.env.SMTP_PORT,
+      u: process.env.SMTP_USER, w: process.env.SMTP_PASS, f: process.env.SMTP_FROM,
+    };
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_PORT;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
+    delete process.env.SMTP_FROM;
+    __resetEmail();
+    expect(isEmailConfigured()).toBe(false);
+    Object.assign(process.env, {
+      SMTP_HOST: saved.h, SMTP_PORT: saved.p, SMTP_USER: saved.u,
+      SMTP_PASS: saved.w, SMTP_FROM: saved.f,
+    });
+  });
+
+  it("emailStoryReceived returns sent:false when SMTP env is missing — never throws", async () => {
+    const { __resetEmail, emailStoryReceived } = await import("./_email");
+    const saved = {
+      h: process.env.SMTP_HOST, p: process.env.SMTP_PORT,
+      u: process.env.SMTP_USER, w: process.env.SMTP_PASS, f: process.env.SMTP_FROM,
+    };
+    delete process.env.SMTP_HOST; delete process.env.SMTP_PORT;
+    delete process.env.SMTP_USER; delete process.env.SMTP_PASS; delete process.env.SMTP_FROM;
+    __resetEmail();
+    const r = await emailStoryReceived({ to: "x@example.com", storyId: 1 });
+    expect(r.sent).toBe(false);
+    if (!r.sent) expect(r.reason).toBe("smtp_not_configured");
+    Object.assign(process.env, {
+      SMTP_HOST: saved.h, SMTP_PORT: saved.p, SMTP_USER: saved.u,
+      SMTP_PASS: saved.w, SMTP_FROM: saved.f,
+    });
+  });
+
+  it("emailStoryReceived returns sent:false when 'to' is null", async () => {
+    const { emailStoryReceived } = await import("./_email");
+    const r = await emailStoryReceived({ to: null, storyId: 7 });
+    expect(r.sent).toBe(false);
+    if (!r.sent) expect(r.reason).toBe("no_recipient");
+  });
+});
+
+describe("v3.5 — Email body redaction discipline", () => {
+  it("template bodies do NOT include reviewer notes, narrative, filenames, or document text", async () => {
+    const mod = await import("./_email");
+    // Spy at module-level by stubbing transport via env tricks: instead,
+    // reach into nodemailer.createTransport via vi.spyOn on the module.
+    const sendCalls: any[] = [];
+    const fakeTransport = { sendMail: async (m: any) => { sendCalls.push(m); return { messageId: "mid" }; } };
+    const nm = await import("nodemailer");
+    vi.spyOn(nm.default, "createTransport").mockReturnValue(fakeTransport as any);
+
+    process.env.SMTP_HOST = "smtp.example.com";
+    process.env.SMTP_PORT = "587";
+    process.env.SMTP_USER = "u";
+    process.env.SMTP_PASS = "p";
+    process.env.SMTP_FROM = "no-reply@therenorecord.com";
+    mod.__resetEmail();
+
+    await mod.emailStoryReceived({ to: "submitter@example.com", storyId: 42 });
+    await mod.emailFilesReceived({ to: "submitter@example.com", storyId: 42, fileCount: 3 });
+    await mod.emailStoryDecision({ to: "submitter@example.com", storyId: 42, decision: "approved" });
+    await mod.emailDocumentDecision({ to: "uploader@example.com", documentId: 99, decision: "rejected" });
+
+    expect(sendCalls.length).toBe(4);
+    for (const m of sendCalls) {
+      const blob = `${m.subject}\n${m.text ?? ""}\n${m.html ?? ""}`;
+      // None of the privacy-sensitive content should ever be in mail
+      // No actual reviewer note value, no narrative content. Disclaimer phrasing is OK.
+      expect(blob).not.toMatch(/reviewer note: /i);
+      expect(blob).not.toMatch(/narrative: /i);
+      // assert no actual filename leaks (extension+name); the disclaimer text is fine
+      expect(blob).not.toMatch(/filename:/i);
+      expect(blob).not.toMatch(/[\w-]+\.(pdf|png|jpg|jpeg|docx|mp4|mp3|webm)/i);
+      expect(blob).not.toMatch(/admin notes/i);
+      expect(blob).not.toMatch(/transcript/i);
+      // Should reference a numeric ID and the project name
+      expect(blob).toMatch(/Reno Record/i);
+    }
+
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_PORT;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
+    delete process.env.SMTP_FROM;
+    mod.__resetEmail();
+    vi.restoreAllMocks();
+  });
+});
+
+describe("v3.5 — Audit list filtering", () => {
+  it("audit.list passes filter args through to db.listAuditLog", async () => {
+    const spy = vi.spyOn(db, "listAuditLog").mockResolvedValue({ rows: [], total: 0 });
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await adminCaller.audit.list({
+      action: "story_submitted",
+      targetType: "story",
+      q: "needle",
+      limit: 25,
+      offset: 50,
+    });
+    expect(spy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "story_submitted",
+        targetType: "story",
+        q: "needle",
+        limit: 25,
+        offset: 50,
+      }),
+    );
+    vi.restoreAllMocks();
+  });
+
+  it("audit.list rejects non-admin", async () => {
+    const userCaller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(userCaller.audit.list({})).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("audit.exportCsv returns rows in admin-defined column shape", async () => {
+    vi.spyOn(db, "exportAuditLog").mockResolvedValue([
+      {
+        id: 1,
+        createdAt: new Date(),
+        actorUserId: 5,
+        actorRole: "admin",
+        action: "story_approved",
+        targetType: "story",
+        targetId: 7,
+        metadata: { from: "pending", to: "approved" },
+        ipHash: "abc",
+      } as any,
+    ]);
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    const rows = await adminCaller.audit.exportCsv({});
+    expect(rows.length).toBe(1);
+    expect(rows[0]).toHaveProperty("action");
+    expect(rows[0]).toHaveProperty("metadata");
+    expect(rows[0]).toHaveProperty("ipHash");
+    vi.restoreAllMocks();
+  });
+});
+
+describe("v3.5 — User management", () => {
+  it("user.adminListWithCounts is admin-only", async () => {
+    vi.spyOn(db, "listUsersWithCounts").mockResolvedValue([] as any);
+    const userCaller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(userCaller.user.adminListWithCounts()).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("user.adminListWithCounts returns submission/upload counts when admin", async () => {
+    vi.spyOn(db, "listUsersWithCounts").mockResolvedValue([
+      { id: 1, role: "user", email: "a@b", submissionCount: 2, uploadCount: 0 },
+      { id: 2, role: "admin", email: "admin@b", submissionCount: 0, uploadCount: 5 },
+    ] as any);
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    const rows = await adminCaller.user.adminListWithCounts();
+    expect(rows.length).toBe(2);
+    expect(rows[0].submissionCount).toBe(2);
+    vi.restoreAllMocks();
+  });
+});
+
+describe("v3.5 — Document admin counts", () => {
+  it("document.adminCounts returns aggregated map; admin-only", async () => {
+    vi.spyOn(db, "documentVisibilityCounts").mockResolvedValue({
+      pending_review: 3,
+      public_preview: 1,
+      "ai:no_ai_processing": 4,
+      "ai:goblin_allowed": 0,
+    });
+    const userCaller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(userCaller.document.adminCounts()).rejects.toBeInstanceOf(TRPCError);
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    const counts = await adminCaller.document.adminCounts();
+    expect(counts.pending_review).toBe(3);
+    expect(counts["ai:no_ai_processing"]).toBe(4);
+    vi.restoreAllMocks();
+  });
+});
