@@ -5,31 +5,45 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import ChurchRecord from "./pages/ChurchRecord";
+import TimelinePage from "./pages/Timeline";
+import EvidencePage from "./pages/Evidence";
+import SubmitPage from "./pages/Submit";
+import PublicRecordsPage from "./pages/PublicRecords";
+import ActorsPage from "./pages/Actors";
+import ElectionPage from "./pages/Election";
+import PatternsPage from "./pages/Patterns";
+import PrivacyPage from "./pages/Privacy";
+import AdminPage from "./pages/Admin";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
+      <Route path="/" component={Home} />
+      <Route path="/the-church-record" component={ChurchRecord} />
+      <Route path="/timeline" component={TimelinePage} />
+      <Route path="/evidence" component={EvidencePage} />
+      <Route path="/evidence/:id" component={EvidencePage} />
+      <Route path="/submit" component={SubmitPage} />
+      <Route path="/public-records" component={PublicRecordsPage} />
+      <Route path="/actors" component={ActorsPage} />
+      <Route path="/actors/:slug" component={ActorsPage} />
+      <Route path="/election" component={ElectionPage} />
+      <Route path="/patterns" component={PatternsPage} />
+      <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/admin" component={AdminPage} />
+      <Route path="/admin/story/:id" component={AdminPage} />
+      <Route path="/admin/document/:id" component={AdminPage} />
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
           <Router />
