@@ -200,3 +200,116 @@ describe("The Reno Record — moderation & gating", () => {
     expect(result[0]?.id).toBe(1);
   });
 });
+
+
+describe("Docket Goblin chat + ingest", () => {
+  beforeEach(() => vi.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
+
+  it("blocks anonymous and non-admin users from chat history, send, ingest, ingestList, and approveIngest", async () => {
+    const anon = appRouter.createCaller(makeCtx(undefined));
+    await expect(anon.docketGoblin.history()).rejects.toBeInstanceOf(TRPCError);
+    await expect(
+      anon.docketGoblin.send({ message: "hi" }),
+    ).rejects.toBeInstanceOf(TRPCError);
+    await expect(
+      anon.docketGoblin.ingest({
+        filename: "x.pdf",
+        mimeType: "application/pdf",
+        dataBase64: "AAAA",
+      }),
+    ).rejects.toBeInstanceOf(TRPCError);
+    await expect(anon.docketGoblin.ingestList({})).rejects.toBeInstanceOf(TRPCError);
+    await expect(
+      anon.docketGoblin.approveIngest({ jobId: 1 }),
+    ).rejects.toBeInstanceOf(TRPCError);
+
+    const userCaller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(userCaller.docketGoblin.history()).rejects.toBeInstanceOf(TRPCError);
+    await expect(
+      userCaller.docketGoblin.send({ message: "hi" }),
+    ).rejects.toBeInstanceOf(TRPCError);
+    await expect(
+      userCaller.docketGoblin.ingest({
+        filename: "x.pdf",
+        mimeType: "application/pdf",
+        dataBase64: "AAAA",
+      }),
+    ).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("ingest creates only a pending document (publicStatus=false, reviewStatus='pending') — never auto-publishes", async () => {
+    const insertSpy = vi.spyOn(db, "insertDocument").mockResolvedValue(123);
+    vi.spyOn(db, "insertIngestJob").mockResolvedValue(7);
+    vi.spyOn(db, "updateIngestJob").mockResolvedValue(undefined as any);
+    vi.spyOn(db, "getFeaturedStory").mockResolvedValue(undefined);
+    vi.spyOn(db, "findActorIdsByNames").mockResolvedValue([]);
+    vi.spyOn(db, "getArchiveContextForLLM").mockResolvedValue(null as any);
+
+    // stub goblin module to skip extract + LLM
+    const goblin = await import("./_goblin");
+    vi.spyOn(goblin, "extractText").mockResolvedValue("dummy");
+    vi.spyOn(goblin, "draftFromExtractedText").mockResolvedValue({
+      title: "Stub Order",
+      summary: "ok",
+      sourceType: "court_order",
+      caseNumber: "CR21-XXXX",
+      documentDate: "2024-01-01",
+      actorNames: [],
+      tags: ["speedy-trial"],
+      proposedTimeline: null,
+      warnings: [],
+    });
+
+    // stub storage put
+    const storage = await import("./storage");
+    vi.spyOn(storage, "storagePut").mockResolvedValue({
+      key: "evidence/x.pdf",
+      url: "/manus-storage/x.pdf",
+    } as any);
+
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await adminCaller.docketGoblin.ingest({
+      filename: "order.pdf",
+      mimeType: "application/pdf",
+      dataBase64: Buffer.from("PDF").toString("base64"),
+    });
+
+    expect(insertSpy).toHaveBeenCalledTimes(1);
+    const insertedDoc = insertSpy.mock.calls[0]![0]!;
+    expect(insertedDoc.publicStatus).toBe(false);
+    expect(insertedDoc.reviewStatus).toBe("pending");
+  });
+
+  it("approveIngest is the ONLY surface that can publish, and requires admin", async () => {
+    const userCaller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(
+      userCaller.docketGoblin.approveIngest({ jobId: 1 }),
+    ).rejects.toBeInstanceOf(TRPCError);
+
+    vi.spyOn(db, "getIngestJob").mockResolvedValue({
+      id: 1,
+      documentId: 50,
+      storyId: null,
+      timelineEventId: null,
+      draftJson: null,
+    } as any);
+    const updateDoc = vi
+      .spyOn(db, "updateDocument")
+      .mockResolvedValue(undefined as any);
+    vi.spyOn(db, "updateIngestJob").mockResolvedValue(undefined as any);
+
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await adminCaller.docketGoblin.approveIngest({
+      jobId: 1,
+      approveDocument: true,
+      publishDocument: true,
+      createTimelineEvent: false,
+      publishTimelineEvent: false,
+    });
+    expect(updateDoc).toHaveBeenCalledWith(50, {
+      reviewStatus: "approved",
+      publicStatus: true,
+    });
+  });
+});

@@ -15,6 +15,7 @@ import ElectionPage from "./pages/Election";
 import PatternsPage from "./pages/Patterns";
 import PrivacyPage from "./pages/Privacy";
 import AdminPage from "./pages/Admin";
+import DocketGoblinBubble from "./components/DocketGoblinBubble";
 
 function Router() {
   return (
@@ -47,6 +48,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <DocketGoblinBubble />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

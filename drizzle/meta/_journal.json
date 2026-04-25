@@ -15,6 +15,13 @@
       "when": 1777088895982,
       "tag": "0001_special_supernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1777090803110,
+      "tag": "0002_condemned_spiral",
+      "breakpoints": true
     }
   ]
 }

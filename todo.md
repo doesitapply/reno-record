@@ -37,4 +37,26 @@ Receipts for Due Process. A public-interest accountability archive for Washoe Co
 - [x] Vitest specs for moderation flow + AI advisory guard (8/8 passing)
 - [x] Responsive layout
 - [x] SEO meta tags on public pages
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+## v2 — Docket Goblin chat + auto-ingest
+- [x] Schema: chat_sessions, chat_messages, ingest_jobs; judicialActor flag on actors
+- [x] Migration applied
+- [x] Server: docketGoblin.chat (grounded with archive context, admin-only)
+- [x] Server: docketGoblin.ingest (PDF/image/text -> extract -> classify -> draft -> stage as pending document)
+- [x] Server: docketGoblin.draftTimelineFromDocument (proposes timeline event tied to doc; admin-approved)
+- [x] Server: docketGoblin.linkActorsFromDocument (proposes actor links by name match; admin-approved)
+- [x] Frontend: persistent floating chat bubble component (admin only) with chat + drop-zone
+- [x] Frontend: bubble shows ingest status + "open in admin" deep links
+- [x] Admin: ingest review queue page to bulk approve drafted docs + events + actor links
+- [x] Vitest: chat is admin-only; ingest creates only pending records (never publicStatus=true / reviewStatus=approved automatically)
+- [x] Verify, checkpoint, deliver
+
+## v3 — Auth-gated submissions + upload security
+- [ ] Build _uploadGuard.ts: MIME allow-list, magic-byte sniffing, size cap, per-user rate limit
+- [ ] story.submit moved to protectedProcedure (must be signed in)
+- [ ] Submit page: signed-out users see sign-in CTA, signed-in users see form
+- [ ] docketGoblin.ingest hardened with same upload guard
+- [ ] Express body parser limits raised carefully (15 MB hard cap)
+- [ ] Vitest: auth-gated submission, MIME spoof rejection, oversize rejection, rate-limit
+- [ ] Verify, checkpoint, deliver

@@ -8,6 +8,12 @@ import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
 import * as db from "./db";
+import {
+  SYSTEM_PROMPT as GOBLIN_SYSTEM_PROMPT,
+  buildArchiveContextString,
+  draftFromExtractedText,
+  extractText,
+} from "./_goblin";
 
 const isoDate = z
   .union([z.string(), z.date()])
@@ -727,6 +733,223 @@ Submitter narrative: ${s.summary ?? ""}`;
   listForStory: adminProcedure
     .input(z.object({ storyId: z.number() }))
     .query(async ({ input }) => db.listAgentTasksForStory(input.storyId)),
+
+  /* ===== Chat: Docket Goblin (admin-only) ===== */
+  history: adminProcedure.query(async ({ ctx }) => {
+    const session = await db.getOrCreateLatestChatSession(ctx.user.id);
+    const messages = await db.listChatMessages(session.id);
+    return { sessionId: session.id, messages };
+  }),
+
+  send: adminProcedure
+    .input(z.object({ message: z.string().min(1).max(8000) }))
+    .mutation(async ({ ctx, input }) => {
+      const session = await db.getOrCreateLatestChatSession(ctx.user.id);
+      await db.appendChatMessage({
+        sessionId: session.id,
+        role: "user",
+        content: input.message,
+      });
+      const prior = await db.listChatMessages(session.id);
+      const archive = await db.getArchiveContextForLLM();
+      const archiveStr = buildArchiveContextString(archive);
+      try {
+        const result = await invokeLLM({
+          messages: [
+            { role: "system", content: GOBLIN_SYSTEM_PROMPT },
+            { role: "system", content: archiveStr },
+            ...prior.slice(-30).map((m) => ({
+              role: m.role as "user" | "assistant" | "system",
+              content: m.content,
+            })),
+          ],
+        });
+        const content = result.choices?.[0]?.message?.content;
+        const text =
+          typeof content === "string"
+            ? content
+            : Array.isArray(content)
+              ? content
+                  .map((p: any) => (p?.type === "text" ? p.text : ""))
+                  .join("")
+              : "(no response)";
+        await db.appendChatMessage({
+          sessionId: session.id,
+          role: "assistant",
+          content: text,
+        });
+        return { sessionId: session.id, reply: text };
+      } catch (e: any) {
+        const errText = `Docket Goblin had a problem: ${e?.message || e}`;
+        await db.appendChatMessage({
+          sessionId: session.id,
+          role: "assistant",
+          content: errText,
+        });
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: errText });
+      }
+    }),
+
+  resetChat: adminProcedure.mutation(async ({ ctx }) => {
+    const newId = await db.insertChatSession({ userId: ctx.user.id, title: "Docket Goblin chat" });
+    return { sessionId: newId };
+  }),
+
+  /* ===== Auto-ingest a single uploaded file =====
+     SAFETY: creates a pending document (publicStatus=false, reviewStatus=pending) plus an ingest_jobs row
+     with the structured draft. NEVER publishes. Admin must approve in the moderation queue. */
+  ingest: adminProcedure
+    .input(
+      z.object({
+        filename: z.string(),
+        mimeType: z.string(),
+        dataBase64: z.string(),
+        storyId: z.number().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const buffer = Buffer.from(input.dataBase64, "base64");
+      const fileSize = buffer.length;
+
+      const jobId = await db.insertIngestJob({
+        userId: ctx.user.id,
+        storyId: input.storyId ?? null,
+        filename: input.filename,
+        mimeType: input.mimeType,
+        fileSize,
+        status: "pending",
+      });
+
+      try {
+        // 1) Upload to storage (private; will only become public after admin flips publicStatus)
+        const safeName = input.filename.replace(/[^a-zA-Z0-9._-]+/g, "_");
+        const { key, url } = await storagePut(
+          `evidence/ingest-${jobId}-${safeName}`,
+          buffer,
+          input.mimeType || "application/octet-stream",
+        );
+
+        // 2) Extract text (PDFs/text). Other types skip extraction; LLM still drafts from filename.
+        const extracted = await extractText(buffer, input.mimeType);
+        await db.updateIngestJob(jobId, {
+          status: "extracted",
+          extractedText: extracted.slice(0, 60000) || null,
+        });
+
+        // 3) Ask Docket Goblin to draft structured metadata (uses archive context for consistency)
+        const archive = await db.getArchiveContextForLLM();
+        const archiveStr = buildArchiveContextString(archive);
+        const draft = await draftFromExtractedText({
+          filename: input.filename,
+          mimeType: input.mimeType,
+          text: extracted,
+          archiveSummary: archiveStr,
+        });
+
+        // 4) Resolve story if not provided: if archive has a featured (Church Record) story, default to that.
+        let storyId = input.storyId ?? null;
+        if (!storyId) {
+          const featured = await db.getFeaturedStory();
+          if (featured) storyId = featured.id;
+        }
+
+        // 5) Create a pending document (NEVER public, NEVER approved automatically).
+        const documentId = await db.insertDocument({
+          title: draft.title || input.filename,
+          description: draft.summary,
+          fileKey: key,
+          fileUrl: url,
+          mimeType: input.mimeType,
+          fileSize,
+          sourceType: draft.sourceType,
+          caseNumber: draft.caseNumber || null,
+          documentDate: draft.documentDate ? new Date(draft.documentDate) : undefined,
+          actorNames: draft.actorNames.join(", "),
+          issueTags: draft.tags,
+          storyId: storyId ?? undefined,
+          publicStatus: false, // hard guarantee
+          reviewStatus: "pending", // hard guarantee
+          uploadedBy: ctx.user.id,
+          aiSummary: draft.summary,
+          aiTags: draft.tags,
+        });
+
+        // 6) Find existing actor matches (proposal only — admin still approves).
+        const proposed = await db.findActorIdsByNames(draft.actorNames);
+
+        await db.updateIngestJob(jobId, {
+          status: "drafted",
+          documentId,
+          draftJson: draft as any,
+          proposedActors: proposed.map((p) => p.name),
+          storyId: storyId ?? null,
+        });
+
+        return { jobId, documentId, draft, proposedActors: proposed };
+      } catch (e: any) {
+        await db.updateIngestJob(jobId, {
+          status: "failed",
+          error: String(e?.message || e),
+        });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Ingest failed: ${e?.message || e}`,
+        });
+      }
+    }),
+
+  ingestList: adminProcedure
+    .input(z.object({ status: z.string().optional() }).optional())
+    .query(async ({ input }) => db.listIngestJobs({ status: input?.status })),
+
+  /** Approve an ingest job's drafted document + (optionally) create the proposed timeline event.
+   * This is the ONLY path that can publish — admin-explicit. */
+  approveIngest: adminProcedure
+    .input(
+      z.object({
+        jobId: z.number(),
+        approveDocument: z.boolean().default(true),
+        publishDocument: z.boolean().default(true),
+        createTimelineEvent: z.boolean().default(true),
+        publishTimelineEvent: z.boolean().default(true),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const job = await db.getIngestJob(input.jobId);
+      if (!job) throw new TRPCError({ code: "NOT_FOUND", message: "Ingest job not found" });
+      if (!job.documentId)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Ingest has no document yet" });
+
+      if (input.approveDocument) {
+        await db.updateDocument(job.documentId, {
+          reviewStatus: "approved",
+          publicStatus: input.publishDocument,
+        });
+      }
+
+      let timelineEventId: number | null = job.timelineEventId ?? null;
+      const draft: any = job.draftJson;
+      if (input.createTimelineEvent && draft?.proposedTimeline && !timelineEventId) {
+        timelineEventId = await db.insertTimelineEvent({
+          eventDate: new Date(draft.proposedTimeline.eventDate),
+          title: draft.proposedTimeline.title,
+          summary: draft.proposedTimeline.summary,
+          category: draft.proposedTimeline.category,
+          status: draft.proposedTimeline.status,
+          caseNumber: draft.caseNumber || null,
+          storyId: job.storyId ?? undefined,
+          sourceDocuments: [job.documentId],
+          publicStatus: input.publishTimelineEvent,
+        });
+      }
+
+      await db.updateIngestJob(input.jobId, {
+        status: "approved",
+        timelineEventId: timelineEventId ?? undefined,
+      });
+
+      return { ok: true, documentId: job.documentId, timelineEventId };
+    }),
 });
 
 /* =============== Root =============== */

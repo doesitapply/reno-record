@@ -188,6 +188,7 @@ export const actors = mysqlTable("actors", {
   status: mysqlEnum("status", ["documented", "alleged", "needs_review"])
     .default("documented")
     .notNull(),
+  judicialActor: boolean("judicial_actor").default(false).notNull(),
   publicStatus: boolean("public_status").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
@@ -247,3 +248,56 @@ export const agentTasks = mysqlTable("agent_tasks", {
 });
 export type AgentTask = typeof agentTasks.$inferSelect;
 export type InsertAgentTask = typeof agentTasks.$inferInsert;
+
+/* ========== Docket Goblin chat ========== */
+export const chatSessions = mysqlTable("chat_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("user_id").notNull(),
+  title: varchar("title", { length: 240 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+export type ChatSession = typeof chatSessions.$inferSelect;
+export type InsertChatSession = typeof chatSessions.$inferInsert;
+
+export const chatMessages = mysqlTable(
+  "chat_messages",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    sessionId: int("session_id").notNull(),
+    role: mysqlEnum("role", ["user", "assistant", "system"]).notNull(),
+    content: text("content").notNull(),
+    metadata: json("metadata").$type<Record<string, unknown>>(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({ sessionIdx: index("chat_messages_session_idx").on(t.sessionId) }),
+);
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+/* ========== Ingest jobs (auto-structuring uploaded evidence) ========== */
+export const ingestJobs = mysqlTable(
+  "ingest_jobs",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("user_id").notNull(),
+    storyId: int("story_id"),
+    documentId: int("document_id"),
+    filename: varchar("filename", { length: 400 }).notNull(),
+    mimeType: varchar("mime_type", { length: 120 }),
+    fileSize: bigint("file_size", { mode: "number" }),
+    status: mysqlEnum("status", ["pending", "extracted", "drafted", "approved", "failed"])
+      .default("pending")
+      .notNull(),
+    extractedText: text("extracted_text"),
+    draftJson: json("draft_json").$type<Record<string, unknown>>(),
+    timelineEventId: int("timeline_event_id"),
+    proposedActors: json("proposed_actors").$type<string[]>(),
+    error: text("error"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({ statusIdx: index("ingest_jobs_status_idx").on(t.status) }),
+);
+export type IngestJob = typeof ingestJobs.$inferSelect;
+export type InsertIngestJob = typeof ingestJobs.$inferInsert;

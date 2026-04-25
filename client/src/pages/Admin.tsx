@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
@@ -100,12 +101,14 @@ function AdminDashboard() {
 
         <Tabs defaultValue="stories">
           <TabsList>
+            <TabsTrigger value="ingest">Goblin Ingest</TabsTrigger>
             <TabsTrigger value="stories">Stories</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
             <TabsTrigger value="actors">Actors</TabsTrigger>
             <TabsTrigger value="prr">Public records</TabsTrigger>
           </TabsList>
+          <TabsContent value="ingest"><IngestTab /></TabsContent>
           <TabsContent value="stories"><StoriesTab /></TabsContent>
           <TabsContent value="documents"><DocumentsTab /></TabsContent>
           <TabsContent value="timeline"><TimelineTab /></TabsContent>
@@ -118,6 +121,178 @@ function AdminDashboard() {
 }
 
 /* ============= Stories ============= */
+function IngestTab() {
+  const utils = trpc.useUtils();
+  const list = trpc.docketGoblin.ingestList.useQuery({ status: undefined });
+  const approve = trpc.docketGoblin.approveIngest.useMutation({
+    onSuccess: () => {
+      toast.success("Approved & promoted to public archive");
+      utils.docketGoblin.ingestList.invalidate();
+      utils.document.adminList.invalidate();
+      utils.timeline.adminList.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const jobs = list.data ?? [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="display-serif text-2xl">Goblin Ingest Queue</h2>
+          <p className="text-sm text-muted-foreground">
+            Drop files into the Docket Goblin chat bubble (bottom-right). Each file is
+            extracted, classified, tagged, and staged here as a pending document.
+            Nothing is public until you approve below.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => list.refetch()}
+          disabled={list.isFetching}
+        >
+          {list.isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh"}
+        </Button>
+      </div>
+
+      {jobs.length === 0 && (
+        <Card className="p-8 text-center text-sm text-muted-foreground">
+          No ingest jobs yet. Drop a PDF, transcript, or image onto the Docket
+          Goblin bubble to start.
+        </Card>
+      )}
+
+      <div className="grid gap-3">
+        {jobs.map((j: any) => {
+          const draft: any = j.draftJson || {};
+          const proposed: string[] = j.proposedActors || [];
+          return (
+            <Card key={j.id} className="p-4">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="font-mono text-[10px] uppercase">
+                      Job #{j.id}
+                    </Badge>
+                    <Badge
+                      className={
+                        j.status === "approved"
+                          ? "bg-emerald-500/15 text-emerald-300 border-emerald-400/30"
+                          : j.status === "failed"
+                            ? "bg-red-500/15 text-red-300 border-red-400/30"
+                            : j.status === "drafted"
+                              ? "bg-amber-400/15 text-amber-300 border-amber-300/30"
+                              : "bg-white/[0.04] text-bone/70 border-white/10"
+                      }
+                    >
+                      {j.status}
+                    </Badge>
+                    {draft.sourceType && (
+                      <Badge variant="outline" className="text-[10px] uppercase">
+                        {draft.sourceType.replace(/_/g, " ")}
+                      </Badge>
+                    )}
+                    {draft.caseNumber && (
+                      <Badge variant="outline" className="font-mono text-[10px]">
+                        {draft.caseNumber}
+                      </Badge>
+                    )}
+                  </div>
+                  <h3 className="font-serif text-lg mt-2">
+                    {draft.title || j.filename}
+                  </h3>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {j.filename} · {(j.fileSize / 1024).toFixed(0)} KB
+                    {draft.documentDate ? ` · ${draft.documentDate}` : ""}
+                  </div>
+                  {draft.summary && (
+                    <p className="text-sm mt-2 leading-relaxed">{draft.summary}</p>
+                  )}
+                  {(draft.tags?.length || 0) > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {draft.tags.map((t: string) => (
+                        <Badge
+                          key={t}
+                          variant="outline"
+                          className="font-mono text-[10px] uppercase"
+                        >
+                          {t}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  {(draft.actorNames?.length || 0) > 0 && (
+                    <div className="text-xs text-muted-foreground mt-2">
+                      <span className="uppercase tracking-wider mr-1">Named:</span>
+                      {draft.actorNames.join(" · ")}
+                      {proposed.length > 0 && (
+                        <span className="ml-2 text-emerald-400">
+                          (matches existing: {proposed.join(", ")})
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {(draft.warnings?.length || 0) > 0 && (
+                    <div className="text-xs text-amber-400 mt-2">
+                      ⚠ {draft.warnings.join(" — ")}
+                    </div>
+                  )}
+                  {draft.proposedTimeline && (
+                    <div className="mt-3 rounded border border-amber-300/30 bg-amber-400/10 p-2 text-xs">
+                      <span className="uppercase tracking-wider text-amber-300 mr-2">
+                        Proposed timeline event:
+                      </span>
+                      <span className="font-mono">
+                        {draft.proposedTimeline.eventDate}
+                      </span>{" "}
+                      · {draft.proposedTimeline.title} (
+                      {draft.proposedTimeline.category}/
+                      {draft.proposedTimeline.status})
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 shrink-0">
+                  {j.documentId && (
+                    <Link href={`/admin/document/${j.documentId}`}>
+                      <Button variant="outline" size="sm">
+                        Open document
+                      </Button>
+                    </Link>
+                  )}
+                  {j.status !== "approved" && j.documentId && (
+                    <Button
+                      size="sm"
+                      className="bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
+                      disabled={approve.isPending}
+                      onClick={() =>
+                        approve.mutate({
+                          jobId: j.id,
+                          approveDocument: true,
+                          publishDocument: true,
+                          createTimelineEvent: !!draft.proposedTimeline,
+                          publishTimelineEvent: !!draft.proposedTimeline,
+                        })
+                      }
+                    >
+                      <Check className="h-4 w-4 mr-1" /> Approve & publish
+                    </Button>
+                  )}
+                  {j.status === "failed" && j.error && (
+                    <span className="text-xs text-red-400 max-w-xs">
+                      {j.error}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function StoriesTab() {
   const [status, setStatus] = useState<"pending" | "approved" | "rejected" | "needs_changes" | "all">("pending");
   const list = trpc.story.adminList.useQuery({ status });
