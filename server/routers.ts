@@ -14,6 +14,14 @@ import {
   draftFromExtractedText,
   extractText,
 } from "./_goblin";
+import {
+  MAX_FILES_PER_SUBMISSION,
+  checkRateLimit,
+  decodeBase64Strict,
+  hashIp,
+  validateUpload,
+  writeAudit,
+} from "./_uploadGuard";
 
 const isoDate = z
   .union([z.string(), z.date()])
@@ -36,8 +44,8 @@ const slugify = (s: string) =>
 
 /* =============== Story router =============== */
 const storyRouter = router({
-  /** Public submission */
-  submit: publicProcedure
+  /** Authenticated submission (v3: must be signed in) */
+  submit: protectedProcedure
     .input(
       z.object({
         submitterName: z.string().max(200).optional(),
@@ -77,59 +85,121 @@ const storyRouter = router({
               dataBase64: z.string(),
             }),
           )
-          .max(15)
+          .max(MAX_FILES_PER_SUBMISSION)
           .optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       if (!input.publicPermission || !input.redactionConfirmed) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Both confirmation checkboxes must be agreed to.",
         });
       }
-      const { attachments, ...payload } = input;
-      const storyId = await db.insertStory({
-        ...payload,
-        dateCaseStarted: payload.dateCaseStarted ?? undefined,
+
+      // Rate limit: max 3 submissions / 24h per signed-in user.
+      await checkRateLimit({
+        userId: ctx.user.id,
+        action: "story_submitted",
+        windowMs: 24 * 60 * 60 * 1000,
+        max: 3,
       });
 
-      // Upload attachments and create pending documents
+      // Pre-validate every attachment BEFORE writing the story row, so a single
+      // bad file rejects the entire submission and nothing is half-created.
+      const { attachments, ...payload } = input;
+      const validated: Array<ReturnType<typeof validateUpload>> = [];
       if (attachments && attachments.length > 0) {
         for (const att of attachments) {
+          const buffer = decodeBase64Strict(att.dataBase64);
           try {
-            const buffer = Buffer.from(att.dataBase64, "base64");
-            const safeName = att.filename.replace(/[^a-zA-Z0-9._-]+/g, "_");
-            const { key, url } = await storagePut(
-              `submissions/story-${storyId}/${safeName}`,
-              buffer,
-              att.mimeType || "application/octet-stream",
+            validated.push(
+              validateUpload({
+                filename: att.filename,
+                mimeType: att.mimeType,
+                buffer,
+              }),
             );
-            await db.insertDocument({
-              title: att.filename,
-              fileKey: key,
-              fileUrl: url,
-              mimeType: att.mimeType,
-              fileSize: buffer.length,
-              sourceType: "other",
-              storyId,
-              publicStatus: false,
-              reviewStatus: "pending",
-              redactionStatus: "unverified",
+          } catch (e: any) {
+            await writeAudit({
+              actorUserId: ctx.user.id,
+              actorRole: ctx.user.role,
+              action: "upload_rejected",
+              targetType: "submission_attachment",
+              metadata: {
+                filename: att.filename,
+                mimeType: att.mimeType,
+                size: buffer.length,
+                reason: e?.message ?? String(e),
+              },
+              ipHash: hashIp((ctx.req as any)?.ip),
             });
-          } catch (e) {
-            console.error("[story.submit] attachment failed", e);
+            throw e;
           }
         }
       }
 
-      // Best-effort owner notification
+      const ipHash = hashIp((ctx.req as any)?.ip);
+      const storyId = await db.insertStory({
+        ...payload,
+        dateCaseStarted: payload.dateCaseStarted ?? undefined,
+        ownerUserId: ctx.user.id,
+        submitterIpHash: ipHash ?? undefined,
+      });
+
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "story_submitted",
+        targetType: "story",
+        targetId: storyId,
+        ipHash: ipHash,
+        metadata: { attachmentCount: validated.length },
+      });
+
+      // Upload validated attachments and create pending+private documents
+      for (const att of validated) {
+        try {
+          const { key, url } = await storagePut(
+            `submissions/story-${storyId}/${att.filename}`,
+            att.buffer,
+            att.mime,
+          );
+          const docId = await db.insertDocument({
+            title: att.filename,
+            fileKey: key,
+            fileUrl: url,
+            mimeType: att.mime,
+            fileSize: att.size,
+            sourceType: "other",
+            storyId,
+            publicStatus: false,
+            reviewStatus: "pending",
+            redactionStatus: "unverified",
+            visibility: "pending_review",
+            aiPolicy: "no_ai_processing",
+            uploadedBy: ctx.user.id,
+          });
+          await writeAudit({
+            actorUserId: ctx.user.id,
+            actorRole: ctx.user.role,
+            action: "document_uploaded",
+            targetType: "document",
+            targetId: docId,
+            ipHash: ipHash,
+            metadata: { storyId, filename: att.filename, size: att.size },
+          });
+        } catch (e) {
+          console.error("[story.submit] attachment write failed", e);
+        }
+      }
+
       try {
         await notifyOwner({
           title: "New Reno Record submission",
-          content: `A new story has been submitted (id ${storyId}). Review in /admin/queue.`,
+          content: `Story #${storyId} submitted by user #${ctx.user.id} with ${validated.length} attachment(s). Review in /admin.`,
         });
-      } catch (e) {
+      } catch {
         // ignore
       }
       return { id: storyId };
@@ -195,15 +265,41 @@ const storyRouter = router({
         }),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const patch: any = { ...input.patch };
-      // If approving and no slug, generate one
       if (patch.status === "approved" && !patch.slug) {
         const story = await db.getStoryById(input.id);
         const base = slugify(story?.mainIssue || story?.alias || `story-${input.id}`);
         patch.slug = `${base}-${input.id}`;
       }
       await db.updateStory(input.id, patch);
+      if (patch.status === "approved") {
+        await writeAudit({
+          actorUserId: ctx.user.id,
+          actorRole: ctx.user.role,
+          action: "story_approved",
+          targetType: "story",
+          targetId: input.id,
+        });
+      } else if (patch.status === "rejected") {
+        await writeAudit({
+          actorUserId: ctx.user.id,
+          actorRole: ctx.user.role,
+          action: "story_rejected",
+          targetType: "story",
+          targetId: input.id,
+          metadata: { reviewerNote: patch.reviewerNote },
+        });
+      } else if (patch.status === "needs_changes") {
+        await writeAudit({
+          actorUserId: ctx.user.id,
+          actorRole: ctx.user.role,
+          action: "story_changes_requested",
+          targetType: "story",
+          targetId: input.id,
+          metadata: { reviewerNote: patch.reviewerNote },
+        });
+      }
       return { ok: true };
     }),
 });
@@ -266,20 +362,25 @@ const documentRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const buffer = Buffer.from(input.dataBase64, "base64");
-      const safeName = input.filename.replace(/[^a-zA-Z0-9._-]+/g, "_");
-      const { key, url } = await storagePut(
-        `evidence/${safeName}`,
+      // v3: even admin uploads must pass validateUpload
+      const buffer = decodeBase64Strict(input.dataBase64);
+      const v = validateUpload({
+        filename: input.filename,
+        mimeType: input.mimeType,
         buffer,
-        input.mimeType || "application/octet-stream",
+      });
+      const { key, url } = await storagePut(
+        `evidence/${v.filename}`,
+        v.buffer,
+        v.mime,
       );
       const id = await db.insertDocument({
         title: input.title,
         description: input.description,
         fileKey: key,
         fileUrl: url,
-        mimeType: input.mimeType,
-        fileSize: buffer.length,
+        mimeType: v.mime,
+        fileSize: v.size,
         sourceType: input.sourceType,
         caseNumber: input.caseNumber,
         documentDate: input.documentDate ?? undefined,
@@ -288,7 +389,17 @@ const documentRouter = router({
         storyId: input.storyId,
         publicStatus: false,
         reviewStatus: "pending",
+        visibility: "pending_review",
+        aiPolicy: "no_ai_processing",
         uploadedBy: ctx.user.id,
+      });
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "document_uploaded",
+        targetType: "document",
+        targetId: id,
+        metadata: { filename: v.filename, mime: v.mime, size: v.size },
       });
       return { id };
     }),
@@ -322,15 +433,89 @@ const documentRouter = router({
           publicStatus: z.boolean().optional(),
           reviewStatus: z.enum(["pending", "approved", "rejected"]).optional(),
           redactionStatus: z.enum(["unverified", "verified", "needs_redaction"]).optional(),
+          visibility: z
+            .enum([
+              "private_admin_only",
+              "pending_review",
+              "needs_redaction",
+              "public_preview",
+              "receipts_only",
+              "goblin_allowed",
+              "rejected",
+            ])
+            .optional(),
+          aiPolicy: z.enum(["no_ai_processing", "goblin_allowed"]).optional(),
           aiSummary: z.string().optional(),
           aiTags: z.array(z.string()).optional(),
         }),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const patch: any = { ...input.patch };
       if (patch.documentDate === null) delete patch.documentDate;
+
+      // Sync legacy publicStatus + reviewStatus with the new visibility state
+      // so existing public-facing queries keep working.
+      if (patch.visibility) {
+        switch (patch.visibility) {
+          case "public_preview":
+          case "receipts_only":
+          case "goblin_allowed":
+            patch.reviewStatus = "approved";
+            patch.publicStatus = patch.visibility === "public_preview";
+            break;
+          case "private_admin_only":
+          case "pending_review":
+          case "needs_redaction":
+            patch.reviewStatus = patch.reviewStatus ?? "pending";
+            patch.publicStatus = false;
+            break;
+          case "rejected":
+            patch.reviewStatus = "rejected";
+            patch.publicStatus = false;
+            break;
+        }
+      }
       await db.updateDocument(input.id, patch);
+
+      if (patch.visibility) {
+        await writeAudit({
+          actorUserId: ctx.user.id,
+          actorRole: ctx.user.role,
+          action: "visibility_changed",
+          targetType: "document",
+          targetId: input.id,
+          metadata: { visibility: patch.visibility },
+        });
+      }
+      if (patch.aiPolicy) {
+        await writeAudit({
+          actorUserId: ctx.user.id,
+          actorRole: ctx.user.role,
+          action: "ai_policy_changed",
+          targetType: "document",
+          targetId: input.id,
+          metadata: { aiPolicy: patch.aiPolicy },
+        });
+      }
+      if (patch.reviewStatus === "approved" && !patch.visibility) {
+        await writeAudit({
+          actorUserId: ctx.user.id,
+          actorRole: ctx.user.role,
+          action: "document_approved",
+          targetType: "document",
+          targetId: input.id,
+        });
+      }
+      if (patch.reviewStatus === "rejected" && !patch.visibility) {
+        await writeAudit({
+          actorUserId: ctx.user.id,
+          actorRole: ctx.user.role,
+          action: "document_rejected",
+          targetType: "document",
+          targetId: input.id,
+        });
+      }
       return { ok: true };
     }),
 });
@@ -808,29 +993,57 @@ Submitter narrative: ${s.summary ?? ""}`;
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const buffer = Buffer.from(input.dataBase64, "base64");
-      const fileSize = buffer.length;
+      // v3: validate before allocating an ingest job row
+      let v;
+      try {
+        const buffer = decodeBase64Strict(input.dataBase64);
+        v = validateUpload({
+          filename: input.filename,
+          mimeType: input.mimeType,
+          buffer,
+        });
+      } catch (e: any) {
+        await writeAudit({
+          actorUserId: ctx.user.id,
+          actorRole: ctx.user.role,
+          action: "upload_rejected",
+          targetType: "ingest",
+          metadata: {
+            filename: input.filename,
+            mimeType: input.mimeType,
+            reason: e?.message ?? String(e),
+          },
+        });
+        throw e;
+      }
+
+      // Rate-limit Goblin ingest per user (30 / 24h).
+      await checkRateLimit({
+        userId: ctx.user.id,
+        action: "document_ingested",
+        windowMs: 24 * 60 * 60 * 1000,
+        max: 30,
+      });
+
+      const fileSize = v.size;
 
       const jobId = await db.insertIngestJob({
         userId: ctx.user.id,
         storyId: input.storyId ?? null,
-        filename: input.filename,
-        mimeType: input.mimeType,
+        filename: v.filename,
+        mimeType: v.mime,
         fileSize,
         status: "pending",
       });
 
       try {
-        // 1) Upload to storage (private; will only become public after admin flips publicStatus)
-        const safeName = input.filename.replace(/[^a-zA-Z0-9._-]+/g, "_");
         const { key, url } = await storagePut(
-          `evidence/ingest-${jobId}-${safeName}`,
-          buffer,
-          input.mimeType || "application/octet-stream",
+          `evidence/ingest-${jobId}-${v.filename}`,
+          v.buffer,
+          v.mime,
         );
 
-        // 2) Extract text (PDFs/text). Other types skip extraction; LLM still drafts from filename.
-        const extracted = await extractText(buffer, input.mimeType);
+        const extracted = await extractText(v.buffer, v.mime);
         await db.updateIngestJob(jobId, {
           status: "extracted",
           extractedText: extracted.slice(0, 60000) || null,
@@ -853,13 +1066,14 @@ Submitter narrative: ${s.summary ?? ""}`;
           if (featured) storyId = featured.id;
         }
 
-        // 5) Create a pending document (NEVER public, NEVER approved automatically).
+        // 5) Create a pending document (NEVER public, NEVER approved automatically,
+        //    NEVER goblin-readable until admin opts in).
         const documentId = await db.insertDocument({
-          title: draft.title || input.filename,
+          title: draft.title || v.filename,
           description: draft.summary,
           fileKey: key,
           fileUrl: url,
-          mimeType: input.mimeType,
+          mimeType: v.mime,
           fileSize,
           sourceType: draft.sourceType,
           caseNumber: draft.caseNumber || null,
@@ -869,9 +1083,20 @@ Submitter narrative: ${s.summary ?? ""}`;
           storyId: storyId ?? undefined,
           publicStatus: false, // hard guarantee
           reviewStatus: "pending", // hard guarantee
+          visibility: "pending_review",
+          aiPolicy: "no_ai_processing",
           uploadedBy: ctx.user.id,
           aiSummary: draft.summary,
           aiTags: draft.tags,
+        });
+
+        await writeAudit({
+          actorUserId: ctx.user.id,
+          actorRole: ctx.user.role,
+          action: "document_ingested",
+          targetType: "document",
+          targetId: documentId,
+          metadata: { filename: v.filename, jobId, storyId },
         });
 
         // 6) Find existing actor matches (proposal only — admin still approves).
@@ -914,16 +1139,26 @@ Submitter narrative: ${s.summary ?? ""}`;
         publishTimelineEvent: z.boolean().default(true),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const job = await db.getIngestJob(input.jobId);
       if (!job) throw new TRPCError({ code: "NOT_FOUND", message: "Ingest job not found" });
       if (!job.documentId)
         throw new TRPCError({ code: "BAD_REQUEST", message: "Ingest has no document yet" });
 
       if (input.approveDocument) {
+        const visibility = input.publishDocument ? "public_preview" : "private_admin_only";
         await db.updateDocument(job.documentId, {
           reviewStatus: "approved",
           publicStatus: input.publishDocument,
+          visibility,
+        });
+        await writeAudit({
+          actorUserId: ctx.user.id,
+          actorRole: ctx.user.role,
+          action: "document_approved",
+          targetType: "document",
+          targetId: job.documentId,
+          metadata: { via: "approveIngest", visibility },
         });
       }
 
@@ -952,6 +1187,40 @@ Submitter narrative: ${s.summary ?? ""}`;
     }),
 });
 
+/* =============== User role management (audited) =============== */
+const userRouter = router({
+  adminList: adminProcedure.query(async () => db.listUsers()),
+  setRole: adminProcedure
+    .input(
+      z.object({
+        userId: z.number(),
+        role: z.enum(["user", "admin"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const target = await db.getUserById(input.userId);
+      if (!target) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      // Cannot demote yourself — prevents lockout
+      if (target.id === ctx.user.id && input.role !== "admin") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You cannot remove your own admin role.",
+        });
+      }
+      const previousRole = target.role;
+      await db.setUserRole(input.userId, input.role);
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "admin_role_changed",
+        targetType: "user",
+        targetId: input.userId,
+        metadata: { from: previousRole, to: input.role, targetEmail: target.email ?? null },
+      });
+      return { ok: true };
+    }),
+});
+
 /* =============== Root =============== */
 export const appRouter = router({
   system: systemRouter,
@@ -970,6 +1239,7 @@ export const appRouter = router({
   prr: prrRouter,
   patterns: patternRouter,
   docketGoblin: docketGoblinRouter,
+  user: userRouter,
 });
 
 export type AppRouter = typeof appRouter;

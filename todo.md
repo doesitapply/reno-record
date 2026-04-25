@@ -52,11 +52,16 @@ Receipts for Due Process. A public-interest accountability archive for Washoe Co
 - [x] Vitest: chat is admin-only; ingest creates only pending records (never publicStatus=true / reviewStatus=approved automatically)
 - [x] Verify, checkpoint, deliver
 
-## v3 — Auth-gated submissions + upload security
-- [ ] Build _uploadGuard.ts: MIME allow-list, magic-byte sniffing, size cap, per-user rate limit
-- [ ] story.submit moved to protectedProcedure (must be signed in)
-- [ ] Submit page: signed-out users see sign-in CTA, signed-in users see form
-- [ ] docketGoblin.ingest hardened with same upload guard
-- [ ] Express body parser limits raised carefully (15 MB hard cap)
-- [ ] Vitest: auth-gated submission, MIME spoof rejection, oversize rejection, rate-limit
-- [ ] Verify, checkpoint, deliver
+## v3 — Auth-gated submissions + upload security + visibility + audit
+- [x] Schema: documentVisibility enum (private_admin_only / pending_review / needs_redaction / public_preview / receipts_only / goblin_allowed / rejected); aiPolicy enum (no_ai_processing / goblin_allowed); ownerUserId FK on documents and stories; audit_log table
+- [x] Migration applied
+- [x] _uploadGuard.ts: MIME allow-list (PDF/PNG/JPG/WEBP/GIF/MP3/WAV/MP4/WEBM/TXT/MD/DOC/DOCX), magic-byte sniff, 15 MB cap, 10-files-per-submission cap
+- [x] Per-user rate limit: 3 story submissions / 24h; 30 ingest uploads / 24h for admin
+- [x] story.submit moved to protectedProcedure; signed-out Submit page shows sign-in CTA
+- [x] Submitted stories owned by submitter (ownerUserId); default reviewStatus=pending, publicStatus=false
+- [x] Documents from intake or Goblin ingest default to documentVisibility=pending_review and aiPolicy=no_ai_processing until admin opts in
+- [x] Admin moderation: approve/reject + set visibility (one of 7 states) + set aiPolicy
+- [x] Audit log on: story submission, document upload, approval/rejection, visibility change, aiPolicy change, admin role change
+- [x] Goblin chat respects aiPolicy: refuses to read documents flagged no_ai_processing or private_admin_only
+- [x] Vitest: auth-gated submit, MIME spoof rejection, oversize rejection, rate-limit, default visibility, audit log writes, Goblin AI-policy refusal
+- [x] Verify, checkpoint v3, then PLAN v4 (do not build)

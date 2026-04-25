@@ -451,13 +451,26 @@ export async function listIngestJobs(opts: { status?: string; limit?: number } =
   return q.orderBy(desc(ingestJobs.createdAt)).limit(opts.limit ?? 100);
 }
 
-/* ================= Lookups for Docket Goblin chat context ================= */
+/* ================= Lookups for Docket Goblin chat context =================
+   AI Policy enforcement (v3): the Goblin can ONLY see documents that admin
+   has explicitly flagged ai_policy='goblin_allowed'. Anything else is hidden
+   from the LLM context entirely — not just summarized differently. */
 export async function getArchiveContextForLLM() {
   const db = await getDb();
   if (!db) return null;
   const [storiesRows, docsRows, eventsRows, actorsRows, prrRows] = await Promise.all([
-    db.select().from(stories).orderBy(desc(stories.createdAt)).limit(20),
-    db.select().from(documents).orderBy(desc(documents.createdAt)).limit(60),
+    db
+      .select()
+      .from(stories)
+      .where(and(eq(stories.status, "approved"), eq(stories.publicPermission, true)))
+      .orderBy(desc(stories.createdAt))
+      .limit(20),
+    db
+      .select()
+      .from(documents)
+      .where(eq(documents.aiPolicy, "goblin_allowed"))
+      .orderBy(desc(documents.createdAt))
+      .limit(60),
     db.select().from(timelineEvents).orderBy(asc(timelineEvents.eventDate)).limit(80),
     db.select().from(actors).orderBy(asc(actors.name)).limit(50),
     db.select().from(publicRecordsRequests).orderBy(desc(publicRecordsRequests.createdAt)).limit(30),
@@ -480,4 +493,25 @@ export async function findActorIdsByNames(names: string[]) {
       ),
     )
     .map((a) => ({ id: a.id, slug: a.slug, name: a.name }));
+}
+
+
+/* ================= User role management (v3 audit-traceable) ================= */
+export async function setUserRole(userId: number, role: "user" | "admin") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
+export async function listUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(users).orderBy(desc(users.createdAt)).limit(500);
+}
+
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  return r[0];
 }

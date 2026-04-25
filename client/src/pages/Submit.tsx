@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Link } from "wouter";
-import { ArrowRight, Check, FileUp, Loader2, ShieldAlert, Trash2 } from "lucide-react";
+import { ArrowRight, Check, FileUp, Loader2, LogIn, ShieldAlert, Trash2 } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 
 type Attachment = { filename: string; mimeType: string; dataBase64: string; size: number };
 
@@ -27,7 +29,49 @@ const fileToBase64 = (f: File) =>
     r.readAsDataURL(f);
   });
 
+function SignInGate() {
+  return (
+    <SiteShell>
+      <section className="py-20">
+        <div className="container max-w-2xl text-center">
+          <ShieldAlert className="mx-auto h-10 w-10 text-amber-500 mb-4" />
+          <h1 className="font-serif text-4xl mb-3">Sign in to submit your story</h1>
+          <p className="text-muted-foreground mb-8">
+            Submissions and document uploads require an account. This protects the archive
+            from spam, malware, and unauthorized publishing — and gives you a record you can
+            revisit, edit, and append to. We never publish anything without explicit admin
+            approval.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <a href={getLoginUrl()}>
+              <Button size="lg" className="gap-2">
+                <LogIn className="h-4 w-4" /> Sign in to continue
+              </Button>
+            </a>
+            <Link href="/">
+              <Button variant="outline" size="lg">
+                Back home
+              </Button>
+            </Link>
+          </div>
+          <p className="text-xs text-muted-foreground mt-6">
+            By signing in you confirm you have the right to share what you upload. Files are
+            scanned, size-limited (15 MB each), and held privately for review.
+          </p>
+        </div>
+      </section>
+    </SiteShell>
+  );
+}
+
 export default function SubmitPage() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  if (authLoading) return null;
+  if (!isAuthenticated) return <SignInGate />;
+  return <SubmitForm />;
+}
+
+function SubmitForm() {
   const submit = trpc.story.submit.useMutation();
   const fileRef = useRef<HTMLInputElement>(null);
 

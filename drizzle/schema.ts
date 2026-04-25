@@ -69,12 +69,17 @@ export const stories = mysqlTable(
     /** Featured flag for canonical case ("The Church Record") */
     featured: boolean("featured").default(false).notNull(),
     slug: varchar("slug", { length: 200 }).unique(),
+    /** v3: who submitted this (FK to users.id; null for legacy/seeded rows) */
+    ownerUserId: int("owner_user_id"),
+    /** v3: client IP hash for abuse forensics (not raw IP) */
+    submitterIpHash: varchar("submitter_ip_hash", { length: 64 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
   (t) => ({
     statusIdx: index("stories_status_idx").on(t.status),
     featuredIdx: index("stories_featured_idx").on(t.featured),
+    ownerIdx: index("stories_owner_idx").on(t.ownerUserId),
   }),
 );
 export type Story = typeof stories.$inferSelect;
@@ -118,6 +123,22 @@ export const documents = mysqlTable(
       .notNull(),
     redactionStatus: mysqlEnum("redaction_status", ["unverified", "verified", "needs_redaction"])
       .default("unverified")
+      .notNull(),
+    /** v3 fine-grained visibility (the 7-state machine the spec calls for) */
+    visibility: mysqlEnum("visibility", [
+      "private_admin_only",
+      "pending_review",
+      "needs_redaction",
+      "public_preview",
+      "receipts_only",
+      "goblin_allowed",
+      "rejected",
+    ])
+      .default("pending_review")
+      .notNull(),
+    /** Whether Docket Goblin AI can read this document's text */
+    aiPolicy: mysqlEnum("ai_policy", ["no_ai_processing", "goblin_allowed"])
+      .default("no_ai_processing")
       .notNull(),
     uploadedBy: int("uploaded_by"),
     aiSummary: text("ai_summary"),
@@ -301,3 +322,40 @@ export const ingestJobs = mysqlTable(
 );
 export type IngestJob = typeof ingestJobs.$inferSelect;
 export type InsertIngestJob = typeof ingestJobs.$inferInsert;
+
+/* ========== Audit log (v3 — every security-relevant action) ========== */
+export const auditLog = mysqlTable(
+  "audit_log",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    actorUserId: int("actor_user_id"),
+    actorRole: varchar("actor_role", { length: 32 }),
+    action: mysqlEnum("action", [
+      "story_submitted",
+      "story_approved",
+      "story_rejected",
+      "story_changes_requested",
+      "document_uploaded",
+      "document_ingested",
+      "document_approved",
+      "document_rejected",
+      "visibility_changed",
+      "ai_policy_changed",
+      "admin_role_changed",
+      "upload_rejected",
+      "rate_limit_triggered",
+    ]).notNull(),
+    targetType: varchar("target_type", { length: 32 }),
+    targetId: int("target_id"),
+    metadata: json("metadata").$type<Record<string, unknown>>(),
+    ipHash: varchar("ip_hash", { length: 64 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    actionIdx: index("audit_action_idx").on(t.action),
+    actorIdx: index("audit_actor_idx").on(t.actorUserId),
+    targetIdx: index("audit_target_idx").on(t.targetType, t.targetId),
+  }),
+);
+export type AuditLog = typeof auditLog.$inferSelect;
+export type InsertAuditLog = typeof auditLog.$inferInsert;

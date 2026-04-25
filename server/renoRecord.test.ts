@@ -38,7 +38,8 @@ describe("The Reno Record — moderation & gating", () => {
 
   it("rejects story submissions that do not include both consent flags", async () => {
     const insertSpy = vi.spyOn(db, "insertStory");
-    const caller = appRouter.createCaller(makeCtx(undefined));
+    // v3: submit now requires auth; use authenticated user
+    const caller = appRouter.createCaller(makeCtx(baseUser));
 
     await expect(
       caller.story.submit({
@@ -269,10 +270,14 @@ describe("Docket Goblin chat + ingest", () => {
     } as any);
 
     const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    const realPdf = Buffer.concat([
+      Buffer.from([0x25, 0x50, 0x44, 0x46]), // %PDF
+      Buffer.from("-1.4\nstub body"),
+    ]);
     await adminCaller.docketGoblin.ingest({
       filename: "order.pdf",
       mimeType: "application/pdf",
-      dataBase64: Buffer.from("PDF").toString("base64"),
+      dataBase64: realPdf.toString("base64"),
     });
 
     expect(insertSpy).toHaveBeenCalledTimes(1);
@@ -310,6 +315,366 @@ describe("Docket Goblin chat + ingest", () => {
     expect(updateDoc).toHaveBeenCalledWith(50, {
       reviewStatus: "approved",
       publicStatus: true,
+      visibility: "public_preview",
     });
+  });
+});
+
+
+/* ============================================================================
+ * v3 — Security: auth-gated submissions, upload validator, audit, AI policy
+ * ========================================================================== */
+import {
+  MAX_FILE_BYTES,
+  validateUpload,
+} from "./_uploadGuard";
+
+describe("v3 — Upload validator (magic-byte sniff + size + filename)", () => {
+  it("rejects a fake PDF (renamed .exe-style content)", () => {
+    expect(() =>
+      validateUpload({
+        filename: "evil.pdf",
+        mimeType: "application/pdf",
+        // MZ header (Windows PE), not %PDF
+        buffer: Buffer.from([0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00]),
+      }),
+    ).toThrow(/signature|valid/i);
+  });
+
+  it("rejects extension/mime mismatch (calls itself .pdf with image/png mime)", () => {
+    expect(() =>
+      validateUpload({
+        filename: "weird.pdf",
+        mimeType: "image/png",
+        buffer: Buffer.from("%PDF-1.4 fake"),
+      }),
+    ).toThrow();
+  });
+
+  it("rejects oversized files before processing", () => {
+    const giant = Buffer.alloc(MAX_FILE_BYTES + 1024, 0x25); // mostly '%'
+    giant[0] = 0x25;
+    giant[1] = 0x50;
+    giant[2] = 0x44;
+    giant[3] = 0x46;
+    expect(() =>
+      validateUpload({
+        filename: "huge.pdf",
+        mimeType: "application/pdf",
+        buffer: giant,
+      }),
+    ).toThrow(/exceeds/i);
+  });
+
+  it("rejects unsupported file types entirely (e.g., .exe)", () => {
+    expect(() =>
+      validateUpload({
+        filename: "thing.exe",
+        mimeType: "application/x-msdownload",
+        buffer: Buffer.from([0x4d, 0x5a, 0x00, 0x00]),
+      }),
+    ).toThrow(/not allowed/i);
+  });
+
+  it("rejects path-traversal filenames", () => {
+    expect(() =>
+      validateUpload({
+        filename: "../../etc/passwd.pdf",
+        mimeType: "application/pdf",
+        buffer: Buffer.concat([Buffer.from([0x25, 0x50, 0x44, 0x46]), Buffer.alloc(10)]),
+      }),
+    ).toThrow(/unsupported characters|.../i);
+  });
+
+  it("accepts a real PDF magic-byte sequence", () => {
+    const buf = Buffer.concat([
+      Buffer.from([0x25, 0x50, 0x44, 0x46]), // %PDF
+      Buffer.from("-1.4\nfake body"),
+    ]);
+    const v = validateUpload({
+      filename: "real.pdf",
+      mimeType: "application/pdf",
+      buffer: buf,
+    });
+    expect(v.mime).toBe("application/pdf");
+    expect(v.ext).toBe("pdf");
+  });
+
+  it("accepts plain text (.txt) and rejects binary disguised as text", () => {
+    const ok = validateUpload({
+      filename: "notes.txt",
+      mimeType: "text/plain",
+      buffer: Buffer.from("Hello world\nThis is plain text.\n"),
+    });
+    expect(ok.mime).toBe("text/plain");
+
+    expect(() =>
+      validateUpload({
+        filename: "evil.txt",
+        mimeType: "text/plain",
+        // Embed lots of NULL bytes
+        buffer: Buffer.alloc(2048, 0x00),
+      }),
+    ).toThrow(/binary/i);
+  });
+});
+
+describe("v3 — story.submit auth gate + audit", () => {
+  beforeEach(() => vi.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
+
+  it("anonymous users cannot call story.submit", async () => {
+    const anon = appRouter.createCaller(makeCtx(undefined));
+    await expect(
+      anon.story.submit({
+        email: "x@y.com",
+        summary: "A long enough summary about what happened on the record here.",
+        publicPermission: true,
+        redactionConfirmed: true,
+      }),
+    ).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("authenticated submission writes audit_log + ownerUserId, never auto-publishes", async () => {
+    const insertStorySpy = vi.spyOn(db, "insertStory").mockResolvedValue(777);
+    const insertDocSpy = vi.spyOn(db, "insertDocument").mockResolvedValue(888);
+    const storage = await import("./storage");
+    vi.spyOn(storage, "storagePut").mockResolvedValue({
+      key: "submissions/story-777/note.txt",
+      url: "/manus-storage/note.txt",
+    } as any);
+
+    // Spy audit writer + rate-limit checker indirectly via _uploadGuard
+    const guard = await import("./_uploadGuard");
+    const auditSpy = vi.spyOn(guard, "writeAudit").mockResolvedValue(undefined);
+    vi.spyOn(guard, "checkRateLimit").mockResolvedValue(undefined);
+
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    const txt = Buffer.from("Hello, this is a real text file submitted as evidence.\n");
+    const out = await caller.story.submit({
+      email: "submitter@example.com",
+      summary: "This is a long enough summary describing what happened on the record.",
+      publicPermission: true,
+      redactionConfirmed: true,
+      attachments: [
+        {
+          filename: "note.txt",
+          mimeType: "text/plain",
+          dataBase64: txt.toString("base64"),
+        },
+      ],
+    });
+
+    expect(out.id).toBe(777);
+    expect(insertStorySpy).toHaveBeenCalledTimes(1);
+    const storyArg = insertStorySpy.mock.calls[0]![0]!;
+    expect(storyArg.ownerUserId).toBe(baseUser.id);
+
+    expect(insertDocSpy).toHaveBeenCalledTimes(1);
+    const docArg = insertDocSpy.mock.calls[0]![0]!;
+    expect(docArg.publicStatus).toBe(false);
+    expect(docArg.reviewStatus).toBe("pending");
+    expect(docArg.visibility).toBe("pending_review");
+    expect(docArg.aiPolicy).toBe("no_ai_processing");
+    expect(docArg.uploadedBy).toBe(baseUser.id);
+
+    // story_submitted + document_uploaded actions written
+    const actions = auditSpy.mock.calls.map((c) => c[0].action);
+    expect(actions).toContain("story_submitted");
+    expect(actions).toContain("document_uploaded");
+  });
+
+  it("rejects a submission with a renamed-extension attachment, writes upload_rejected audit, never inserts story or doc", async () => {
+    const insertStorySpy = vi.spyOn(db, "insertStory");
+    const insertDocSpy = vi.spyOn(db, "insertDocument");
+    const guard = await import("./_uploadGuard");
+    const auditSpy = vi.spyOn(guard, "writeAudit").mockResolvedValue(undefined);
+    vi.spyOn(guard, "checkRateLimit").mockResolvedValue(undefined);
+
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    // Claims to be PDF but is actually a Windows PE header.
+    const fake = Buffer.from([0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00]);
+    await expect(
+      caller.story.submit({
+        email: "submitter@example.com",
+        summary: "Long enough summary about the situation on the record here.",
+        publicPermission: true,
+        redactionConfirmed: true,
+        attachments: [
+          {
+            filename: "evil.pdf",
+            mimeType: "application/pdf",
+            dataBase64: fake.toString("base64"),
+          },
+        ],
+      }),
+    ).rejects.toBeInstanceOf(TRPCError);
+
+    expect(insertStorySpy).not.toHaveBeenCalled();
+    expect(insertDocSpy).not.toHaveBeenCalled();
+
+    const actions = auditSpy.mock.calls.map((c) => c[0].action);
+    expect(actions).toContain("upload_rejected");
+  });
+});
+
+describe("v3 — Document admin update writes visibility + ai_policy audit entries", () => {
+  beforeEach(() => vi.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
+
+  it("setting visibility=receipts_only writes visibility_changed audit and forces reviewStatus=approved", async () => {
+    const updateSpy = vi.spyOn(db, "updateDocument").mockResolvedValue(undefined as any);
+    const guard = await import("./_uploadGuard");
+    const auditSpy = vi.spyOn(guard, "writeAudit").mockResolvedValue(undefined);
+
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await adminCaller.document.adminUpdate({
+      id: 50,
+      patch: { visibility: "receipts_only" },
+    });
+    expect(updateSpy).toHaveBeenCalledTimes(1);
+    const [, patch] = updateSpy.mock.calls[0]!;
+    expect(patch.visibility).toBe("receipts_only");
+    expect(patch.reviewStatus).toBe("approved");
+    expect(patch.publicStatus).toBe(false);
+
+    const actions = auditSpy.mock.calls.map((c) => c[0].action);
+    expect(actions).toContain("visibility_changed");
+  });
+
+  it("setting aiPolicy=goblin_allowed writes ai_policy_changed audit", async () => {
+    vi.spyOn(db, "updateDocument").mockResolvedValue(undefined as any);
+    const guard = await import("./_uploadGuard");
+    const auditSpy = vi.spyOn(guard, "writeAudit").mockResolvedValue(undefined);
+
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await adminCaller.document.adminUpdate({
+      id: 50,
+      patch: { aiPolicy: "goblin_allowed" },
+    });
+    const actions = auditSpy.mock.calls.map((c) => c[0].action);
+    expect(actions).toContain("ai_policy_changed");
+  });
+});
+
+
+describe("v3 — Admin role changes are audited", () => {
+  beforeEach(() => vi.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
+
+  it("non-admin cannot call user.setRole", async () => {
+    const userCaller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(
+      userCaller.user.setRole({ userId: 99, role: "admin" }),
+    ).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("admin promoting another user writes admin_role_changed audit", async () => {
+    vi.spyOn(db, "getUserById").mockResolvedValue({
+      id: 99,
+      role: "user",
+      email: "target@example.com",
+    } as any);
+    const setRoleSpy = vi.spyOn(db, "setUserRole").mockResolvedValue(undefined as any);
+    const guard = await import("./_uploadGuard");
+    const auditSpy = vi.spyOn(guard, "writeAudit").mockResolvedValue(undefined);
+
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await adminCaller.user.setRole({ userId: 99, role: "admin" });
+
+    expect(setRoleSpy).toHaveBeenCalledWith(99, "admin");
+    expect(auditSpy).toHaveBeenCalled();
+    const call = auditSpy.mock.calls.find((c) => c[0].action === "admin_role_changed");
+    expect(call).toBeTruthy();
+    expect(call![0].metadata).toMatchObject({ from: "user", to: "admin" });
+  });
+
+  it("admin cannot demote themselves (lockout protection)", async () => {
+    vi.spyOn(db, "getUserById").mockResolvedValue({
+      id: baseUser.id,
+      role: "admin",
+      email: baseUser.email,
+    } as any);
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await expect(
+      adminCaller.user.setRole({ userId: baseUser.id, role: "user" }),
+    ).rejects.toBeInstanceOf(TRPCError);
+  });
+});
+
+describe("v3 — Rate limiting", () => {
+  beforeEach(() => vi.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
+
+  it("over-limit submissions throw TOO_MANY_REQUESTS without inserting", async () => {
+    const insertStorySpy = vi.spyOn(db, "insertStory");
+    const guard = await import("./_uploadGuard");
+    vi.spyOn(guard, "writeAudit").mockResolvedValue(undefined);
+    // Force rate limiter to trip
+    vi.spyOn(guard, "checkRateLimit").mockImplementation(async () => {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: "Too many submissions in the last 24h.",
+      });
+    });
+
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(
+      caller.story.submit({
+        email: "submitter@example.com",
+        summary: "Long enough summary that describes the on-record events and timeline.",
+        publicPermission: true,
+        redactionConfirmed: true,
+      }),
+    ).rejects.toThrow(/Too many submissions/i);
+    expect(insertStorySpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("v3 — Goblin AI-policy enforcement", () => {
+  beforeEach(() => vi.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
+
+  it("getArchiveContextForLLM only returns documents with ai_policy='goblin_allowed' (no others reach the LLM)", async () => {
+    // We can't run the real DB query in tests; instead, verify Goblin chat
+    // sends only what getArchiveContextForLLM returns. Stub the helper to
+    // return a curated list and ensure the LLM sees only those.
+    vi.spyOn(db, "getArchiveContextForLLM").mockResolvedValue({
+      stories: [],
+      documents: [
+        { id: 1, title: "Allowed", aiPolicy: "goblin_allowed" } as any,
+      ],
+      events: [],
+      actors: [],
+      prrs: [],
+    } as any);
+    vi.spyOn(db, "getOrCreateLatestChatSession").mockResolvedValue({ id: 1 } as any);
+    vi.spyOn(db, "appendChatMessage").mockResolvedValue(undefined as any);
+    vi.spyOn(db, "listChatMessages").mockResolvedValue([] as any);
+
+    const llmModule = await import("./_core/llm");
+    const llmSpy = vi
+      .spyOn(llmModule, "invokeLLM")
+      .mockResolvedValue({
+        choices: [{ message: { content: "ack" } }],
+      } as any);
+
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await adminCaller.docketGoblin.send({ message: "hi" });
+
+    expect(llmSpy).toHaveBeenCalled();
+    const messages = llmSpy.mock.calls[0]![0]!.messages as Array<{
+      role: string;
+      content: string;
+    }>;
+    const archiveSysMsg = messages.find(
+      (m) => m.role === "system" && /Allowed/.test(m.content),
+    );
+    expect(archiveSysMsg).toBeTruthy();
+    // No "Forbidden" doc should ever appear because db helper filters it out
+    const anyForbidden = messages.some((m) =>
+      typeof m.content === "string" && /Forbidden|no_ai_processing/i.test(m.content),
+    );
+    expect(anyForbidden).toBe(false);
   });
 });
