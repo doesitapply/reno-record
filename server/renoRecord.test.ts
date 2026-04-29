@@ -1263,6 +1263,7 @@ describe("v3.8 — Review requests: submission and access control", () => {
     };
     vi.spyOn(db, "getReviewRequestById").mockResolvedValue(mockRequest as any);
     vi.spyOn(db, "updateReviewRequest").mockResolvedValue(undefined as any);
+    vi.spyOn(db, "updateStory").mockResolvedValue(undefined as any);
     vi.spyOn(uploadGuard, "writeAudit").mockResolvedValue(undefined as any);
 
     const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));

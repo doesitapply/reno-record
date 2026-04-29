@@ -280,26 +280,18 @@ function SubmitForm() {
               <div className="eyebrow mt-6">Submission received</div>
               <h1 className="display-serif text-4xl mt-2">On the record.</h1>
             </div>
-<<<<<<< Updated upstream
-            <div className="eyebrow mt-6">Submission #{success}</div>
-            <h1 className="display-serif text-4xl mt-2">Evidence queued for review.</h1>
-            <p className="mt-4 text-muted-foreground">
-              Your materials are private while editors separate actors, evidence items, allegations,
-              pattern signals, timeline events, redaction risks, and follow-up public-records targets.
-              Nothing appears publicly unless it is explicitly approved.
-            </p>
-            <div className="mt-7 flex gap-3 justify-center flex-wrap">
-              <Link href="/patterns">
-=======
-
-            {/* Submission ID — prominent */}
-            <div className="mt-6 rounded border border-[var(--amber)]/40 bg-[var(--amber)]/5 p-4 text-center">
+<div className="mt-6 rounded border border-[var(--amber)]/40 bg-[var(--amber)]/5 p-4 text-center">
               <div className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Your submission ID</div>
               <div className="font-mono text-2xl font-bold mt-1 text-[var(--amber)]">#{success}</div>
               <div className="text-xs text-muted-foreground mt-1">Save this number. You’ll need it to reference your submission.</div>
             </div>
 
-            {/* What happens next */}
+            <p className="mt-4 text-muted-foreground text-center">
+              Your materials are private while editors separate actors, evidence items, allegations,
+              pattern signals, timeline events, redaction risks, and follow-up public-records targets.
+              Nothing appears publicly unless it is explicitly approved.
+            </p>
+
             <div className="mt-6 space-y-3 text-sm text-foreground/80">
               <div className="font-semibold text-foreground">What happens next</div>
               <div className="flex gap-3">
@@ -308,15 +300,15 @@ function SubmitForm() {
               </div>
               <div className="flex gap-3">
                 <span className="font-mono text-[var(--amber)] shrink-0">2.</span>
-                <span>An editor reviews the submission for completeness, accuracy, and redaction compliance.</span>
+                <span>An editor reviews the submission for completeness, accuracy, source-record integrity, and redaction compliance.</span>
               </div>
               <div className="flex gap-3">
                 <span className="font-mono text-[var(--amber)] shrink-0">3.</span>
-                <span>If approved, your story and documents become part of the public archive. If clarification is needed, we’ll contact you at the email you provided.</span>
+                <span>If approved, the evidence can become part of the public archive. If clarification is needed, we’ll contact you at the email you provided.</span>
               </div>
               <div className="flex gap-3">
                 <span className="font-mono text-[var(--amber)] shrink-0">4.</span>
-                <span className="font-medium">Once approved, records become part of the public archive and cannot be edited or deleted directly by the submitter. You may submit a formal review request for corrections, redactions, or removal after approval.</span>
+                <span className="font-medium">Once approved, public records become part of the archive and cannot be edited or deleted directly by the submitter. You may submit a formal review request for corrections, redactions, or removal after approval.</span>
               </div>
             </div>
 
@@ -324,8 +316,7 @@ function SubmitForm() {
               <Link href="/">
                 <Button variant="outline">Back to home</Button>
               </Link>
-              <Link href="/the-church-record">
->>>>>>> Stashed changes
+              <Link href="/patterns">
                 <Button className="bg-foreground text-background gap-2">
                   See pattern dashboard <ArrowRight className="h-4 w-4" />
                 </Button>
