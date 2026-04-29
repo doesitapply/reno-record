@@ -1040,6 +1040,15 @@ function DocumentReview({ id }: { id: number }) {
     toast.success("Draft applied to document (still not public until you publish).");
   };
 
+  const fileUrl = doc.fileUrl || "";
+  const mimeType = doc.mimeType || "application/octet-stream";
+  const canEmbed =
+    /^image\//.test(mimeType) ||
+    /^audio\//.test(mimeType) ||
+    /^video\//.test(mimeType) ||
+    mimeType === "application/pdf" ||
+    /^text\//.test(mimeType);
+
   return (
     <SiteShell>
       <section className="container py-10">
@@ -1151,19 +1160,43 @@ function DocumentReview({ id }: { id: number }) {
 
           <div className="lg:col-span-8">
             <div className="paper-card overflow-hidden">
+              <div className="flex items-center justify-between gap-3 border-b border-border p-3">
+                <div className="min-w-0">
+                  <div className="eyebrow !mb-0">Evidence file</div>
+                  <div className="truncate text-xs text-muted-foreground">{mimeType}</div>
+                </div>
+                {fileUrl && (
+                  <a href={fileUrl} target="_blank" rel="noreferrer" className="shrink-0">
+                    <Button size="sm" variant="outline">Open original</Button>
+                  </a>
+                )}
+              </div>
               <div className="h-[80vh]">
-                {/^image\//.test(doc.mimeType || "") ? (
-                  <img src={doc.fileUrl} alt={doc.title} className="w-full h-full object-contain" />
-                ) : /^audio\//.test(doc.mimeType || "") ? (
-                  <div className="p-8">
-                    <audio controls src={doc.fileUrl} className="w-full" />
+                {!fileUrl ? (
+                  <div className="grid h-full place-items-center p-8 text-center text-muted-foreground">
+                    This document record does not have a stored file URL.
                   </div>
-                ) : /^video\//.test(doc.mimeType || "") ? (
-                  <video controls src={doc.fileUrl} className="w-full h-full" />
-                ) : (
-                  <object data={doc.fileUrl} type={doc.mimeType || "application/pdf"} className="w-full h-full">
-                    <iframe src={doc.fileUrl} title={doc.title} className="w-full h-full border-0" />
+                ) : /^image\//.test(mimeType) ? (
+                  <img src={fileUrl} alt={doc.title} className="w-full h-full object-contain" />
+                ) : /^audio\//.test(mimeType) ? (
+                  <div className="p-8">
+                    <audio controls src={fileUrl} className="w-full" />
+                  </div>
+                ) : /^video\//.test(mimeType) ? (
+                  <video controls src={fileUrl} className="w-full h-full" />
+                ) : canEmbed ? (
+                  <object data={fileUrl} type={mimeType} className="w-full h-full">
+                    <iframe src={fileUrl} title={doc.title} className="w-full h-full border-0" />
                   </object>
+                ) : (
+                  <div className="grid h-full place-items-center p-8 text-center">
+                    <div className="max-w-md">
+                      <div className="display-serif text-xl">Preview not available for this file type</div>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        The evidence was uploaded and structured, but this browser cannot embed {mimeType} files. Use the original-file button above to open or download it.
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

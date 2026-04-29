@@ -107,8 +107,9 @@ describe("The Reno Record — moderation & gating", () => {
     expect(await caller.document.byId({ id: 11 })).toBeNull();
   });
 
-  it("returns public document file URLs through the same-origin storage proxy", async () => {
-    const caller = appRouter.createCaller(makeCtx(undefined));
+  it("returns document file URLs through encoded same-origin storage proxy routes", async () => {
+    const publicCaller = appRouter.createCaller(makeCtx(undefined));
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
 
     vi.spyOn(db, "getDocumentById").mockResolvedValueOnce({
       id: 30014,
@@ -120,7 +121,7 @@ describe("The Reno Record — moderation & gating", () => {
       reviewStatus: "approved",
     } as unknown as Awaited<ReturnType<typeof db.getDocumentById>>);
 
-    const detail = await caller.document.byId({ id: 30014 });
+    const detail = await publicCaller.document.byId({ id: 30014 });
     expect(detail?.fileUrl).toBe(
       "/manus-storage/evidence/ingest-30014-09-17-24%20app%20for%20setting%20young_3bh12chf.pdf",
     );
@@ -133,9 +134,36 @@ describe("The Reno Record — moderation & gating", () => {
       },
     ] as unknown as Awaited<ReturnType<typeof db.listPublicDocuments>>);
 
-    const list = await caller.document.listPublic({ q: undefined, sourceType: "all" });
+    const list = await publicCaller.document.listPublic({ q: undefined, sourceType: "all" });
     expect(list[0]?.fileUrl).toBe(
       "/manus-storage/evidence/ingest-30014-09-17-24%20app%20for%20setting%20young_3bh12chf.pdf",
+    );
+
+    vi.spyOn(db, "getDocumentById").mockResolvedValueOnce({
+      id: 30015,
+      title: "Pending uploaded evidence",
+      fileKey: "evidence/ingest-88-new evidence packet_7abc1234.pdf",
+      fileUrl: "/manus-storage/evidence/ingest-88-new evidence packet_7abc1234.pdf",
+      publicStatus: false,
+      reviewStatus: "pending",
+    } as unknown as Awaited<ReturnType<typeof db.getDocumentById>>);
+
+    const adminDetail = await adminCaller.document.adminGet({ id: 30015 });
+    expect(adminDetail?.fileUrl).toBe(
+      "/manus-storage/evidence/ingest-88-new%20evidence%20packet_7abc1234.pdf",
+    );
+
+    vi.spyOn(db, "listAllDocuments").mockResolvedValueOnce([
+      {
+        id: 30015,
+        fileKey: "evidence/ingest-88-new evidence packet_7abc1234.pdf",
+        fileUrl: "/manus-storage/evidence/ingest-88-new evidence packet_7abc1234.pdf",
+      },
+    ] as unknown as Awaited<ReturnType<typeof db.listAllDocuments>>);
+
+    const adminList = await adminCaller.document.adminList({ visibility: "pending_review" });
+    expect(adminList[0]?.fileUrl).toBe(
+      "/manus-storage/evidence/ingest-88-new%20evidence%20packet_7abc1234.pdf",
     );
   });
 

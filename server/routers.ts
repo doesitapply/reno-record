@@ -501,13 +501,15 @@ const documentRouter = router({
         })
         .optional(),
     )
-    .query(async ({ input }) =>
-      db.listAllDocuments({ visibility: input?.visibility, aiPolicy: input?.aiPolicy }),
-    ),
+    .query(async ({ input }) => {
+      const rows = await db.listAllDocuments({ visibility: input?.visibility, aiPolicy: input?.aiPolicy });
+      return rows.map(withSameOriginDocumentUrl);
+    }),
   adminCounts: adminProcedure.query(async () => db.documentVisibilityCounts()),
-  adminGet: adminProcedure.input(z.object({ id: z.number() })).query(async ({ input }) =>
-    db.getDocumentById(input.id),
-  ),
+  adminGet: adminProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
+    const d = await db.getDocumentById(input.id);
+    return d ? withSameOriginDocumentUrl(d) : null;
+  }),
   adminUpload: adminProcedure
     .input(
       z.object({
