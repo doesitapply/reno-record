@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 import * as db from "./db";
+import * as uploadGuard from "./_uploadGuard";
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
 
@@ -1168,5 +1169,209 @@ describe("v3.6 — Admin CRUD: public records requests", () => {
   it("prr.adminDelete requires admin role", async () => {
     const caller = appRouter.createCaller(makeCtx(baseUser));
     await expect(caller.prr.adminDelete({ id: 1 })).rejects.toThrow();
+  });
+});
+
+/* ============================================================
+   v3.8 — Review requests, soft-delete, and audit guardrails
+   ============================================================ */
+describe("v3.8 — Review requests: submission and access control", () => {
+  beforeEach(() => { vi.restoreAllMocks(); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it("reviewRequest.submit requires authentication", async () => {
+    const anon = appRouter.createCaller(makeCtx(undefined));
+    await expect(
+      anon.reviewRequest.submit({
+        targetType: "story",
+        targetId: 1,
+        requestType: "correction",
+        reason: "This is a factual error that needs to be corrected.",
+      }),
+    ).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("reviewRequest.submit requires reason of at least 10 chars", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(
+      caller.reviewRequest.submit({
+        targetType: "story",
+        targetId: 1,
+        requestType: "correction",
+        reason: "short",
+      }),
+    ).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("reviewRequest.submit succeeds for authenticated user with valid input", async () => {
+    // Must mock an approved public story owned by the test user
+    vi.spyOn(db, "getStoryById").mockResolvedValue({
+      id: 1,
+      ownerUserId: baseUser.id,
+      status: "approved",
+      publicPermission: true,
+    } as any);
+    vi.spyOn(db, "createReviewRequest").mockResolvedValue(99 as any);
+    vi.spyOn(uploadGuard, "writeAudit").mockResolvedValue(undefined as any);
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    const result = await caller.reviewRequest.submit({
+      targetType: "story",
+      targetId: 1,
+      requestType: "correction",
+      reason: "The date listed is incorrect — it should be 2022, not 2021.",
+    });
+    expect(result.id).toBe(99);
+    expect(db.createReviewRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it("reviewRequest.adminList requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(caller.reviewRequest.adminList({})).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("reviewRequest.adminList succeeds for admin", async () => {
+    vi.spyOn(db, "listReviewRequests").mockResolvedValue([] as any);
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    const result = await adminCaller.reviewRequest.adminList({});
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("reviewRequest.adminResolve requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(
+      caller.reviewRequest.adminResolve({
+        id: 1,
+        resolution: "keep_public",
+      }),
+    ).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("reviewRequest.adminResolve writes audit log entry", async () => {
+    const mockRequest = {
+      id: 1,
+      targetType: "story",
+      targetId: 10,
+      requestType: "correction",
+      reason: "Factual error",
+      status: "submitted",
+      requestorUserId: 42,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      editorialNote: null,
+      correctionText: null,
+      explanation: null,
+    };
+    vi.spyOn(db, "getReviewRequestById").mockResolvedValue(mockRequest as any);
+    vi.spyOn(db, "updateReviewRequest").mockResolvedValue(undefined as any);
+    vi.spyOn(uploadGuard, "writeAudit").mockResolvedValue(undefined as any);
+
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await adminCaller.reviewRequest.adminResolve({
+      id: 1,
+      resolution: "keep_public",
+      editorialNote: "Reviewed and confirmed accurate.",
+    });
+
+    expect(uploadGuard.writeAudit).toHaveBeenCalledTimes(1);
+    const auditCall = (uploadGuard.writeAudit as ReturnType<typeof vi.spyOn>).mock.calls[0]![0]!;
+    expect(auditCall.action).toContain("review_request");
+  });
+});
+
+describe("v3.8 — Soft-delete: user can delete pending, not approved", () => {
+  beforeEach(() => { vi.restoreAllMocks(); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it("userData.deleteMyStory requires authentication", async () => {
+    const anon = appRouter.createCaller(makeCtx(undefined));
+    await expect(anon.userData.deleteMyStory({ id: 1 })).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("userData.deleteMyStory blocks deletion of approved/public story", async () => {
+    vi.spyOn(db, "getStoryById").mockResolvedValue({
+      id: 1,
+      ownerUserId: baseUser.id,
+      status: "approved",
+      publicPermission: true,
+    } as any);
+
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    // Should throw because story is approved/public
+    await expect(caller.userData.deleteMyStory({ id: 1 })).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("userData.deleteMyStory allows deletion of pending story by owner", async () => {
+    vi.spyOn(db, "getStoryById").mockResolvedValue({
+      id: 1,
+      ownerUserId: baseUser.id,
+      status: "pending",
+      publicPermission: false,
+    } as any);
+    vi.spyOn(db, "hardDeleteStory").mockResolvedValue(undefined as any);
+    vi.spyOn(uploadGuard, "writeAudit").mockResolvedValue(undefined as any);
+
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    const result = await caller.userData.deleteMyStory({ id: 1 });
+    expect(result.ok).toBe(true);
+    expect(db.hardDeleteStory).toHaveBeenCalled();
+  });
+
+  it("userData.deleteMyStory blocks deletion of another user's story", async () => {
+    vi.spyOn(db, "getStoryById").mockResolvedValue({
+      id: 1,
+      ownerUserId: 999, // different user
+      status: "pending",
+      publicPermission: false,
+    } as any);
+
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(caller.userData.deleteMyStory({ id: 1 })).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("userData.deleteMyDocument blocks deletion of approved/public document", async () => {
+    vi.spyOn(db, "getDocumentById").mockResolvedValue({
+      id: 5,
+      uploadedBy: baseUser.id,
+      reviewStatus: "approved",
+      publicStatus: true,
+    } as any);
+
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(caller.userData.deleteMyDocument({ id: 5 })).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("userData.deleteMyDocument allows deletion of pending document by owner", async () => {
+    vi.spyOn(db, "getDocumentById").mockResolvedValue({
+      id: 5,
+      uploadedBy: baseUser.id,
+      reviewStatus: "pending",
+      publicStatus: false,
+    } as any);
+    vi.spyOn(db, "hardDeleteDocument").mockResolvedValue(undefined as any);
+    vi.spyOn(uploadGuard, "writeAudit").mockResolvedValue(undefined as any);
+
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    const result = await caller.userData.deleteMyDocument({ id: 5 });
+    expect(result.ok).toBe(true);
+    expect(db.hardDeleteDocument).toHaveBeenCalled();
+  });
+});
+
+describe("v3.8 — Admin hard-delete guardrails", () => {
+  beforeEach(() => { vi.restoreAllMocks(); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it("adminEdit.hardDeleteStory requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(
+      caller.adminEdit.hardDeleteStory({ id: 1, confirmPhrase: "PERMANENTLY DELETE" }),
+    ).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("adminEdit.hardDeleteStory rejects wrong confirmation phrase", async () => {
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+    await expect(
+      adminCaller.adminEdit.hardDeleteStory({ id: 1, confirmPhrase: "wrong phrase" }),
+    ).rejects.toBeInstanceOf(TRPCError);
   });
 });

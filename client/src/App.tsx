@@ -7,7 +7,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import ChurchRecord from "./pages/ChurchRecord";
 import TimelinePage from "./pages/Timeline";
-import EvidencePage from "./pages/Evidence";
+import Evidence from "@/pages/Evidence";
+import EvidenceDetail from "@/pages/EvidenceDetail";
 import SubmitPage from "./pages/Submit";
 import PublicRecordsPage from "./pages/PublicRecords";
 import ActorsPage from "./pages/Actors";
@@ -16,6 +17,8 @@ import PatternsPage from "./pages/Patterns";
 import PrivacyPage from "./pages/Privacy";
 import AdminPage from "./pages/Admin";
 import AdminManagePage from "./pages/AdminManage";
+import PreviewCheckPage from "./pages/PreviewCheck";
+import ProfilePage from "./pages/Profile";
 import DocketGoblinBubble from "./components/DocketGoblinBubble";
 
 function Router() {
@@ -24,8 +27,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/the-church-record" component={ChurchRecord} />
       <Route path="/timeline" component={TimelinePage} />
-      <Route path="/evidence" component={EvidencePage} />
-      <Route path="/evidence/:id" component={EvidencePage} />
+      <Route path="/evidence" component={Evidence} />
+      <Route path="/evidence/:id" component={EvidenceDetail} />
       <Route path="/submit" component={SubmitPage} />
       <Route path="/public-records" component={PublicRecordsPage} />
       <Route path="/actors" component={ActorsPage} />
@@ -37,6 +40,8 @@ function Router() {
       <Route path="/admin/story/:id" component={AdminPage} />
       <Route path="/admin/document/:id" component={AdminPage} />
       <Route path="/admin/manage" component={AdminManagePage} />
+      <Route path="/admin/preview-check" component={PreviewCheckPage} />
+      <Route path="/profile" component={ProfilePage} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -73,6 +73,12 @@ export const stories = mysqlTable(
     ownerUserId: int("owner_user_id"),
     /** v3: client IP hash for abuse forensics (not raw IP) */
     submitterIpHash: varchar("submitter_ip_hash", { length: 64 }),
+    /** v3.8: soft-delete */
+    deletedAt: timestamp("deleted_at"),
+    deletedBy: int("deleted_by"),
+    /** v3.8: editorial notes visible on public page; correction note for substantive changes */
+    editorialNote: text("editorial_note"),
+    correctionNote: text("correction_note"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
@@ -143,6 +149,12 @@ export const documents = mysqlTable(
     uploadedBy: int("uploaded_by"),
     aiSummary: text("ai_summary"),
     aiTags: json("ai_tags").$type<string[]>(),
+    /** v3.8: soft-delete */
+    deletedAt: timestamp("deleted_at"),
+    deletedBy: int("deleted_by"),
+    /** v3.8: editorial notes visible on public page */
+    editorialNote: text("editorial_note"),
+    correctionNote: text("correction_note"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
@@ -351,6 +363,17 @@ export const auditLog = mysqlTable(
       "admin_role_changed",
       "upload_rejected",
       "rate_limit_triggered",
+      "story_edited",
+      "story_soft_deleted",
+      "story_hard_deleted",
+      "story_restored",
+      "document_edited",
+      "document_soft_deleted",
+      "document_hard_deleted",
+      "document_restored",
+      "review_request_submitted",
+      "review_request_resolved",
+      "inline_edit",
     ]).notNull(),
     targetType: varchar("target_type", { length: 32 }),
     targetId: int("target_id"),
@@ -366,3 +389,52 @@ export const auditLog = mysqlTable(
 );
 export type AuditLog = typeof auditLog.$inferSelect;
 export type InsertAuditLog = typeof auditLog.$inferInsert;
+
+/* ========== Review Requests (user-initiated correction/removal/redaction) ========== */
+export const reviewRequests = mysqlTable(
+  "review_requests",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    /** Who submitted the request */
+    requestorUserId: int("requestor_user_id").notNull(),
+    /** What type of record this concerns */
+    targetType: mysqlEnum("target_type", ["story", "document"]).notNull(),
+    targetId: int("target_id").notNull(),
+    /** Type of request */
+    requestType: mysqlEnum("request_type", [
+      "removal",
+      "correction",
+      "redaction",
+      "privacy_concern",
+      "legal_safety_concern",
+    ]).notNull(),
+    /** Current workflow status */
+    status: mysqlEnum("status", [
+      "submitted",
+      "under_review",
+      "approved",
+      "denied",
+      "resolved_redaction",
+      "resolved_correction",
+      "resolved_removal",
+    ])
+      .default("submitted")
+      .notNull(),
+    reason: text("reason").notNull(),
+    explanation: text("explanation"),
+    correctionText: text("correction_text"),
+    /** Admin-facing editorial note explaining the resolution */
+    editorialNote: text("editorial_note"),
+    resolvedBy: int("resolved_by"),
+    resolvedAt: timestamp("resolved_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    requestorIdx: index("review_req_requestor_idx").on(t.requestorUserId),
+    targetIdx: index("review_req_target_idx").on(t.targetType, t.targetId),
+    statusIdx: index("review_req_status_idx").on(t.status),
+  }),
+);
+export type ReviewRequest = typeof reviewRequests.$inferSelect;
+export type InsertReviewRequest = typeof reviewRequests.$inferInsert;

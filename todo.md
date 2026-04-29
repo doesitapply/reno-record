@@ -114,6 +114,56 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [ ] Public read rate limiting
 - [ ] Bulk evidence export for admin
 
+<<<<<<< Updated upstream
 - [x] Misconduct-first public framing: demote The Church Record to a case example and make patterns/evidence/actors the main site frame
 - [x] Deeper evidence ingest draft: actors, evidence items, allegations, chronology, pattern signals, redaction risks, source quality, follow-up questions, and PRR targets
 - [ ] Second-wave intake redesign: replace case-only submit flow with flexible misconduct report/evidence intake categories
+=======
+## v3.7 — Share-Ready Public Record Layer
+
+- [ ] Server: document.publicById — returns only public+approved docs, null otherwise (no metadata leakage)
+- [ ] Server: document.relatedEvents — returns public timeline events referencing the document
+- [ ] /evidence/[id] standalone page: PDF viewer, title, date, source type, case, actors (linked), timeline events (linked), summary, SEO/OG/Twitter, 404 on private
+- [ ] Church Record: Share button + Copy link + pre-composed X post text
+- [ ] Timeline: Share button + Copy link + pre-composed X post text
+- [ ] Submission confirmation: show submission ID, what-happens-next steps, save-ID reminder, share CTA, no admin data
+- [ ] /preview-check admin-only page: OG/Twitter preview cards for all major public routes, missing metadata flagged
+- [ ] Actor dossier empty state: structured placeholder, submit CTA, safe pending-review language
+- [ ] Tests: evidence access control (public/private), share buttons render, preview-check admin-gated, confirmation includes ID, actor empty state
+- [ ] Run full suite, checkpoint, deliver
+
+## v3.8 — Admin Editorial Control + User Data Rights
+
+- [x] Schema: review_requests table (type: removal/correction/redaction/privacy/legal; status: submitted/under_review/approved/denied/resolved_redaction/resolved_correction/resolved_removal; reason, explanation, correctionText, editorialNote, resolvedBy FK, resolvedAt)
+- [x] Schema: soft-delete columns on stories (deletedAt, deletedBy) and documents (deletedAt, deletedBy)
+- [x] Schema: editorialNote + correctionNote text columns on stories and documents
+- [x] Migration applied
+- [x] Server: reviewRequest.submit (protectedProcedure — submitter only, approved items only)
+- [x] Server: reviewRequest.myRequests (protectedProcedure — user sees their own requests + status)
+- [x] Server: reviewRequest.adminList (adminProcedure — full list with filters)
+- [x] Server: reviewRequest.adminResolve (adminProcedure — 7 resolution actions + audit)
+- [x] Server: story.userDelete (protectedProcedure — pending only, hard delete, audit)
+- [x] Server: document.userDelete (protectedProcedure — pending only, hard delete, audit)
+- [x] Server: story.adminSoftDelete + story.adminHardDelete (adminProcedure — hard requires phrase "PERMANENTLY DELETE")
+- [x] Server: document.adminSoftDelete + document.adminHardDelete (adminProcedure)
+- [x] Server: story.adminFullEdit (adminProcedure — all fields, audit with old/new values)
+- [x] Server: document.adminFullEdit (adminProcedure — all fields, audit)
+- [x] Server: actor.adminFullEdit, timeline.adminFullEdit, prr.adminFullEdit
+- [x] Prominent login: SiteShell top-nav sign-in as primary CTA button; avatar dropdown (My Profile, My Submissions, Sign Out)
+- [x] Mobile hamburger: sign-in as first item
+- [x] User /profile page at /profile
+- [x] Profile: account info, submission history with status badges, uploaded files with status
+- [x] Profile: pending-item delete (with confirmation dialog)
+- [x] Profile: approved-item review-request CTA with permanence notice
+- [x] Profile: review-request form (type, reason, explanation, correctionText)
+- [x] Profile: request status tracker (submitted/under_review/approved/denied/resolved_*)
+- [x] Admin: review-request moderation queue tab in Admin panel
+- [x] Admin: resolve review request with 7 actions (keep_public/redact/correct_metadata/hide_temporarily/move_to_private/reject_request/remove_from_public)
+- [ ] Admin: inline edit mode on Church Record, Timeline, Evidence, Actor pages (admin-only, save/cancel, audit)
+- [ ] Admin: soft-delete flow (default) + hard-delete with confirmation phrase "PERMANENTLY DELETE" — frontend UX needed
+- [ ] Admin: deleted/hidden records retain audit history; visible in admin with [DELETED] badge
+- [ ] Correction note + editorial note display on EvidenceDetail and ChurchRecord public pages — ChurchRecord and editorialNote on EvidenceDetail still needed
+- [x] Tests: pending delete allowed, approved delete blocked, review-request submit/resolve, soft-delete audit, inline edit audit, hard-delete phrase guard
+- [x] Full test suite passes
+- [ ] Checkpoint saved
+>>>>>>> Stashed changes

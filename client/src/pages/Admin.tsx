@@ -124,6 +124,7 @@ function AdminDashboard() {
             <TabsTrigger value="prr">Public records</TabsTrigger>
             <TabsTrigger value="audit">Audit log</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="review_requests">Review Requests</TabsTrigger>
           </TabsList>
           <TabsContent value="ingest"><IngestTab /></TabsContent>
           <TabsContent value="stories"><StoriesTab /></TabsContent>
@@ -133,6 +134,7 @@ function AdminDashboard() {
           <TabsContent value="prr"><PrrTab /></TabsContent>
           <TabsContent value="audit"><AuditTab /></TabsContent>
           <TabsContent value="users"><UsersTab /></TabsContent>
+          <TabsContent value="review_requests"><ReviewRequestsTab /></TabsContent>
         </Tabs>
       </section>
     </SiteShell>
@@ -412,6 +414,11 @@ function StoriesTab() {
                 >
                   {s.status}
                 </Badge>
+                {(s as any).deletedAt && (
+                  <Badge variant="destructive" className="font-mono uppercase text-[10px]">
+                    [DELETED]
+                  </Badge>
+                )}
                 {s.featured && (
                   <Badge className="bg-[var(--amber)] text-foreground font-mono uppercase text-[10px]">
                     Featured
@@ -665,6 +672,8 @@ function StoryReview({ id }: { id: number }) {
                 <Switch checked={!!s.featured} onCheckedChange={toggleFeatured} />
               </div>
             </div>
+
+            <AdminDeleteControls storyId={id} onDeleted={() => { utils.story.adminList.invalidate(); }} />
 
             <div className="paper-card p-6">
               <div className="flex items-center gap-2 mb-2">
@@ -925,6 +934,11 @@ function DocumentsTab() {
                 <Badge variant="outline" className="font-mono uppercase text-[10px]">
                   {d.publicStatus ? "public" : "private"}
                 </Badge>
+                {d.deletedAt && (
+                  <Badge variant="destructive" className="font-mono uppercase text-[10px]">
+                    [DELETED]
+                  </Badge>
+                )}
                 <span className="text-xs text-muted-foreground font-mono uppercase tracking-widest">
                   {d.sourceType.replace(/_/g, " ")}
                 </span>
@@ -1159,6 +1173,7 @@ function DocumentReview({ id }: { id: number }) {
           </aside>
 
           <div className="lg:col-span-8">
+<<<<<<< Updated upstream
             <div className="paper-card overflow-hidden">
               <div className="flex items-center justify-between gap-3 border-b border-border p-3">
                 <div className="min-w-0">
@@ -1171,6 +1186,10 @@ function DocumentReview({ id }: { id: number }) {
                   </a>
                 )}
               </div>
+=======
+            <AdminDeleteControls documentId={id} onDeleted={() => { utils.document.adminList.invalidate(); }} />
+            <div className="paper-card overflow-hidden mt-4">
+>>>>>>> Stashed changes
               <div className="h-[80vh]">
                 {!fileUrl ? (
                   <div className="grid h-full place-items-center p-8 text-center text-muted-foreground">
@@ -2002,6 +2021,324 @@ function UsersTab() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/* =============== Review Requests Tab =============== */
+function ReviewRequestsTab() {
+  const [statusFilter, setStatusFilter] = useState<string>("submitted");
+  const [targetTypeFilter, setTargetTypeFilter] = useState<string>("");
+  const [resolvingId, setResolvingId] = useState<number | null>(null);
+  const [resolution, setResolution] = useState<string>("keep_public");
+  const [editorialNote, setEditorialNote] = useState("");
+  const [correctionNote, setCorrectionNote] = useState("");
+
+  const requests = trpc.reviewRequest.adminList.useQuery({
+    status: statusFilter || undefined,
+    targetType: targetTypeFilter || undefined,
+  });
+  const utils = trpc.useUtils();
+  const resolve = trpc.reviewRequest.adminResolve.useMutation({
+    onSuccess: () => {
+      toast.success("Review request resolved.");
+      setResolvingId(null);
+      setEditorialNote("");
+      setCorrectionNote("");
+      utils.reviewRequest.adminList.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const REQUEST_TYPE_LABELS: Record<string, string> = {
+    removal: "Removal",
+    correction: "Correction",
+    redaction: "Redaction",
+    privacy_concern: "Privacy concern",
+    legal_safety_concern: "Legal / safety concern",
+  };
+
+  const STATUS_LABELS: Record<string, string> = {
+    submitted: "Submitted",
+    under_review: "Under review",
+    approved: "Approved",
+    denied: "Denied",
+    resolved_redaction: "Resolved: redaction",
+    resolved_correction: "Resolved: correction",
+    resolved_removal: "Resolved: removal",
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-3 items-center">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All statuses</SelectItem>
+            <SelectItem value="submitted">Submitted</SelectItem>
+            <SelectItem value="under_review">Under review</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="denied">Denied</SelectItem>
+            <SelectItem value="resolved_redaction">Resolved: redaction</SelectItem>
+            <SelectItem value="resolved_correction">Resolved: correction</SelectItem>
+            <SelectItem value="resolved_removal">Resolved: removal</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={targetTypeFilter} onValueChange={setTargetTypeFilter}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Record type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All types</SelectItem>
+            <SelectItem value="story">Story</SelectItem>
+            <SelectItem value="document">Document</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" onClick={() => requests.refetch()}>Refresh</Button>
+      </div>
+
+      {requests.isLoading && <p className="text-muted-foreground text-sm">Loading…</p>}
+      {!requests.isLoading && (requests.data ?? []).length === 0 && (
+        <p className="text-muted-foreground text-sm">No review requests match the current filters.</p>
+      )}
+
+      {(requests.data ?? []).map((r) => (
+        <Card key={r.id} className="p-5">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <span className="font-mono text-xs text-muted-foreground">Request #{r.id}</span>
+                <Badge variant="outline" className="text-[10px]">{STATUS_LABELS[r.status] ?? r.status}</Badge>
+                <Badge variant="outline" className="text-[10px]">{REQUEST_TYPE_LABELS[r.requestType] ?? r.requestType}</Badge>
+                <span className="text-xs text-muted-foreground">{r.targetType} #{r.targetId}</span>
+              </div>
+              <p className="text-sm text-foreground/80 mb-1">{r.reason}</p>
+              {r.explanation && <p className="text-xs text-muted-foreground">{r.explanation}</p>}
+              {r.correctionText && (
+                <div className="mt-1 text-xs bg-secondary rounded-sm p-2">
+                  <span className="font-semibold">Proposed correction:</span> {r.correctionText}
+                </div>
+              )}
+              <div className="text-xs text-muted-foreground mt-1">
+                Submitted {new Date(r.createdAt).toLocaleDateString()} · User #{r.requestorUserId}
+              </div>
+              {r.editorialNote && (
+                <div className="mt-2 text-xs bg-[var(--amber)]/10 rounded-sm p-2">
+                  <span className="font-semibold">Editorial note:</span> {r.editorialNote}
+                </div>
+              )}
+            </div>
+            {(r.status === "submitted" || r.status === "under_review") && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setResolvingId(r.id)}
+              >
+                Resolve
+              </Button>
+            )}
+          </div>
+
+          {resolvingId === r.id && (
+            <div className="mt-4 border-t border-border pt-4 space-y-3">
+              <div>
+                <Label className="text-xs">Resolution</Label>
+                <Select value={resolution} onValueChange={setResolution}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="keep_public">Keep public — no change</SelectItem>
+                    <SelectItem value="reject_request">Reject request</SelectItem>
+                    <SelectItem value="correct_metadata">Apply correction to metadata</SelectItem>
+                    <SelectItem value="redact">Mark for redaction</SelectItem>
+                    <SelectItem value="hide_temporarily">Hide temporarily</SelectItem>
+                    <SelectItem value="move_to_private">Move to private</SelectItem>
+                    <SelectItem value="remove_from_public_view">Remove from public view</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Editorial note (visible to submitter)</Label>
+                <Textarea
+                  className="mt-1 text-sm"
+                  rows={2}
+                  value={editorialNote}
+                  onChange={(e) => setEditorialNote(e.target.value)}
+                  placeholder="Explain the decision to the submitter…"
+                />
+              </div>
+              {resolution === "correct_metadata" && (
+                <div>
+                  <Label className="text-xs">Correction note (public)</Label>
+                  <Textarea
+                    className="mt-1 text-sm"
+                    rows={2}
+                    value={correctionNote}
+                    onChange={(e) => setCorrectionNote(e.target.value)}
+                    placeholder="Describe what was corrected…"
+                  />
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  className="bg-foreground text-background"
+                  onClick={() => resolve.mutate({
+                    id: r.id,
+                    resolution: resolution as any,
+                    editorialNote: editorialNote || undefined,
+                    correctionNote: correctionNote || undefined,
+                  })}
+                  disabled={resolve.isPending}
+                >
+                  {resolve.isPending ? "Saving…" : "Save resolution"}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setResolvingId(null)}>Cancel</Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+/* =============== Admin Delete Controls =============== */
+function AdminDeleteControls({
+  storyId,
+  documentId,
+  onDeleted,
+}: {
+  storyId?: number;
+  documentId?: number;
+  onDeleted?: () => void;
+}) {
+  const [mode, setMode] = useState<"idle" | "soft" | "hard">("idle");
+  const [hardPhrase, setHardPhrase] = useState("");
+  const utils = trpc.useUtils();
+
+  const softDeleteStory = trpc.adminEdit.softDeleteStory.useMutation({
+    onSuccess: () => {
+      toast.success("Story soft-deleted (hidden from public, audit retained).");
+      utils.story.adminList.invalidate();
+      onDeleted?.();
+      setMode("idle");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const hardDeleteStory = trpc.adminEdit.hardDeleteStory.useMutation({
+    onSuccess: () => {
+      toast.success("Story permanently deleted.");
+      utils.story.adminList.invalidate();
+      onDeleted?.();
+      setMode("idle");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const softDeleteDocument = trpc.adminEdit.softDeleteDocument.useMutation({
+    onSuccess: () => {
+      toast.success("Document soft-deleted (hidden from public, audit retained).");
+      utils.document.adminList.invalidate();
+      onDeleted?.();
+      setMode("idle");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const hardDeleteDocument = trpc.adminEdit.hardDeleteDocument.useMutation({
+    onSuccess: () => {
+      toast.success("Document permanently deleted.");
+      utils.document.adminList.invalidate();
+      onDeleted?.();
+      setMode("idle");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleSoftDelete = () => {
+    if (storyId) softDeleteStory.mutate({ id: storyId });
+    else if (documentId) softDeleteDocument.mutate({ id: documentId });
+  };
+
+  const handleHardDelete = () => {
+    if (hardPhrase !== "PERMANENTLY DELETE") {
+      toast.error("Type the exact phrase: PERMANENTLY DELETE");
+      return;
+    }
+    if (storyId) hardDeleteStory.mutate({ id: storyId, confirmPhrase: hardPhrase });
+    else if (documentId) hardDeleteDocument.mutate({ id: documentId, confirmPhrase: hardPhrase });
+  };
+
+  return (
+    <div className="paper-card p-4 border-destructive/30">
+      <div className="eyebrow text-destructive/80 mb-3">Danger zone</div>
+      {mode === "idle" && (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-destructive border-destructive/40 hover:bg-destructive/10 text-xs"
+            onClick={() => setMode("soft")}
+          >
+            Soft-delete (hide)
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-destructive border-destructive/40 hover:bg-destructive/10 text-xs"
+            onClick={() => setMode("hard")}
+          >
+            Hard-delete (permanent)
+          </Button>
+        </div>
+      )}
+      {mode === "soft" && (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            This will hide the record from public view. Audit history is retained. Reversible by admin.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="bg-destructive text-destructive-foreground text-xs"
+              onClick={handleSoftDelete}
+              disabled={softDeleteStory.isPending || softDeleteDocument.isPending}
+            >
+              Confirm soft-delete
+            </Button>
+            <Button size="sm" variant="ghost" className="text-xs" onClick={() => setMode("idle")}>Cancel</Button>
+          </div>
+        </div>
+      )}
+      {mode === "hard" && (
+        <div className="space-y-3">
+          <p className="text-xs text-destructive font-semibold">
+            Permanent deletion. This cannot be undone. Audit history is retained but the record data is gone.
+          </p>
+          <div>
+            <Label className="text-xs mb-1 block">Type <code className="bg-muted px-1 rounded">PERMANENTLY DELETE</code> to confirm</Label>
+            <Input
+              className="text-xs font-mono"
+              value={hardPhrase}
+              onChange={(e) => setHardPhrase(e.target.value)}
+              placeholder="PERMANENTLY DELETE"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              className="bg-destructive text-destructive-foreground text-xs"
+              onClick={handleHardDelete}
+              disabled={hardDeleteStory.isPending || hardDeleteDocument.isPending || hardPhrase !== "PERMANENTLY DELETE"}
+            >
+              Permanently delete
+            </Button>
+            <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setMode("idle"); setHardPhrase(""); }}>Cancel</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -480,6 +480,14 @@ const documentRouter = router({
     if (!(d.publicStatus && d.reviewStatus === "approved")) return null;
     return withSameOriginDocumentUrl(d);
   }),
+  relatedEvents: publicProcedure
+    .input(z.object({ docId: z.number() }))
+    .query(async ({ input }) => {
+      // Only return related events for publicly accessible documents
+      const d = await db.getDocumentById(input.docId);
+      if (!d || !(d.publicStatus && d.reviewStatus === "approved")) return [];
+      return db.getRelatedTimelineEvents(input.docId);
+    }),
 
   /* Admin */
   adminList: adminProcedure
@@ -1485,6 +1493,405 @@ const auditRouter = router({
     }),
 });
 
+/* =============== Review Requests router =============== */
+const reviewRequestRouter = router({
+  /** Submitter files a request against their own approved record */
+  submit: protectedProcedure
+    .input(
+      z.object({
+        targetType: z.enum(["story", "document"]),
+        targetId: z.number(),
+        requestType: z.enum(["removal", "correction", "redaction", "privacy_concern", "legal_safety_concern"]),
+        reason: z.string().min(10).max(2000),
+        explanation: z.string().max(4000).optional(),
+        correctionText: z.string().max(4000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify the record belongs to this user
+      if (input.targetType === "story") {
+        const story = await db.getStoryById(input.targetId);
+        if (!story) throw new TRPCError({ code: "NOT_FOUND" });
+        if (story.ownerUserId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN", message: "You can only request review of records you submitted." });
+        if (story.status !== "approved" || !story.publicPermission) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Only approved public records can be flagged for review. Pending records can be deleted directly." });
+        }
+      } else {
+        const doc = await db.getDocumentById(input.targetId);
+        if (!doc) throw new TRPCError({ code: "NOT_FOUND" });
+        // uploadedBy or ownerUserId via storyId
+        const isOwner = doc.uploadedBy === ctx.user.id;
+        if (!isOwner) throw new TRPCError({ code: "FORBIDDEN", message: "You can only request review of documents you uploaded." });
+        if (!doc.publicStatus || doc.reviewStatus !== "approved") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Only approved public documents can be flagged for review." });
+        }
+      }
+      const id = await db.createReviewRequest({
+        requestorUserId: ctx.user.id,
+        targetType: input.targetType,
+        targetId: input.targetId,
+        requestType: input.requestType,
+        reason: input.reason,
+        explanation: input.explanation ?? null,
+        correctionText: input.correctionText ?? null,
+      });
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "review_request_submitted",
+        targetType: input.targetType,
+        targetId: input.targetId,
+        metadata: { requestType: input.requestType, requestId: id },
+      });
+      return { id };
+    }),
+
+  /** User sees their own requests */
+  myRequests: protectedProcedure.query(async ({ ctx }) =>
+    db.listReviewRequestsByUser(ctx.user.id),
+  ),
+
+  /** Admin list with optional filters */
+  adminList: adminProcedure
+    .input(
+      z.object({
+        status: z.string().optional(),
+        requestType: z.string().optional(),
+        targetType: z.string().optional(),
+      }).default({}),
+    )
+    .query(async ({ input }) => db.listReviewRequests(input)),
+
+  /** Admin resolves a request — 7 possible actions */
+  adminResolve: adminProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        resolution: z.enum([
+          "keep_public",
+          "redact",
+          "correct_metadata",
+          "hide_temporarily",
+          "move_to_private",
+          "reject_request",
+          "remove_from_public_view",
+        ]),
+        editorialNote: z.string().max(2000).optional(),
+        correctionNote: z.string().max(2000).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const req = await db.getReviewRequestById(input.id);
+      if (!req) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // Map resolution to status
+      const statusMap: Record<string, string> = {
+        keep_public: "denied",
+        reject_request: "denied",
+        redact: "resolved_redaction",
+        correct_metadata: "resolved_correction",
+        hide_temporarily: "approved",
+        move_to_private: "approved",
+        remove_from_public_view: "resolved_removal",
+      };
+      const newStatus = statusMap[input.resolution] as any;
+
+      await db.updateReviewRequest(input.id, {
+        status: newStatus,
+        editorialNote: input.editorialNote ?? null,
+        resolvedBy: ctx.user.id,
+        resolvedAt: new Date(),
+      });
+
+      // Apply the resolution to the underlying record
+      if (input.resolution === "move_to_private" || input.resolution === "hide_temporarily") {
+        if (req.targetType === "story") {
+          await db.updateStory(req.targetId, { publicPermission: false } as any);
+        } else {
+          await db.updateDocument(req.targetId, { publicStatus: false, visibility: "private_admin_only" } as any);
+        }
+      } else if (input.resolution === "remove_from_public_view") {
+        if (req.targetType === "story") {
+          await db.updateStory(req.targetId, { publicPermission: false } as any);
+        } else {
+          await db.updateDocument(req.targetId, { publicStatus: false, visibility: "private_admin_only" } as any);
+        }
+      } else if (input.resolution === "correct_metadata" && input.correctionNote) {
+        if (req.targetType === "story") {
+          await db.updateStory(req.targetId, { correctionNote: input.correctionNote } as any);
+        } else {
+          await db.updateDocument(req.targetId, { correctionNote: input.correctionNote } as any);
+        }
+      } else if (input.resolution === "redact") {
+        if (req.targetType === "document") {
+          await db.updateDocument(req.targetId, { visibility: "needs_redaction" } as any);
+        }
+      }
+
+      // Apply editorial note to the record
+      if (input.editorialNote) {
+        if (req.targetType === "story") {
+          await db.updateStory(req.targetId, { editorialNote: input.editorialNote } as any);
+        } else {
+          await db.updateDocument(req.targetId, { editorialNote: input.editorialNote } as any);
+        }
+      }
+
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "review_request_resolved",
+        targetType: req.targetType,
+        targetId: req.targetId,
+        metadata: { resolution: input.resolution, requestId: input.id, editorialNote: input.editorialNote ?? null },
+      });
+      return { ok: true };
+    }),
+});
+
+/* =============== User self-service delete (pending items only) =============== */
+const userDataRouter = router({
+  /** Delete a pending story the user owns */
+  deleteMyStory: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const story = await db.getStoryById(input.id);
+      if (!story) throw new TRPCError({ code: "NOT_FOUND" });
+      if (story.ownerUserId !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN" });
+      if (story.status !== "pending") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Approved or rejected records cannot be deleted directly. Use the review request process.",
+        });
+      }
+      await db.hardDeleteStory(input.id);
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "story_hard_deleted",
+        targetType: "story",
+        targetId: input.id,
+        metadata: { reason: "user_self_delete_pending" },
+      });
+      return { ok: true };
+    }),
+
+  /** Delete a pending document the user owns */
+  deleteMyDocument: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const doc = await db.getDocumentById(input.id);
+      if (!doc) throw new TRPCError({ code: "NOT_FOUND" });
+      if (doc.uploadedBy !== ctx.user.id) throw new TRPCError({ code: "FORBIDDEN" });
+      if (doc.reviewStatus !== "pending") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Approved or rejected documents cannot be deleted directly. Use the review request process.",
+        });
+      }
+      await db.hardDeleteDocument(input.id);
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "document_hard_deleted",
+        targetType: "document",
+        targetId: input.id,
+        metadata: { reason: "user_self_delete_pending" },
+      });
+      return { ok: true };
+    }),
+
+  /** User's own submissions (for profile page) */
+  myStories: protectedProcedure.query(async ({ ctx }) => db.listStoriesByOwner(ctx.user.id)),
+  myDocuments: protectedProcedure.query(async ({ ctx }) => db.listDocumentsByOwner(ctx.user.id)),
+});
+
+/* =============== Admin full-edit + soft/hard delete =============== */
+const adminEditRouter = router({
+  /** Full edit of any story field — audited with old/new values */
+  editStory: adminProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        patch: z.object({
+          alias: z.string().optional(),
+          court: z.string().optional(),
+          judge: z.string().optional(),
+          prosecutor: z.string().optional(),
+          defenseAttorney: z.string().optional(),
+          charges: z.string().optional(),
+          summary: z.string().optional(),
+          mainIssue: z.string().optional(),
+          reviewerNote: z.string().optional(),
+          editorialNote: z.string().optional(),
+          correctionNote: z.string().optional(),
+          featured: z.boolean().optional(),
+          slug: z.string().optional(),
+          status: z.enum(["pending", "approved", "rejected", "needs_changes"]).optional(),
+          publicPermission: z.boolean().optional(),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const before = await db.getStoryById(input.id);
+      if (!before) throw new TRPCError({ code: "NOT_FOUND" });
+      await db.updateStory(input.id, input.patch as any);
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "story_edited",
+        targetType: "story",
+        targetId: input.id,
+        metadata: { fields: Object.keys(input.patch), before: Object.fromEntries(Object.keys(input.patch).map(k => [k, (before as any)[k]])) },
+      });
+      return { ok: true };
+    }),
+
+  /** Full edit of any document field */
+  editDocument: adminProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        patch: z.object({
+          title: z.string().optional(),
+          description: z.string().optional(),
+          sourceType: z.string().optional(),
+          caseNumber: z.string().optional(),
+          actorNames: z.string().optional(),
+          editorialNote: z.string().optional(),
+          correctionNote: z.string().optional(),
+          visibility: z.string().optional(),
+          aiPolicy: z.string().optional(),
+          publicStatus: z.boolean().optional(),
+          reviewStatus: z.string().optional(),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const before = await db.getDocumentById(input.id);
+      if (!before) throw new TRPCError({ code: "NOT_FOUND" });
+      await db.updateDocument(input.id, input.patch as any);
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "document_edited",
+        targetType: "document",
+        targetId: input.id,
+        metadata: { fields: Object.keys(input.patch), before: Object.fromEntries(Object.keys(input.patch).map(k => [k, (before as any)[k]])) },
+      });
+      return { ok: true };
+    }),
+
+  /** Soft-delete a story (hides from public, retains in DB) */
+  softDeleteStory: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await db.softDeleteStory(input.id, ctx.user.id);
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "story_soft_deleted",
+        targetType: "story",
+        targetId: input.id,
+      });
+      return { ok: true };
+    }),
+
+  /** Hard-delete a story — requires confirmation phrase */
+  hardDeleteStory: adminProcedure
+    .input(z.object({ id: z.number(), confirmPhrase: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.confirmPhrase !== "PERMANENTLY DELETE") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Confirmation phrase incorrect. Type PERMANENTLY DELETE to confirm." });
+      }
+      await db.hardDeleteStory(input.id);
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "story_hard_deleted",
+        targetType: "story",
+        targetId: input.id,
+        metadata: { reason: "admin_hard_delete" },
+      });
+      return { ok: true };
+    }),
+
+  /** Soft-delete a document */
+  softDeleteDocument: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await db.softDeleteDocument(input.id, ctx.user.id);
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "document_soft_deleted",
+        targetType: "document",
+        targetId: input.id,
+      });
+      return { ok: true };
+    }),
+
+  /** Hard-delete a document — requires confirmation phrase */
+  hardDeleteDocument: adminProcedure
+    .input(z.object({ id: z.number(), confirmPhrase: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.confirmPhrase !== "PERMANENTLY DELETE") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Confirmation phrase incorrect. Type PERMANENTLY DELETE to confirm." });
+      }
+      await db.hardDeleteDocument(input.id);
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "document_hard_deleted",
+        targetType: "document",
+        targetId: input.id,
+        metadata: { reason: "admin_hard_delete" },
+      });
+      return { ok: true };
+    }),
+
+  /** Inline edit — generic field-level edit for any record type, audited */
+  inlineEdit: adminProcedure
+    .input(
+      z.object({
+        recordType: z.enum(["story", "document", "timeline_event", "actor", "prr"]),
+        recordId: z.number(),
+        field: z.string(),
+        oldValue: z.unknown(),
+        newValue: z.unknown(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const patch = { [input.field]: input.newValue };
+      switch (input.recordType) {
+        case "story":
+          await db.updateStory(input.recordId, patch as any);
+          break;
+        case "document":
+          await db.updateDocument(input.recordId, patch as any);
+          break;
+        case "timeline_event":
+          await db.updateTimelineEvent(input.recordId, patch as any);
+          break;
+        case "actor":
+          await db.updateActor(input.recordId, patch as any);
+          break;
+        case "prr":
+          await db.updatePrr(input.recordId, patch as any);
+          break;
+      }
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "inline_edit",
+        targetType: input.recordType,
+        targetId: input.recordId,
+        metadata: { field: input.field, oldValue: input.oldValue, newValue: input.newValue },
+      });
+      return { ok: true };
+    }),
+});
+
 /* =============== Document admin counts =============== */
 // Mounted into documentRouter via patch below; declared early so it sees auditRouter scope
 
@@ -1508,6 +1915,9 @@ export const appRouter = router({
   docketGoblin: docketGoblinRouter,
   user: userRouter,
   audit: auditRouter,
+  reviewRequest: reviewRequestRouter,
+  userData: userDataRouter,
+  adminEdit: adminEditRouter,
 });
 
 export type AppRouter = typeof appRouter;

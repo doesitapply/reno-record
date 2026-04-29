@@ -397,13 +397,36 @@ function ActorDetail({ slug }: { slug: string }) {
                 dossier.events.length === 0 &&
                 dossier.documents.length === 0 &&
                 dossier.prrs.length === 0 && (
-                  <div className="paper-card p-8 text-center">
-                    <BookOpen className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                    <h3 className="display-serif text-xl">No public records yet</h3>
-                    <p className="text-muted-foreground mt-2 text-sm">
-                      Evidence and timeline events for this actor are pending review or have not
-                      been published yet.
-                    </p>
+                  <div className="space-y-4">
+                    <div className="paper-card p-8">
+                      <div className="flex items-start gap-4">
+                        <BookOpen className="h-8 w-8 text-muted-foreground shrink-0 mt-0.5" />
+                        <div>
+                          <h3 className="display-serif text-xl">No public records yet</h3>
+                          <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                            Evidence and timeline events for this actor are pending editorial review
+                            or have not been submitted yet. Records in the moderation queue are not
+                            visible until approved.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="paper-card p-6 border-dashed">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div className="flex-1">
+                          <div className="eyebrow">Have records on this actor?</div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Court documents, emails, public records responses, or other sourced
+                            materials can be submitted for editorial review.
+                          </p>
+                        </div>
+                        <Link href="/submit">
+                          <Button variant="outline" className="gap-2 shrink-0">
+                            <FileText className="h-4 w-4" /> Submit records
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 )}
             </div>

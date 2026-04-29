@@ -1,9 +1,11 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, ScrollText, Shield } from "lucide-react";
+import { Menu, X, ScrollText, Shield, LogIn, User, LogOut, ChevronDown, FileText } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getLoginUrl } from "@/const";
+import { trpc } from "@/lib/trpc";
 
 const NAV = [
   { href: "/", label: "Home" },
@@ -17,7 +19,6 @@ const NAV = [
 ];
 
 function GoblinMark({ className }: { className?: string }) {
-  // Minimalist sigil: serif R with file-tab + amber stamp underline
   return (
     <svg
       viewBox="0 0 40 40"
@@ -40,6 +41,70 @@ function GoblinMark({ className }: { className?: string }) {
       </text>
       <rect x="6" y="32" width="22" height="2" fill="var(--amber)" />
     </svg>
+  );
+}
+
+function UserDropdown() {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const logout = trpc.auth.logout.useMutation({
+    onSuccess: () => { window.location.href = "/"; },
+  });
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    : "U";
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm border border-border hover:border-foreground/40 transition-colors text-sm"
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        <div className="h-6 w-6 rounded-full bg-[var(--amber)] text-foreground grid place-items-center text-[10px] font-bold font-mono">
+          {initials}
+        </div>
+        <span className="hidden sm:inline max-w-[100px] truncate text-sm">{user?.name || "Account"}</span>
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-52 bg-background border border-border rounded-sm shadow-lg z-50 py-1">
+          <div className="px-3 py-2 border-b border-border">
+            <div className="text-xs font-mono text-muted-foreground truncate">{user?.email || user?.name}</div>
+          </div>
+          <Link href="/profile" onClick={() => setOpen(false)}>
+            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary transition-colors">
+              <User className="h-3.5 w-3.5" /> My Profile
+            </button>
+          </Link>
+          <Link href="/profile#submissions" onClick={() => setOpen(false)}>
+            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary transition-colors">
+              <FileText className="h-3.5 w-3.5" /> My Submissions
+            </button>
+          </Link>
+          <div className="border-t border-border mt-1 pt-1">
+            <button
+              onClick={() => { setOpen(false); logout.mutate(); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Sign out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -101,11 +166,37 @@ export default function SiteShell({ children }: { children: ReactNode }) {
                 </Button>
               </Link>
             )}
+<<<<<<< Updated upstream
             <Link href="/submit">
               <Button size="sm" className="bg-foreground text-background hover:bg-[var(--navy)] gap-1.5">
                 <ScrollText className="h-3.5 w-3.5" /> Submit Evidence
               </Button>
             </Link>
+=======
+            {isAuthenticated ? (
+              <>
+                <Link href="/submit">
+                  <Button size="sm" className="bg-foreground text-background hover:bg-[var(--navy)] gap-1.5">
+                    <ScrollText className="h-3.5 w-3.5" /> Submit
+                  </Button>
+                </Link>
+                <UserDropdown />
+              </>
+            ) : (
+              <>
+                <a href={getLoginUrl()}>
+                  <Button variant="outline" size="sm" className="gap-1.5 border-foreground/30">
+                    <LogIn className="h-3.5 w-3.5" /> Sign in
+                  </Button>
+                </a>
+                <Link href="/submit">
+                  <Button size="sm" className="bg-foreground text-background hover:bg-[var(--navy)] gap-1.5">
+                    <ScrollText className="h-3.5 w-3.5" /> Submit Your Story
+                  </Button>
+                </Link>
+              </>
+            )}
+>>>>>>> Stashed changes
           </div>
 
           <button
@@ -120,6 +211,20 @@ export default function SiteShell({ children }: { children: ReactNode }) {
         {open && (
           <div className="lg:hidden border-t border-border">
             <nav className="container py-3 flex flex-col gap-0.5">
+              {/* Auth first on mobile */}
+              {isAuthenticated ? (
+                <div className="flex items-center gap-2 py-2 border-b border-border mb-1">
+                  <div className="h-7 w-7 rounded-full bg-[var(--amber)] text-foreground grid place-items-center text-[10px] font-bold font-mono shrink-0">
+                    {user?.name?.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "U"}
+                  </div>
+                  <span className="text-sm font-medium truncate flex-1">{user?.name || "Account"}</span>
+                </div>
+              ) : (
+                <a href={getLoginUrl()} onClick={() => setOpen(false)} className="flex items-center gap-2 py-2.5 border-b border-border mb-1 text-sm font-medium">
+                  <LogIn className="h-4 w-4" /> Sign in to submit
+                </a>
+              )}
+
               {NAV.map((item) => (
                 <Link
                   key={item.href}
@@ -130,15 +235,41 @@ export default function SiteShell({ children }: { children: ReactNode }) {
                   {item.label}
                 </Link>
               ))}
+
+              {isAuthenticated && (
+                <>
+                  <Link href="/profile" onClick={() => setOpen(false)} className="py-2 text-sm border-b border-border/60 flex items-center gap-2">
+                    <User className="h-3.5 w-3.5" /> My Profile
+                  </Link>
+                  <Link href="/profile#submissions" onClick={() => setOpen(false)} className="py-2 text-sm border-b border-border/60 flex items-center gap-2">
+                    <FileText className="h-3.5 w-3.5" /> My Submissions
+                  </Link>
+                </>
+              )}
+
               <div className="flex gap-2 pt-3">
                 {isAdmin && (
                   <Link href="/admin" onClick={() => setOpen(false)} className="flex-1">
-                    <Button variant="outline" className="w-full">Admin</Button>
+                    <Button variant="outline" className="w-full gap-1.5"><Shield className="h-3.5 w-3.5" /> Admin</Button>
                   </Link>
                 )}
                 <Link href="/submit" onClick={() => setOpen(false)} className="flex-1">
+<<<<<<< Updated upstream
                   <Button className="w-full bg-foreground text-background">Submit Evidence</Button>
+=======
+                  <Button className="w-full bg-foreground text-background gap-1.5">
+                    <ScrollText className="h-3.5 w-3.5" /> Submit
+                  </Button>
+>>>>>>> Stashed changes
                 </Link>
+                {isAuthenticated && (
+                  <button
+                    onClick={() => { setOpen(false); window.location.href = "/api/oauth/logout"; }}
+                    className="px-3 py-2 border border-border rounded-sm text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </nav>
           </div>

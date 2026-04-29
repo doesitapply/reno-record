@@ -1,10 +1,35 @@
 import { useSEO } from "@/hooks/useSEO";
 import { Link } from "wouter";
-import { ArrowRight, FileText } from "lucide-react";
+import { ArrowRight, FileText, Share2, Copy, Check, Twitter } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
+import { useState, useCallback } from "react";
+
+function ShareBar({ url, title }: { url: string; title: string }) {
+  const [copied, setCopied] = useState(false);
+  const copyLink = useCallback(() => {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [url]);
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+  return (
+    <div className="flex flex-wrap gap-2 mt-6">
+      <Button variant="outline" size="sm" onClick={copyLink} className="gap-2 text-xs">
+        {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+        {copied ? "Copied" : "Copy link"}
+      </Button>
+      <a href={tweetUrl} target="_blank" rel="noopener noreferrer">
+        <Button variant="outline" size="sm" className="gap-2 text-xs">
+          <Twitter className="h-3.5 w-3.5" /> Share on X
+        </Button>
+      </a>
+    </div>
+  );
+}
 
 const SECTIONS = [
   { id: "overview", label: "Overview" },
@@ -48,6 +73,10 @@ export default function ChurchRecord() {
               <span className="stamp text-[var(--amber)]">1,000+ days pending</span>
               <span className="stamp text-[var(--amber)]">No trial</span>
             </div>
+            <ShareBar
+              url={`${window.location.origin}/the-church-record`}
+              title="The Church Record — documented due process failures in Washoe County"
+            />
           </div>
           <aside className="lg:col-span-4">
             <div className="paper-card !bg-background/5 !border-background/15 p-5">
@@ -65,6 +94,28 @@ export default function ChurchRecord() {
           </aside>
         </div>
       </section>
+
+      {/* Correction / Editorial notes — public transparency */}
+      {(featured.data?.correctionNote || featured.data?.editorialNote) && (
+        <div className="container py-4">
+          {featured.data?.correctionNote && (
+            <div className="rounded border border-blue-500/30 bg-blue-500/5 p-4 mb-3">
+              <div className="flex items-start gap-2">
+                <span className="text-blue-500 text-xs font-mono uppercase tracking-widest shrink-0 mt-0.5">Correction notice</span>
+                <p className="text-sm text-foreground/85 ml-2">{featured.data.correctionNote}</p>
+              </div>
+            </div>
+          )}
+          {featured.data?.editorialNote && (
+            <div className="rounded border border-amber-400/30 bg-amber-400/5 p-4">
+              <div className="flex items-start gap-2">
+                <span className="text-amber-400 text-xs font-mono uppercase tracking-widest shrink-0 mt-0.5">Editorial note</span>
+                <p className="text-sm text-foreground/85 ml-2">{featured.data.editorialNote}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Overview */}
       <Section id="overview" eyebrow="Section 1" title="Overview">

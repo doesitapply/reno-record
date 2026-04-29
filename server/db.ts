@@ -698,3 +698,143 @@ export async function listAllActors() {
   if (!db) return [];
   return db.select().from(actors).orderBy(asc(actors.name));
 }
+
+export async function getRelatedTimelineEvents(docId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  // sourceDocuments is a JSON array of document IDs stored as text
+  // MySQL JSON_CONTAINS is the right tool here
+  const rows = await db
+    .select()
+    .from(timelineEvents)
+    .where(
+      and(
+        eq(timelineEvents.publicStatus, true),
+        sql`JSON_CONTAINS(${timelineEvents.sourceDocuments}, CAST(${docId} AS JSON), '$')`
+      )
+    )
+    .orderBy(asc(timelineEvents.eventDate));
+  return rows;
+}
+
+
+/* ================= Review Requests (v3.8) ================= */
+import {
+  reviewRequests,
+  InsertReviewRequest,
+  ReviewRequest,
+} from "../drizzle/schema";
+
+export async function createReviewRequest(
+  data: Omit<InsertReviewRequest, "id" | "status" | "createdAt" | "updatedAt" | "editorialNote" | "resolvedBy" | "resolvedAt">,
+): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [{ insertId }] = (await db.insert(reviewRequests).values({
+    ...data,
+    status: "submitted",
+  })) as unknown as [{ insertId: number }];
+  return insertId;
+}
+
+export async function getReviewRequestById(id: number): Promise<ReviewRequest | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(reviewRequests).where(eq(reviewRequests.id, id)).limit(1);
+  return r[0];
+}
+
+export async function listReviewRequestsByUser(userId: number): Promise<ReviewRequest[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(reviewRequests)
+    .where(eq(reviewRequests.requestorUserId, userId))
+    .orderBy(desc(reviewRequests.createdAt));
+}
+
+export async function listReviewRequests(filters: {
+  status?: string;
+  requestType?: string;
+  targetType?: string;
+}): Promise<ReviewRequest[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const conds: any[] = [];
+  if (filters.status) conds.push(eq(reviewRequests.status, filters.status as any));
+  if (filters.requestType) conds.push(eq(reviewRequests.requestType, filters.requestType as any));
+  if (filters.targetType) conds.push(eq(reviewRequests.targetType, filters.targetType as any));
+  let q: any = db.select().from(reviewRequests);
+  if (conds.length === 1) q = q.where(conds[0]);
+  else if (conds.length > 1) q = q.where(and(...conds));
+  return q.orderBy(desc(reviewRequests.createdAt));
+}
+
+export async function updateReviewRequest(
+  id: number,
+  patch: Partial<InsertReviewRequest>,
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(reviewRequests).set(patch).where(eq(reviewRequests.id, id));
+}
+
+/* ================= Story: owner list + soft/hard delete (v3.8) ================= */
+
+export async function listStoriesByOwner(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(stories)
+    .where(eq(stories.ownerUserId, userId))
+    .orderBy(desc(stories.createdAt));
+}
+
+export async function softDeleteStory(id: number, deletedBy: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(stories)
+    .set({ deletedAt: new Date(), deletedBy, publicPermission: false })
+    .where(eq(stories.id, id));
+}
+
+export async function hardDeleteStory(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(stories).where(eq(stories.id, id));
+}
+
+/* ================= Document: owner list + soft/hard delete (v3.8) ================= */
+
+export async function listDocumentsByOwner(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(documents)
+    .where(eq(documents.uploadedBy, userId))
+    .orderBy(desc(documents.createdAt));
+}
+
+export async function softDeleteDocument(id: number, deletedBy: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(documents)
+    .set({ deletedAt: new Date(), deletedBy, publicStatus: false, visibility: "private_admin_only" })
+    .where(eq(documents.id, id));
+}
+
+export async function hardDeleteDocument(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(documents).where(eq(documents.id, id));
+}
+
+/* ================= Alias for updatePrr casing compatibility ================= */
+export async function updatePrr(id: number, patch: Partial<InsertPublicRecordsRequest>): Promise<void> {
+  return updatePRR(id, patch);
+}

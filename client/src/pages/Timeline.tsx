@@ -1,12 +1,36 @@
 import { useSEO } from "@/hooks/useSEO";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Link } from "wouter";
-import { FileText, ArrowRight } from "lucide-react";
+import { FileText, ArrowRight, Copy, Check, Twitter } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
+
+function ShareBar({ url, title }: { url: string; title: string }) {
+  const [copied, setCopied] = useState(false);
+  const copyLink = useCallback(() => {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [url]);
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+  return (
+    <div className="flex flex-wrap gap-2 mt-4">
+      <Button variant="outline" size="sm" onClick={copyLink} className="gap-2 text-xs">
+        {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+        {copied ? "Copied" : "Copy link"}
+      </Button>
+      <a href={tweetUrl} target="_blank" rel="noopener noreferrer">
+        <Button variant="outline" size="sm" className="gap-2 text-xs">
+          <Twitter className="h-3.5 w-3.5" /> Share on X
+        </Button>
+      </a>
+    </div>
+  );
+}
 
 const CATEGORIES = [
   { value: "all", label: "All" },
@@ -41,6 +65,7 @@ export default function TimelinePage() {
               its date, category, status, and links to source documents. Filter by category and trace
               each card back to the underlying record where available.
             </p>
+            <ShareBar url={`${window.location.origin}/timeline`} title="The Reno Record — Docket Timeline: every documented event in order" />
             <div className="mt-7 flex flex-wrap gap-2">
               {CATEGORIES.map((c) => (
                 <button
