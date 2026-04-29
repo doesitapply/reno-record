@@ -1,19 +1,19 @@
 # The Reno Record — Project TODO
 
-Receipts for Due Process. A public-interest accountability archive for Washoe County.
+Patterns · Actors · Evidence. A public-interest misconduct exposure archive for Washoe County and related public agencies.
 
 ## Foundations
 - [x] Initialize full-stack project (web-db-user)
 - [x] Define DB schema: stories, documents, timeline_events, actors, public_records_requests, agent_tasks
 - [x] Apply migrations
 - [x] Editorial design tokens (deep navy, bone, neon amber, muted red) + serif/sans pairing in index.css
-- [x] Global site shell: top nav (Home, The Church Record, Timeline, Evidence, Public Records, Actors, Election, Patterns, Submit, Admin) + footer
+- [x] Global site shell: misconduct-first top nav (Home, Patterns, Evidence, Actors, Public Records, Timeline, Case Example, Accountability, Submit Evidence, Admin) + footer
 
 ## Public site
-- [x] Home page (hero, what this is, why it matters, core pattern, featured timeline preview, submit CTA, evidence preview, election preview, footer)
-- [x] The Church Record (main story page) with sectioned narrative + key actors
+- [x] Home page reframed as misconduct exposure archive (hero, what this is, pattern engine, case example, timeline preview, submit CTA, evidence preview, footer)
+- [x] The Church Record demoted from main story to case example with sectioned narrative + key actors
 - [x] Interactive Timeline page with category filters
-- [x] Evidence Archive: search, filter by type, inline PDF viewer
+- [x] Evidence Archive: search, filter by type, inline PDF viewer with same-origin storage streaming
 - [x] Submit Your Story page (intake form + multi-file upload + redaction warnings + consent checkboxes)
 - [x] Public Records Tracker (status badges + per-request status history timeline)
 - [x] Actor pages (profile cards + index)
@@ -28,8 +28,8 @@ Receipts for Due Process. A public-interest accountability archive for Washoe Co
 - [x] Admin: upload evidence documents and link to stories
 
 ## Docket Goblin AI
-- [x] Server: invokeLLM-based tag + summary draft for documents/stories
-- [x] UI: "Run Docket Goblin" button in admin moderation; output stored as advisory only
+- [x] Server: invokeLLM-based misconduct analysis draft for documents/stories
+- [x] UI: "Run Docket Goblin" button in admin moderation; richer actor/evidence/pattern output stored as advisory only
 - [x] Strict guard: never auto-publishes; admin approval required (covered by tests)
 
 ## Quality
@@ -94,6 +94,7 @@ Receipts for Due Process. A public-interest accountability archive for Washoe Co
 - [x] Public promotional ad image generated (16:9 + 9:16 vertical for Stories)
 - [x] Operator launch checklist doc (evidence upload steps, SMTP, domain)
 - [x] Tests updated, checkpoint saved
+- [x] Evidence online viewer fixed: `/manus-storage/*` streams files inline and supports HEAD probes
 
 ### Operator Tasks (requires real files/credentials — not buildable by code)
 - [ ] Upload 10 core evidence PDFs via Docket Goblin ingest
@@ -112,3 +113,7 @@ Receipts for Due Process. A public-interest accountability archive for Washoe Co
 - [x] PRR status history timeline
 - [ ] Public read rate limiting
 - [ ] Bulk evidence export for admin
+
+- [x] Misconduct-first public framing: demote The Church Record to a case example and make patterns/evidence/actors the main site frame
+- [x] Deeper evidence ingest draft: actors, evidence items, allegations, chronology, pattern signals, redaction risks, source quality, follow-up questions, and PRR targets
+- [ ] Second-wave intake redesign: replace case-only submit flow with flexible misconduct report/evidence intake categories

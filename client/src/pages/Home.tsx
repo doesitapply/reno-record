@@ -115,19 +115,19 @@ export default function Home() {
               Record.
             </h1>
             <p className="mt-6 max-w-xl text-base md:text-lg text-background/80 leading-relaxed">
-              A public-interest archive documenting court delay, ignored filings, pretrial detention
-              harm, self-representation barriers, missing records, and procedural abuse patterns in
-              Washoe County, Nevada.
+              A public exposure archive for misconduct patterns: who was involved, what records prove it,
+              how the timeline fits together, which agencies failed to respond, and where one case
+              becomes evidence of a larger system.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
-              <Link href="/the-church-record">
+              <Link href="/patterns">
                 <Button size="lg" className="bg-[var(--amber)] text-[var(--ink)] hover:bg-[var(--amber)]/90 gap-2">
-                  Read the Main Record <ArrowRight className="h-4 w-4" />
+                  Start with the Patterns <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link href="/submit">
                 <Button size="lg" variant="outline" className="border-background/30 text-background bg-transparent hover:bg-background/10 gap-2">
-                  Submit Your Story
+                  Submit Evidence
                 </Button>
               </Link>
               <Link href="/evidence">
@@ -149,7 +149,7 @@ export default function Home() {
                 <Stat label="Family harm reports" value={metrics.data?.familyHarm ?? 0} />
               </div>
               <div className="mt-5 text-[11px] font-mono uppercase tracking-[0.18em] text-background/60">
-                Reported / under review · not adjudicated
+                Signals under review · record-backed where possible
               </div>
             </div>
           </div>
@@ -164,15 +164,15 @@ export default function Home() {
         </div>
         <div className="md:col-span-7 space-y-5 text-[1.04rem] leading-relaxed text-foreground/85">
           <p>
-            <strong>The Reno Record is a record archive, not a rant archive.</strong> Dates. Orders.
+            <strong>The Reno Record is a misconduct evidence archive, not a rant archive.</strong> Dates. Orders.
             Emails. Warrants. Transcripts. Public records. Custody time. Missing findings. Each
-            entry is sourced from a document or a sworn submitter account, then preserved here so
-            patterns can be compared across cases.
+            entry is organized into actors, events, evidence, allegations, redaction risks, and pattern
+            indicators so one incident can be compared against the next.
           </p>
           <p>
-            We document procedural failure where it happens — Washoe County's criminal courts,
-            pretrial machinery, public defender practice, district attorney conduct, and the
-            agencies whose silences have started to look like a system.
+            The point is not to make one case the whole story. The point is to expose the machinery: court
+            delay, ignored filings, retaliatory posture, records obstruction, custody pressure, agency
+            silence, and repeated conduct by the same public actors.
           </p>
           <p className="text-muted-foreground">
             Submissions are reviewed before publication. Allegations are presented as reported until
@@ -185,27 +185,26 @@ export default function Home() {
       <section className="border-y border-border bg-secondary/60">
         <div className="container py-16 max-w-4xl">
           <PullQuote>
-            One case is a complaint. Ten cases are a pattern. A hundred cases are a system trying
-            not to be seen.
+            One receipt is a data point. Repeated conduct by the same actors becomes a pattern.
+            A pattern with records becomes public exposure.
           </PullQuote>
-          <div className="mt-6 eyebrow">— The Reno Record · founding premise</div>
+          <div className="mt-6 eyebrow">— The Reno Record · editorial standard</div>
         </div>
       </section>
 
-      {/* Featured: The Church Record */}
+      {/* Case example: The Church Record */}
       <section className="container py-20 grid lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-5">
-          <div className="eyebrow">Featured Case</div>
+          <div className="eyebrow">Case Example</div>
           <h2 className="display-serif text-4xl mt-3">The Church Record</h2>
           <p className="mt-5 text-foreground/85 leading-relaxed">
-            One defendant. Roughly 110 days in custody. More than 1,000 days pending. Repeated
-            requests for rulings, self-representation, written findings, and trial. Documented
-            delay, filing restrictions, competency detours, no-bail warrant practice, unresolved
-            motions — and silence where written answers should exist.
+            This is no longer the whole site; it is one documented example. The Church Record remains as
+            a side file showing how delay, filing restrictions, competency detours, no-bail warrant
+            practice, unresolved motions, and records silence can connect into a visible pattern.
           </p>
           <Link href="/the-church-record">
             <Button className="mt-7 bg-foreground text-background gap-2">
-              Open the case file <ArrowUpRight className="h-4 w-4" />
+              Open the example file <ArrowUpRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -213,9 +212,9 @@ export default function Home() {
           <div className="paper-card p-6 md:p-8">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
-                <div className="eyebrow">Docket Summary</div>
+                <div className="eyebrow">Example Summary</div>
                 <h3 className="display-serif text-2xl mt-1">
-                  {featured.data?.alias || "Church v. Washoe County (lead defendant case)"}
+                  {featured.data?.alias || "Church v. Washoe County (documented example)"}
                 </h3>
                 <div className="mt-1 text-sm text-muted-foreground">
                   {featured.data?.court || "Second Judicial District Court, Washoe County"}
@@ -255,14 +254,14 @@ export default function Home() {
         <SectionCard
           icon={<ClipboardList className="h-5 w-5" />}
           title="Timeline"
-          desc="Filterable docket of state and federal events linked to source documents."
+          desc="Cross-case chronology of incidents, filings, agency responses, and public-records pressure."
           href="/timeline"
           cta="Open timeline"
         />
         <SectionCard
           icon={<FileText className="h-5 w-5" />}
           title="Evidence Archive"
-          desc="Searchable library of orders, motions, emails, transcripts, warrants — viewed inline."
+          desc="Source files, receipts, transcripts, images, and responses organized around the conduct they document."
           href="/evidence"
           cta="Browse evidence"
         />
@@ -283,7 +282,7 @@ export default function Home() {
         <SectionCard
           icon={<Gavel className="h-5 w-5" />}
           title="Pattern Dashboard"
-          desc="Anonymized aggregate metrics across submitted cases."
+          desc="The main dashboard: recurring actors, repeated practices, delay signals, records obstruction, and harm indicators."
           href="/patterns"
           cta="See the patterns"
         />
@@ -296,8 +295,8 @@ export default function Home() {
         />
         <SectionCard
           icon={<ScrollText className="h-5 w-5" />}
-          title="Submit Your Story"
-          desc="Your dates, orders, custody time, and documents — reviewed before any publication."
+          title="Submit Evidence"
+          desc="Upload records or report misconduct signals; we separate actors, events, evidence, allegations, and redaction risks before publication."
           href="/submit"
           cta="Add your record"
           accent
@@ -311,17 +310,17 @@ export default function Home() {
         />
       </section>
 
-      {/* Recent docket / preview */}
+      {/* Recent exposure map / preview */}
       <section className="container py-20 grid lg:grid-cols-12 gap-10">
         <div className="lg:col-span-5">
-          <div className="eyebrow">Recent docket</div>
-          <h2 className="display-serif text-3xl md:text-4xl mt-3">From the timeline</h2>
+          <div className="eyebrow">Recent exposure map</div>
+          <h2 className="display-serif text-3xl md:text-4xl mt-3">From the public record</h2>
           <p className="mt-4 text-muted-foreground">
-            A live look at the most recent confirmed and reported entries on the public timeline.
+            A live look at approved incidents, filings, responses, and misconduct signals from the public timeline.
           </p>
           <Link href="/timeline">
             <Button variant="outline" className="mt-6 gap-2">
-              Open full timeline <ArrowRight className="h-4 w-4" />
+              Open full chronology <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -356,7 +355,7 @@ export default function Home() {
           ))}
           {(timeline.data ?? []).length === 0 && (
             <div className="paper-card p-8 text-center text-muted-foreground">
-              The public timeline is being built. Check back as records are approved.
+              The public exposure map is being built. Check back as records are reviewed and approved.
             </div>
           )}
         </div>
@@ -368,38 +367,39 @@ export default function Home() {
           <div className="md:col-span-7">
             <div className="eyebrow">Inside the engine room</div>
             <h2 className="display-serif text-3xl md:text-4xl mt-3 rule-amber">
-              Meet Docket Goblin
+              Evidence ingest that separates the mess
             </h2>
             <p className="mt-5 text-foreground/85 leading-relaxed">
-              The Reno Record's archive librarian. Docket Goblin reads incoming documents and
-              submissions, drafts neutral summaries, suggests issue tags, and surfaces possible
-              duplicates and missing metadata for human review.
+              The Reno Record's archive librarian. Docket Goblin reads incoming records and separates
+              them into actors, evidence items, allegations, timeline events, pattern indicators,
+              redaction risks, source quality, and follow-up record requests for human review.
             </p>
             <p className="mt-3 text-foreground/85 leading-relaxed">
               <strong>Docket Goblin never publishes anything.</strong> Every draft requires explicit
-              admin approval before it appears on the public site.
+              editorial approval before it appears on the public site.
             </p>
           </div>
           <div className="md:col-span-5">
             <div className="paper-card p-6 font-mono text-[13px]">
-              <div className="eyebrow mb-3">Goblin draft · advisory only</div>
+              <div className="eyebrow mb-3">Ingest pass · advisory only</div>
               <div className="space-y-2.5">
                 <div>
-                  <span className="text-muted-foreground">summary:</span> Order denying motion for
-                  Faretta canvass; signed by department judge.
+                  <span className="text-muted-foreground">actors:</span> judge · defense counsel · agency clerk
                 </div>
                 <div>
-                  <span className="text-muted-foreground">tags:</span>{" "}
-                  <span className="text-[var(--rust)]">faretta</span>{" "}
-                  <span className="text-[var(--rust)]">self-representation</span>{" "}
-                  <span className="text-[var(--rust)]">ignored-motion</span>
+                  <span className="text-muted-foreground">evidence:</span> order · minute entry · email receipt
                 </div>
                 <div>
-                  <span className="text-muted-foreground">warnings:</span> Verify redaction of
-                  contact info on cover page.
+                  <span className="text-muted-foreground">patterns:</span>{" "}
+                  <span className="text-[var(--rust)]">ignored-motion</span>{" "}
+                  <span className="text-[var(--rust)]">records-obstruction</span>{" "}
+                  <span className="text-[var(--rust)]">custody-pressure</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">warnings:</span> Verify redactions; separate allegation from record-confirmed fact.
                 </div>
                 <div className="pt-3 border-t border-border text-[11px] uppercase tracking-widest text-muted-foreground">
-                  Status: pending admin approval
+                  Status: separated for admin review
                 </div>
               </div>
             </div>
@@ -411,20 +411,20 @@ export default function Home() {
       <section className="container py-20">
         <div className="paper-card p-10 md:p-14 grid md:grid-cols-12 gap-8 items-center">
           <div className="md:col-span-8">
-            <div className="eyebrow">If this happened to you too</div>
+            <div className="eyebrow">If you have receipts</div>
             <h2 className="display-serif text-3xl md:text-4xl mt-2">
-              Send the receipts.
+              Expose the pattern.
             </h2>
             <p className="mt-4 text-muted-foreground max-w-2xl">
-              Case numbers. Dates. Orders. Minutes. Emails. Warrants. Grievances. Discovery issues.
-              Custody time. Trial delays. What you asked for. What they ignored. We read everything
-              before it goes public.
+              Names, agencies, dates, orders, minutes, emails, warrants, grievances, public-records responses,
+              custody time, delay, retaliation, and what was ignored. We separate the receipts from
+              the allegations before anything goes public.
             </p>
           </div>
           <div className="md:col-span-4 flex md:justify-end">
             <Link href="/submit">
               <Button size="lg" className="bg-foreground text-background gap-2">
-                Submit Your Story <ArrowRight className="h-4 w-4" />
+                Submit Evidence <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>

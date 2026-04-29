@@ -8,11 +8,11 @@
 | Backend | Node 22 + Express 4 + tRPC 11 + superjson | Running on port 3000 |
 | DB | TiDB / MySQL via Drizzle ORM | Live; 10 tables; PRR status-history migration added |
 | Auth | Manus OAuth, JWT session cookie | Wired; owner auto-promoted to `admin` |
-| Storage | Manus S3 via `storagePut` (`/manus-storage/{key}`) | Wired; signed-redirect serving |
+| Storage | Manus S3 via `storagePut` (`/manus-storage/{key}`) | Wired; same-origin inline streaming proxy for evidence viewing |
 | LLM | Manus Forge (Gemini 2.5 Flash) via `invokeLLM` | Wired (system + frontend keys injected) |
 | Notifications | `notifyOwner()` server helper | Available; not yet bound to events |
-| Tests | Vitest | 55/55 passing across 2 suites |
-| Checkpoint | `cdc3290d` (v1) — v2 + v3 work uncheckpointed | **Needs new checkpoint before publish** |
+| Tests | Vitest | 57/57 passing across 3 suites |
+| Checkpoint | PRR status-history checkpoint pushed; evidence viewer and misconduct-first pivot verified locally | **Needs checkpoint/push before publish** |
 | Deploy | Manus built-in hosting | Not yet published; user clicks Publish in UI |
 
 Live preview URL: `https://3000-ih9kzkycn4ncyvns0ryaf-91477af8.us1.manus.computer`
@@ -25,7 +25,7 @@ Migrations include the full Reno Record schema, chat/ingest/audit additions, and
 
 ## 3. Public Pages (all rendering)
 
-Home, The Church Record (featured case), Timeline (category-filtered), Evidence Archive (search + inline PDF viewer), Submit Your Story (intake + multi-file upload + dual consent), Public Records Tracker with per-request status history timelines, Actors index + detail, Election & Accountability (neutral/public-record), Pattern Dashboard, Privacy.
+Home now frames the project as a public misconduct exposure archive; The Church Record is demoted to a documented case example rather than the whole product. Rendering pages include Timeline (category-filtered), Evidence Archive (search + inline PDF viewer), Submit Evidence (intake + multi-file upload + dual consent), Public Records Tracker with per-request status history timelines, Actors index + detail, Election & Accountability (neutral/public-record), Pattern Dashboard, Privacy.
 
 ## 4. Admin
 
@@ -35,7 +35,7 @@ Manus OAuth sign-in at `/admin`. Tabs: Goblin Ingest queue, Stories, Documents, 
 
 - Persistent floating chat bubble (admin-only) on every page.
 - Grounded in archive context (stories, documents, timeline, actors, PRRs) on every send.
-- Drop-zone in bubble: file → extract text → LLM-classify → draft title/summary/source-type/case-number/date/actors/tags → optional proposed timeline event → stage as **pending** document linked to the right story.
+- Drop-zone in bubble: file → extract text → LLM-classify → draft title/summary/source-type/case-number/date/actors/tags plus structured actor extraction, evidence items, allegations, chronology, pattern signals, redaction risks, source quality, follow-up questions, public-records targets, and optional proposed timeline event → stage as **pending** document linked to the right story.
 - Hard guarantee: never sets `publicStatus=true` and never sets `reviewStatus="approved"`. Admin-explicit approval is the only publication path.
 - Tested: 4 dedicated tests covering RBAC + advisory-only + pending-on-ingest + admin-only approveIngest.
 
@@ -47,7 +47,7 @@ Manus OAuth sign-in at `/admin`. Tabs: Goblin Ingest queue, Stories, Documents, 
 3. **No saved checkpoint since v1** — current state (chat bubble + ingest pipeline) is not yet snapshotted; cannot publish without it.
 
 ### Soft gaps (not blocking, real)
-4. **Evidence Archive empty** until you (admin) upload PDFs or use Goblin ingest. Church Record + Timeline only show evidence links once approved evidence exists.
+4. **Evidence Archive needs approved uploaded evidence to display records.** The online viewer now uses a same-origin streaming proxy instead of redirecting inline viewers to external signed storage URLs.
 5. **Actor detail pages** render profile but don't yet aggregate related events / related documents.
 6. **No CRUD UI in admin yet** for Stripe-style scoped CRUD on actors/timeline/PRRs (mutations exist; UI is partial).
 7. **Per-page SEO meta tags** are generic; should be per-page (title/description/OG).
@@ -88,14 +88,20 @@ The platform supports buying or binding a domain in-app. Suggest `therenorecord.
 
 ## 8. Tests
 
-55/55 passing in two suites:
+57/57 passing in three suites:
 - `auth.logout.test.ts` — session clear behavior.
 - `renoRecord.test.ts` — moderation gating, consent enforcement, admin-only RBAC, Docket Goblin advisory-only behavior, chat + ingest RBAC, no-auto-publish on ingest, admin-only approveIngest, and PRR status-history create/update validation.
+- `storageProxy.test.ts` — evidence files stream inline through `/manus-storage/*` and HEAD probes do not fall through to the SPA fallback.
 
 ## 9. Recommended Next Sequence
 
-1. **Save a checkpoint now** to lock current state, including the PRR status-history feature.
+1. **Save a checkpoint now** to lock the evidence viewing proxy fix.
 2. **Finish v3 upload security + auth-gated submissions** (in progress; ~30 min).
 3. **Add Stripe via `webdev_add_feature`** and wire the paywall (v4) — needs your pricing call + Stripe keys.
 4. **Custom domain + per-page SEO + first real evidence uploads** before going public.
 5. **Publish.**
+
+
+## Misconduct-first pivot completed locally
+
+The public framing has been shifted away from treating The Church Record as the whole product. It is now presented as one documented case example inside a broader public misconduct exposure archive. The main site navigation and home page now emphasize misconduct patterns, actors, evidence, timelines, public-records pressure, and review-safe publication. Docket Goblin ingest has also been expanded from a narrow summary/tag/timeline draft into a deeper advisory analysis that separates actors, evidence items, allegations, chronology, pattern signals, redaction risks, source quality, follow-up questions, and public-records targets before human review. The local browser preview rendered the new home-page framing successfully, and `pnpm check && pnpm test && pnpm build` passed after the pivot.

@@ -116,7 +116,7 @@ function AdminDashboard() {
 
         <Tabs defaultValue="stories">
           <TabsList>
-            <TabsTrigger value="ingest">Goblin Ingest</TabsTrigger>
+            <TabsTrigger value="ingest">Evidence Ingest</TabsTrigger>
             <TabsTrigger value="stories">Stories</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
@@ -158,11 +158,11 @@ function IngestTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="display-serif text-2xl">Goblin Ingest Queue</h2>
+          <h2 className="display-serif text-2xl">Evidence Ingest Queue</h2>
           <p className="text-sm text-muted-foreground">
             Drop files into the Docket Goblin chat bubble (bottom-right). Each file is
-            extracted, classified, tagged, and staged here as a pending document.
-            Nothing is public until you approve below.
+            extracted into actors, evidence items, allegations, chronology, pattern signals, redaction
+            risks, and follow-up records targets. Nothing is public until you approve below.
           </p>
         </div>
         <Button
@@ -250,6 +250,66 @@ function IngestTab() {
                           (matches existing: {proposed.join(", ")})
                         </span>
                       )}
+                    </div>
+                  )}
+                  {((draft.actors?.length || 0) > 0 || (draft.evidenceItems?.length || 0) > 0 || (draft.patternSignals?.length || 0) > 0 || (draft.allegations?.length || 0) > 0) && (
+                    <div className="mt-3 grid gap-2 md:grid-cols-2 text-xs">
+                      {(draft.actors?.length || 0) > 0 && (
+                        <div className="rounded border border-border bg-secondary/35 p-2">
+                          <div className="uppercase tracking-wider text-muted-foreground mb-1">Actors separated</div>
+                          <div className="space-y-1">
+                            {draft.actors.slice(0, 6).map((actor: any, idx: number) => (
+                              <div key={`${actor.name}-${idx}`}>
+                                <span className="font-medium">{actor.name}</span>
+                                <span className="text-muted-foreground"> · {actor.category}{actor.agency ? ` · ${actor.agency}` : ""}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {(draft.evidenceItems?.length || 0) > 0 && (
+                        <div className="rounded border border-border bg-secondary/35 p-2">
+                          <div className="uppercase tracking-wider text-muted-foreground mb-1">Evidence items</div>
+                          <div className="space-y-1">
+                            {draft.evidenceItems.slice(0, 5).map((item: any, idx: number) => (
+                              <div key={`${item.label}-${idx}`}>
+                                <span className="font-medium">{item.label}</span>
+                                <span className="text-muted-foreground"> · {item.evidenceType} · {item.confidence}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {(draft.patternSignals?.length || 0) > 0 && (
+                        <div className="rounded border border-border bg-secondary/35 p-2">
+                          <div className="uppercase tracking-wider text-muted-foreground mb-1">Pattern signals</div>
+                          <div className="flex flex-wrap gap-1">
+                            {draft.patternSignals.slice(0, 8).map((p: any, idx: number) => (
+                              <Badge key={`${p.tag}-${idx}`} variant="outline" className="font-mono text-[10px] uppercase">{p.tag}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {(draft.allegations?.length || 0) > 0 && (
+                        <div className="rounded border border-border bg-secondary/35 p-2">
+                          <div className="uppercase tracking-wider text-muted-foreground mb-1">Allegations / concerns</div>
+                          <div className="space-y-1">
+                            {draft.allegations.slice(0, 4).map((allegation: any, idx: number) => (
+                              <div key={idx}>
+                                <span className="font-medium">{allegation.status?.replace(/_/g, " ")}</span>
+                                <span className="text-muted-foreground"> · {allegation.allegation}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {((draft.chronology?.length || 0) > 0 || (draft.redactionRisks?.length || 0) > 0 || (draft.publicRecordsTargets?.length || 0) > 0) && (
+                    <div className="mt-3 rounded border border-amber-300/25 bg-amber-400/5 p-2 text-xs space-y-1">
+                      {(draft.chronology?.length || 0) > 0 && <div><span className="uppercase tracking-wider text-amber-300 mr-1">Chronology:</span>{draft.chronology.length} extracted event(s)</div>}
+                      {(draft.redactionRisks?.length || 0) > 0 && <div><span className="uppercase tracking-wider text-amber-300 mr-1">Redaction:</span>{draft.redactionRisks.map((r: any) => `${r.riskType}:${r.severity}`).join(" · ")}</div>}
+                      {(draft.publicRecordsTargets?.length || 0) > 0 && <div><span className="uppercase tracking-wider text-amber-300 mr-1">PRR targets:</span>{draft.publicRecordsTargets.map((r: any) => r.agency).join(" · ")}</div>}
                     </div>
                   )}
                   {(draft.warnings?.length || 0) > 0 && (

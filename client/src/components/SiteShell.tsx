@@ -7,13 +7,13 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/", label: "Home" },
-  { href: "/the-church-record", label: "The Church Record" },
-  { href: "/timeline", label: "Timeline" },
+  { href: "/patterns", label: "Misconduct Patterns" },
   { href: "/evidence", label: "Evidence" },
-  { href: "/public-records", label: "Public Records" },
   { href: "/actors", label: "Actors" },
-  { href: "/election", label: "Election" },
-  { href: "/patterns", label: "Patterns" },
+  { href: "/public-records", label: "Public Records" },
+  { href: "/timeline", label: "Timeline" },
+  { href: "/the-church-record", label: "Case Example" },
+  { href: "/election", label: "Accountability" },
 ];
 
 function GoblinMark({ className }: { className?: string }) {
@@ -54,8 +54,8 @@ export default function SiteShell({ children }: { children: ReactNode }) {
       {/* Top utility bar */}
       <div className="border-b border-border bg-foreground text-background">
         <div className="container flex items-center justify-between py-1.5 text-[11px] font-mono uppercase tracking-[0.18em]">
-          <span className="opacity-80">Washoe County · Public Accountability Archive</span>
-          <span className="hidden sm:inline opacity-60">Receipts for Due Process</span>
+          <span className="opacity-80">Public Misconduct Exposure Archive</span>
+          <span className="hidden sm:inline opacity-60">Patterns · Actors · Evidence</span>
         </div>
       </div>
 
@@ -66,7 +66,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
             <GoblinMark className="h-9 w-9 text-foreground group-hover:text-[var(--navy)] transition-colors" />
             <div className="leading-tight">
               <div className="display-serif text-[1.55rem] font-bold">The Reno Record</div>
-              <div className="eyebrow !text-[0.62rem] mt-0.5">Receipts for Due Process</div>
+              <div className="eyebrow !text-[0.62rem] mt-0.5">Patterns · Actors · Evidence</div>
             </div>
           </Link>
 
@@ -103,7 +103,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
             )}
             <Link href="/submit">
               <Button size="sm" className="bg-foreground text-background hover:bg-[var(--navy)] gap-1.5">
-                <ScrollText className="h-3.5 w-3.5" /> Submit Your Story
+                <ScrollText className="h-3.5 w-3.5" /> Submit Evidence
               </Button>
             </Link>
           </div>
@@ -137,7 +137,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
                   </Link>
                 )}
                 <Link href="/submit" onClick={() => setOpen(false)} className="flex-1">
-                  <Button className="w-full bg-foreground text-background">Submit Your Story</Button>
+                  <Button className="w-full bg-foreground text-background">Submit Evidence</Button>
                 </Link>
               </div>
             </nav>
@@ -156,28 +156,29 @@ export default function SiteShell({ children }: { children: ReactNode }) {
               <div>
                 <div className="display-serif text-xl">The Reno Record</div>
                 <div className="text-[11px] font-mono uppercase tracking-[0.2em] opacity-70">
-                  Receipts for Due Process
+                  Patterns · Actors · Evidence
                 </div>
               </div>
             </div>
             <p className="mt-5 text-sm leading-relaxed opacity-80 max-w-md">
-              A public-interest documentation project. Submitted allegations are reviewed before
-              publication. This site does not provide legal advice and does not endorse candidates.
+              A public-interest documentation project focused on misconduct patterns, responsible actors,
+              source evidence, and public-records pressure. Submitted allegations are reviewed before
+              publication; this site does not provide legal advice and does not endorse candidates.
             </p>
           </div>
           <div>
             <div className="eyebrow !text-background/70 mb-3">Archive</div>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/the-church-record" className="opacity-90 hover:opacity-100">The Church Record</Link></li>
-              <li><Link href="/timeline" className="opacity-90 hover:opacity-100">Timeline</Link></li>
+              <li><Link href="/patterns" className="opacity-90 hover:opacity-100">Misconduct Patterns</Link></li>
               <li><Link href="/evidence" className="opacity-90 hover:opacity-100">Evidence Archive</Link></li>
-              <li><Link href="/public-records" className="opacity-90 hover:opacity-100">Public Records Tracker</Link></li>
+              <li><Link href="/actors" className="opacity-90 hover:opacity-100">Actor Dossiers</Link></li>
+              <li><Link href="/the-church-record" className="opacity-90 hover:opacity-100">Case Example</Link></li>
             </ul>
           </div>
           <div>
             <div className="eyebrow !text-background/70 mb-3">Participate</div>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/submit" className="opacity-90 hover:opacity-100">Submit Your Story</Link></li>
+              <li><Link href="/submit" className="opacity-90 hover:opacity-100">Submit Evidence</Link></li>
               <li><Link href="/patterns" className="opacity-90 hover:opacity-100">Pattern Dashboard</Link></li>
               <li><Link href="/election" className="opacity-90 hover:opacity-100">Election &amp; Accountability</Link></li>
               <li><Link href="/privacy" className="opacity-90 hover:opacity-100">Privacy &amp; Terms</Link></li>
@@ -187,7 +188,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
         <div className="border-t border-background/15">
           <div className="container py-4 text-[11px] font-mono uppercase tracking-[0.2em] opacity-60 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
             <span>© {new Date().getFullYear()} The Reno Record</span>
-            <span>One case is a complaint. Ten is a pattern. A hundred is a system.</span>
+            <span>One receipt is a data point. Repetition becomes a pattern. Patterns demand exposure.</span>
           </div>
         </div>
       </footer>
