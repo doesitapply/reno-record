@@ -6,12 +6,12 @@
 |---|---|---|
 | Frontend | React 19 + Vite 7 + Tailwind 4 + shadcn/ui + wouter | Running, no LSP/TS errors |
 | Backend | Node 22 + Express 4 + tRPC 11 + superjson | Running on port 3000 |
-| DB | TiDB / MySQL via Drizzle ORM | Live; 10 tables; 2 migrations applied |
+| DB | TiDB / MySQL via Drizzle ORM | Live; 10 tables; PRR status-history migration added |
 | Auth | Manus OAuth, JWT session cookie | Wired; owner auto-promoted to `admin` |
 | Storage | Manus S3 via `storagePut` (`/manus-storage/{key}`) | Wired; signed-redirect serving |
 | LLM | Manus Forge (Gemini 2.5 Flash) via `invokeLLM` | Wired (system + frontend keys injected) |
 | Notifications | `notifyOwner()` server helper | Available; not yet bound to events |
-| Tests | Vitest | 11/11 passing |
+| Tests | Vitest | 55/55 passing across 2 suites |
 | Checkpoint | `cdc3290d` (v1) — v2 + v3 work uncheckpointed | **Needs new checkpoint before publish** |
 | Deploy | Manus built-in hosting | Not yet published; user clicks Publish in UI |
 
@@ -21,15 +21,15 @@ Live preview URL: `https://3000-ih9kzkycn4ncyvns0ryaf-91477af8.us1.manus.compute
 
 `users`, `stories`, `documents`, `timeline_events`, `actors` (with `judicial_actor` flag), `public_records_requests`, `agent_tasks` (Goblin advisory log), `chat_sessions`, `chat_messages`, `ingest_jobs` (auto-ingest pipeline state).
 
-Migrations: `0000_lyrical_jamie_braddock.sql` (initial), `0001_special_supernaut.sql` (full Reno Record schema), `0002_condemned_spiral.sql` (chat + ingest + judicial flag).
+Migrations include the full Reno Record schema, chat/ingest/audit additions, and `0004_prr_status_history.sql`, which adds structured JSON history entries to `public_records_requests`.
 
 ## 3. Public Pages (all rendering)
 
-Home, The Church Record (featured case), Timeline (category-filtered), Evidence Archive (search + inline PDF viewer), Submit Your Story (intake + multi-file upload + dual consent), Public Records Tracker, Actors index + detail, Election & Accountability (neutral/public-record), Pattern Dashboard, Privacy.
+Home, The Church Record (featured case), Timeline (category-filtered), Evidence Archive (search + inline PDF viewer), Submit Your Story (intake + multi-file upload + dual consent), Public Records Tracker with per-request status history timelines, Actors index + detail, Election & Accountability (neutral/public-record), Pattern Dashboard, Privacy.
 
 ## 4. Admin
 
-Manus OAuth sign-in at `/admin`. Tabs: Goblin Ingest queue, Stories, Documents, Timeline, Actors, Public Records. Approve/reject/request-changes for stories and documents; CRUD for timeline / actors / PRRs; admin upload of evidence documents.
+Manus OAuth sign-in at `/admin`. Tabs: Goblin Ingest queue, Stories, Documents, Timeline, Actors, Public Records. Approve/reject/request-changes for stories and documents; CRUD for timeline / actors / PRRs; admin upload of evidence documents; PRR admin form now captures public status-history entries using `YYYY-MM-DD | status | note` lines.
 
 ## 5. Docket Goblin (AI assistant)
 
@@ -52,7 +52,7 @@ Manus OAuth sign-in at `/admin`. Tabs: Goblin Ingest queue, Stories, Documents, 
 6. **No CRUD UI in admin yet** for Stripe-style scoped CRUD on actors/timeline/PRRs (mutations exist; UI is partial).
 7. **Per-page SEO meta tags** are generic; should be per-page (title/description/OG).
 8. **No mobile QA pass** done.
-9. **Public Records Tracker** has status badges but no per-request status history timeline.
+9. **Public Records Tracker status history is implemented**; next polish could add document attachments and agency-response source links per status entry.
 
 ### Premium tier (v4, not started)
 10. **Two-tier model (free public / paid Receipts)** — schema needs a `subscriber` role; Stripe integration needs to be added via `webdev_add_feature stripe`; pricing page; `<Paywall>` wrapper component; gated procedures.
@@ -88,13 +88,13 @@ The platform supports buying or binding a domain in-app. Suggest `therenorecord.
 
 ## 8. Tests
 
-11/11 passing in two suites:
+55/55 passing in two suites:
 - `auth.logout.test.ts` — session clear behavior.
-- `renoRecord.test.ts` — moderation gating, consent enforcement, admin-only RBAC, Docket Goblin advisory-only behavior, chat + ingest RBAC, no-auto-publish on ingest, admin-only approveIngest.
+- `renoRecord.test.ts` — moderation gating, consent enforcement, admin-only RBAC, Docket Goblin advisory-only behavior, chat + ingest RBAC, no-auto-publish on ingest, admin-only approveIngest, and PRR status-history create/update validation.
 
 ## 9. Recommended Next Sequence
 
-1. **Save a checkpoint now** to lock current state.
+1. **Save a checkpoint now** to lock current state, including the PRR status-history feature.
 2. **Finish v3 upload security + auth-gated submissions** (in progress; ~30 min).
 3. **Add Stripe via `webdev_add_feature`** and wire the paywall (v4) — needs your pricing call + Stripe keys.
 4. **Custom domain + per-page SEO + first real evidence uploads** before going public.

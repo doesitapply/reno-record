@@ -218,6 +218,12 @@ export type Actor = typeof actors.$inferSelect;
 export type InsertActor = typeof actors.$inferInsert;
 
 /* ========== Public Records Requests ========== */
+export type PublicRecordsStatusHistoryEntry = {
+  date?: string;
+  status: "draft" | "sent" | "awaiting_response" | "overdue" | "partial_response" | "denied" | "produced" | "appealed" | "closed";
+  note?: string;
+};
+
 export const publicRecordsRequests = mysqlTable("public_records_requests", {
   id: int("id").autoincrement().primaryKey(),
   title: varchar("title", { length: 300 }).notNull(),
@@ -240,6 +246,7 @@ export const publicRecordsRequests = mysqlTable("public_records_requests", {
     .notNull(),
   responseSummary: text("response_summary"),
   legalBasisForDenial: text("legal_basis_for_denial"),
+  statusHistory: json("status_history").$type<PublicRecordsStatusHistoryEntry[]>(),
   linkedDocuments: json("linked_documents").$type<number[]>(),
   publicStatus: boolean("public_status").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

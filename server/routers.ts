@@ -767,6 +767,12 @@ const PRR_STATUS = [
   "closed",
 ] as const;
 
+const prrStatusHistoryEntry = z.object({
+  date: z.string().optional(),
+  status: z.enum(PRR_STATUS),
+  note: z.string().optional(),
+});
+
 const prrRouter = router({
   listPublic: publicProcedure.query(async () => db.listPublicPRRs()),
   adminList: adminProcedure.query(async () => db.listAllPRRs()),
@@ -781,6 +787,7 @@ const prrRouter = router({
         status: z.enum(PRR_STATUS).default("sent"),
         responseSummary: z.string().optional(),
         legalBasisForDenial: z.string().optional(),
+        statusHistory: z.array(prrStatusHistoryEntry).optional(),
         publicStatus: z.boolean().default(true),
       }),
     )
@@ -805,6 +812,7 @@ const prrRouter = router({
           status: z.enum(PRR_STATUS).optional(),
           responseSummary: z.string().optional(),
           legalBasisForDenial: z.string().optional(),
+          statusHistory: z.array(prrStatusHistoryEntry).optional(),
           publicStatus: z.boolean().optional(),
         }),
       }),

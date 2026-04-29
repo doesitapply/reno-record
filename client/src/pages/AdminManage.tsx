@@ -889,6 +889,7 @@ function PRRsTab() {
     status: "sent" as (typeof PRR_STATUSES)[number],
     responseSummary: "",
     legalBasisForDenial: "",
+    statusHistory: "",
     publicStatus: true,
   };
   const [form, setForm] = useState(emptyForm);
@@ -908,6 +909,7 @@ function PRRsTab() {
       status: (p.status as (typeof PRR_STATUSES)[number]) ?? "sent",
       responseSummary: p.responseSummary ?? "",
       legalBasisForDenial: p.legalBasisForDenial ?? "",
+      statusHistory: formatPrrStatusHistory(p.statusHistory),
       publicStatus: p.publicStatus ?? true,
     });
     setEditTarget(p);
@@ -1098,6 +1100,19 @@ function PRRsTab() {
                 className="mt-1"
               />
             </div>
+            <div>
+              <Label>Status history</Label>
+              <Textarea
+                value={form.statusHistory}
+                onChange={(e) => setForm((f) => ({ ...f, statusHistory: e.target.value }))}
+                placeholder="YYYY-MM-DD | sent | Request delivered\nYYYY-MM-DD | overdue | Deadline passed without production"
+                rows={4}
+                className="mt-1 font-mono text-xs"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                One public timeline entry per line: date, status, and optional note separated by pipes.
+              </p>
+            </div>
             <div className="flex items-center gap-3">
               <Switch
                 id="prr-public"
@@ -1131,6 +1146,7 @@ function PRRsTab() {
                       status: form.status,
                       responseSummary: form.responseSummary || undefined,
                       legalBasisForDenial: form.legalBasisForDenial || undefined,
+                      statusHistory: parsePrrStatusHistory(form.statusHistory),
                       publicStatus: form.publicStatus,
                     },
                   });
@@ -1144,6 +1160,7 @@ function PRRsTab() {
                     status: form.status,
                     responseSummary: form.responseSummary || undefined,
                     legalBasisForDenial: form.legalBasisForDenial || undefined,
+                    statusHistory: parsePrrStatusHistory(form.statusHistory),
                     publicStatus: form.publicStatus,
                   });
                 }
@@ -1181,4 +1198,38 @@ function PRRsTab() {
       </AlertDialog>
     </div>
   );
+}
+
+function formatPrrStatusHistory(value: unknown) {
+  if (!Array.isArray(value)) return "";
+  return value
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") return "";
+      const row = entry as { date?: unknown; status?: unknown; note?: unknown };
+      const date = typeof row.date === "string" ? row.date : "";
+      const status = typeof row.status === "string" ? row.status : "sent";
+      const note = typeof row.note === "string" ? row.note : "";
+      return [date, status, note].filter((part, index) => index < 2 || part).join(" | ");
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+function parsePrrStatusHistory(value: string) {
+  const entries = value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [dateRaw, statusRaw, ...noteParts] = line.split("|").map((part) => part.trim());
+      const status = PRR_STATUSES.includes(statusRaw as (typeof PRR_STATUSES)[number])
+        ? (statusRaw as (typeof PRR_STATUSES)[number])
+        : "sent";
+      return {
+        date: dateRaw || undefined,
+        status,
+        note: noteParts.join(" | ") || undefined,
+      };
+    });
+  return entries.length > 0 ? entries : undefined;
 }

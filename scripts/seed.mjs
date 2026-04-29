@@ -205,6 +205,10 @@ const prrs = [
     dateSent: "2024-11-04",
     deadline: "2024-11-19",
     status: "awaiting_response",
+    statusHistory: [
+      { date: "2024-11-04", status: "sent", note: "Request submitted to court administration." },
+      { date: "2024-11-19", status: "awaiting_response", note: "Response deadline reached; production still pending." },
+    ],
   },
   {
     title: "SEED: Department-level standing orders re: pro se filings while counsel of record",
@@ -214,6 +218,10 @@ const prrs = [
     dateSent: "2024-11-04",
     deadline: "2024-11-19",
     status: "overdue",
+    statusHistory: [
+      { date: "2024-11-04", status: "sent", note: "Request submitted for standing orders and departmental policies." },
+      { date: "2024-11-19", status: "overdue", note: "No public production recorded by the response deadline." },
+    ],
   },
   {
     title: "SEED: Continuance and time-waiver records, CR21-XXXX",
@@ -223,6 +231,11 @@ const prrs = [
     dateSent: "2024-11-12",
     deadline: "2024-11-27",
     status: "partial_response",
+    statusHistory: [
+      { date: "2024-11-12", status: "sent", note: "Request submitted for continuance and time-waiver records." },
+      { date: "2024-11-27", status: "awaiting_response", note: "Deadline reached; follow-up required." },
+      { date: "2024-12-03", status: "partial_response", note: "Agency produced limited responsive records; gaps remain under review." },
+    ],
   },
   {
     title: "SEED: Pretrial detention duration data, Washoe County Detention Facility",
@@ -232,14 +245,27 @@ const prrs = [
     dateSent: "2024-11-12",
     deadline: "2024-11-27",
     status: "denied",
+    statusHistory: [
+      { date: "2024-11-12", status: "sent", note: "Request submitted for anonymized detention-duration data." },
+      { date: "2024-11-27", status: "awaiting_response", note: "Response deadline tracked." },
+      { date: "2024-12-02", status: "denied", note: "Agency denied production; legal basis is pending public review." },
+    ],
   },
 ];
 for (const r of prrs) {
   await conn.query(
     `INSERT INTO public_records_requests
-     (title, agency, description, date_sent, deadline, status, public_status)
-     VALUES (?, ?, ?, ?, ?, ?, 1)`,
-    [r.title, r.agency, r.description, new Date(r.dateSent), new Date(r.deadline), r.status],
+     (title, agency, description, date_sent, deadline, status, status_history, public_status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+    [
+      r.title,
+      r.agency,
+      r.description,
+      new Date(r.dateSent),
+      new Date(r.deadline),
+      r.status,
+      JSON.stringify(r.statusHistory ?? []),
+    ],
   );
 }
 

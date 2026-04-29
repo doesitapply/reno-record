@@ -15,7 +15,7 @@ Receipts for Due Process. A public-interest accountability archive for Washoe Co
 - [x] Interactive Timeline page with category filters
 - [x] Evidence Archive: search, filter by type, inline PDF viewer
 - [x] Submit Your Story page (intake form + multi-file upload + redaction warnings + consent checkboxes)
-- [x] Public Records Tracker (table + status badges)
+- [x] Public Records Tracker (status badges + per-request status history timeline)
 - [x] Actor pages (profile cards + index)
 - [x] Election & Accountability page (neutral, public-record only)
 - [x] Pattern Dashboard (aggregate metrics, anonymized)
@@ -109,6 +109,6 @@ Receipts for Due Process. A public-interest accountability archive for Washoe Co
 ### Later Power Features
 - [ ] Case comparison view
 - [ ] Print/PDF case packets
-- [ ] PRR status history timeline
+- [x] PRR status history timeline
 - [ ] Public read rate limiting
 - [ ] Bulk evidence export for admin

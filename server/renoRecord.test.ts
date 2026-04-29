@@ -1057,6 +1057,54 @@ describe("v3.6 — Admin CRUD: public records requests", () => {
     expect(result.id).toBe(77);
   });
 
+  it("prr.adminCreate accepts public status history entries", async () => {
+    const insertSpy = vi.spyOn(db, "insertPRR").mockResolvedValue(88 as any);
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+
+    await adminCaller.prr.adminCreate({
+      title: "Court request status trail",
+      agency: "Second Judicial District Court",
+      status: "overdue",
+      statusHistory: [
+        { date: "2024-11-04", status: "sent", note: "Request submitted." },
+        { date: "2024-11-19", status: "overdue", note: "Deadline passed." },
+      ],
+    });
+
+    expect(insertSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusHistory: [
+          { date: "2024-11-04", status: "sent", note: "Request submitted." },
+          { date: "2024-11-19", status: "overdue", note: "Deadline passed." },
+        ],
+      }),
+    );
+  });
+
+  it("prr.adminUpdate accepts public status history entries", async () => {
+    const updateSpy = vi.spyOn(db, "updatePRR").mockResolvedValue(undefined as any);
+    const adminCaller = appRouter.createCaller(makeCtx({ ...baseUser, role: "admin" }));
+
+    await adminCaller.prr.adminUpdate({
+      id: 5,
+      patch: {
+        status: "partial_response",
+        statusHistory: [
+          { date: "2024-12-03", status: "partial_response", note: "Limited records produced." },
+        ],
+      },
+    });
+
+    expect(updateSpy).toHaveBeenCalledWith(
+      5,
+      expect.objectContaining({
+        statusHistory: [
+          { date: "2024-12-03", status: "partial_response", note: "Limited records produced." },
+        ],
+      }),
+    );
+  });
+
   it("prr.adminDelete requires admin role", async () => {
     const caller = appRouter.createCaller(makeCtx(baseUser));
     await expect(caller.prr.adminDelete({ id: 1 })).rejects.toThrow();
