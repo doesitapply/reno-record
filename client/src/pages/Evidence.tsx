@@ -9,6 +9,15 @@ import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
 
+function sameOriginStorageUrl(fileKey?: string | null, fileUrl?: string | null): string {
+  if (!fileKey) return fileUrl ?? "#";
+  const encodedKey = fileKey
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+  return `/manus-storage/${encodedKey}`;
+}
+
 const SOURCE_TYPES = [
   { value: "all", label: "All" },
   { value: "court_order", label: "Court order" },
@@ -172,6 +181,7 @@ function EvidenceList() {
 
 function EvidenceDetail({ id }: { id: number }) {
   const { data: doc, isLoading } = trpc.document.byId.useQuery({ id });
+  const fileUrl = doc ? sameOriginStorageUrl(doc.fileKey, doc.fileUrl) : "#";
 
   return (
     <SiteShell>
@@ -237,7 +247,7 @@ function EvidenceDetail({ id }: { id: number }) {
                   </div>
                 )}
                 <div className="mt-6">
-                  <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={fileUrl} target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" className="w-full gap-2">
                       Open in new tab <ExternalLink className="h-3.5 w-3.5" />
                     </Button>
@@ -247,7 +257,7 @@ function EvidenceDetail({ id }: { id: number }) {
             </aside>
 
             <div className="lg:col-span-8">
-              <DocumentViewer url={doc.fileUrl} mime={doc.mimeType ?? ""} title={doc.title} />
+              <DocumentViewer url={fileUrl} mime={doc.mimeType ?? ""} title={doc.title} />
             </div>
           </div>
         )}

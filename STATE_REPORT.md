@@ -11,8 +11,8 @@
 | Storage | Manus S3 via `storagePut` (`/manus-storage/{key}`) | Wired; same-origin inline streaming proxy for evidence viewing |
 | LLM | Manus Forge (Gemini 2.5 Flash) via `invokeLLM` | Wired (system + frontend keys injected) |
 | Notifications | `notifyOwner()` server helper | Available; not yet bound to events |
-| Tests | Vitest | 57/57 passing across 3 suites |
-| Checkpoint | PRR status-history checkpoint pushed; evidence viewer and misconduct-first pivot verified locally | **Needs checkpoint/push before publish** |
+| Tests | Vitest | 58/58 passing across 3 suites |
+| Checkpoint | PRR status-history and misconduct-first pivot checkpoints pushed; same-origin evidence URL normalization verified locally | **Needs checkpoint/push before publish** |
 | Deploy | Manus built-in hosting | Not yet published; user clicks Publish in UI |
 
 Live preview URL: `https://3000-ih9kzkycn4ncyvns0ryaf-91477af8.us1.manus.computer`
@@ -47,7 +47,7 @@ Manus OAuth sign-in at `/admin`. Tabs: Goblin Ingest queue, Stories, Documents, 
 3. **No saved checkpoint since v1** — current state (chat bubble + ingest pipeline) is not yet snapshotted; cannot publish without it.
 
 ### Soft gaps (not blocking, real)
-4. **Evidence Archive needs approved uploaded evidence to display records.** The online viewer now uses a same-origin streaming proxy instead of redirecting inline viewers to external signed storage URLs.
+4. **Evidence Archive needs approved uploaded evidence to display records.** The online viewer now uses a same-origin streaming proxy and public document read procedures normalize persisted file URLs to `/manus-storage/*`, preventing stale CloudFront/S3 signed URLs from producing `AccessDenied` in inline viewers.
 5. **Actor detail pages** render profile but don't yet aggregate related events / related documents.
 6. **No CRUD UI in admin yet** for Stripe-style scoped CRUD on actors/timeline/PRRs (mutations exist; UI is partial).
 7. **Per-page SEO meta tags** are generic; should be per-page (title/description/OG).
@@ -88,14 +88,14 @@ The platform supports buying or binding a domain in-app. Suggest `therenorecord.
 
 ## 8. Tests
 
-57/57 passing in three suites:
+58/58 passing in three suites:
 - `auth.logout.test.ts` — session clear behavior.
-- `renoRecord.test.ts` — moderation gating, consent enforcement, admin-only RBAC, Docket Goblin advisory-only behavior, chat + ingest RBAC, no-auto-publish on ingest, admin-only approveIngest, and PRR status-history create/update validation.
+- `renoRecord.test.ts` — moderation gating, consent enforcement, admin-only RBAC, Docket Goblin advisory-only behavior, chat + ingest RBAC, no-auto-publish on ingest, admin-only approveIngest, PRR status-history create/update validation, and public evidence URL normalization to the same-origin storage proxy.
 - `storageProxy.test.ts` — evidence files stream inline through `/manus-storage/*` and HEAD probes do not fall through to the SPA fallback.
 
 ## 9. Recommended Next Sequence
 
-1. **Save a checkpoint now** to lock the evidence viewing proxy fix.
+1. **Save a checkpoint now** to lock the evidence viewing proxy and public document URL-normalization fix.
 2. **Finish v3 upload security + auth-gated submissions** (in progress; ~30 min).
 3. **Add Stripe via `webdev_add_feature`** and wire the paywall (v4) — needs your pricing call + Stripe keys.
 4. **Custom domain + per-page SEO + first real evidence uploads** before going public.

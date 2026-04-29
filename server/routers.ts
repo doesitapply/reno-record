@@ -363,6 +363,23 @@ const storyRouter = router({
 });
 
 /* =============== Documents router =============== */
+type DocumentWithFileUrl = { fileKey?: string | null; fileUrl?: string | null };
+
+function storageProxyUrlForKey(fileKey?: string | null): string | null {
+  if (!fileKey) return null;
+  const encodedKey = fileKey
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+  return `/manus-storage/${encodedKey}`;
+}
+
+function withSameOriginDocumentUrl<T extends DocumentWithFileUrl>(doc: T): T {
+  const proxyUrl = storageProxyUrlForKey(doc.fileKey);
+  if (!proxyUrl) return doc;
+  return { ...doc, fileUrl: proxyUrl };
+}
+
 const documentRouter = router({
   listPublic: publicProcedure
     .input(
@@ -373,14 +390,15 @@ const documentRouter = router({
         })
         .optional(),
     )
-    .query(async ({ input }) =>
-      db.listPublicDocuments({ q: input?.q, sourceType: input?.sourceType }),
-    ),
+    .query(async ({ input }) => {
+      const rows = await db.listPublicDocuments({ q: input?.q, sourceType: input?.sourceType });
+      return rows.map(withSameOriginDocumentUrl);
+    }),
   byId: publicProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
     const d = await db.getDocumentById(input.id);
     if (!d) return null;
     if (!(d.publicStatus && d.reviewStatus === "approved")) return null;
-    return d;
+    return withSameOriginDocumentUrl(d);
   }),
 
   /* Admin */

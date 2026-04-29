@@ -107,6 +107,38 @@ describe("The Reno Record — moderation & gating", () => {
     expect(await caller.document.byId({ id: 11 })).toBeNull();
   });
 
+  it("returns public document file URLs through the same-origin storage proxy", async () => {
+    const caller = appRouter.createCaller(makeCtx(undefined));
+
+    vi.spyOn(db, "getDocumentById").mockResolvedValueOnce({
+      id: 30014,
+      title: "Application for Setting Young Hearing",
+      fileKey: "evidence/ingest-30014-09-17-24 app for setting young_3bh12chf.pdf",
+      fileUrl:
+        "https://d36hbw14aib5lz.cloudfront.net/91847194/signed/evidence/ingest-30014-09-17-24%20app%20for%20setting%20young_3bh12chf.pdf?Expires=1777466728&Signature=broken",
+      publicStatus: true,
+      reviewStatus: "approved",
+    } as unknown as Awaited<ReturnType<typeof db.getDocumentById>>);
+
+    const detail = await caller.document.byId({ id: 30014 });
+    expect(detail?.fileUrl).toBe(
+      "/manus-storage/evidence/ingest-30014-09-17-24%20app%20for%20setting%20young_3bh12chf.pdf",
+    );
+
+    vi.spyOn(db, "listPublicDocuments").mockResolvedValueOnce([
+      {
+        id: 30014,
+        fileKey: "evidence/ingest-30014-09-17-24 app for setting young_3bh12chf.pdf",
+        fileUrl: "https://d36hbw14aib5lz.cloudfront.net/91847194/signed/evidence/file.pdf?Expires=expired",
+      },
+    ] as unknown as Awaited<ReturnType<typeof db.listPublicDocuments>>);
+
+    const list = await caller.document.listPublic({ q: undefined, sourceType: "all" });
+    expect(list[0]?.fileUrl).toBe(
+      "/manus-storage/evidence/ingest-30014-09-17-24%20app%20for%20setting%20young_3bh12chf.pdf",
+    );
+  });
+
   it("blocks non-admin users from admin-only mutations (moderation queue, document upload, Docket Goblin)", async () => {
     const userCaller = appRouter.createCaller(makeCtx(baseUser));
 

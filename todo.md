@@ -94,7 +94,7 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [x] Public promotional ad image generated (16:9 + 9:16 vertical for Stories)
 - [x] Operator launch checklist doc (evidence upload steps, SMTP, domain)
 - [x] Tests updated, checkpoint saved
-- [x] Evidence online viewer fixed: `/manus-storage/*` streams files inline and supports HEAD probes
+- [x] Evidence online viewer fixed: `/manus-storage/*` streams files inline, supports HEAD probes, and public evidence URLs are normalized away from stale CloudFront/S3 signed links
 
 ### Operator Tasks (requires real files/credentials — not buildable by code)
 - [ ] Upload 10 core evidence PDFs via Docket Goblin ingest
