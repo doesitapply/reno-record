@@ -1,4 +1,4 @@
-# The Reno Record — State Report (as of 2026-04-25)
+# The Reno Record — State Report (as of 2026-04-29)
 
 ## 1. Build & Infra
 
@@ -11,8 +11,8 @@
 | Storage | Manus S3 via `storagePut` (`/manus-storage/{key}`) | Wired; same-origin inline streaming proxy for evidence viewing |
 | LLM | Manus Forge (Gemini 2.5 Flash) via `invokeLLM` | Wired (system + frontend keys injected) |
 | Notifications | `notifyOwner()` server helper | Available; not yet bound to events |
-| Tests | Vitest | 58/58 passing across 3 suites |
-| Checkpoint | PRR status-history and misconduct-first pivot checkpoints pushed; same-origin evidence URL normalization verified locally | **Needs checkpoint/push before publish** |
+| Tests | Vitest | 58/58 passing across 3 suites; `pnpm check`, `pnpm test`, and `pnpm build` passed after the public evidence-platform rewrite |
+| Checkpoint | Generalized evidence intake, broader pattern dashboard, supporting-case reframing, and backend compatibility updates completed locally | **Ready for commit/push checkpoint** |
 | Deploy | Manus built-in hosting | Not yet published; user clicks Publish in UI |
 
 Live preview URL: `https://3000-ih9kzkycn4ncyvns0ryaf-91477af8.us1.manus.computer`
@@ -25,7 +25,7 @@ Migrations include the full Reno Record schema, chat/ingest/audit additions, and
 
 ## 3. Public Pages (all rendering)
 
-Home now frames the project as a public misconduct exposure archive; The Church Record is demoted to a documented case example rather than the whole product. Rendering pages include Timeline (category-filtered), Evidence Archive (search + inline PDF viewer), Submit Evidence (intake + multi-file upload + dual consent), Public Records Tracker with per-request status history timelines, Actors index + detail, Election & Accountability (neutral/public-record), Pattern Dashboard, Privacy.
+Home now frames the project as a public corruption and misconduct evidence platform. The Church Record is a supporting documented case example rather than the product center. Rendering pages include Timeline as a cross-agency exposure chronology, Evidence Archive for source records and multimedia receipts, Submit Evidence as a generalized misconduct intake separating actors/evidence/patterns/timeline/publication safeguards, Public Records Tracker with per-request status history timelines, Actors index + detail for public actors and institutions, Election & Accountability, a broader Misconduct Pattern Dashboard, and Privacy.
 
 ## 4. Admin
 
@@ -42,9 +42,9 @@ Manus OAuth sign-in at `/admin`. Tabs: Goblin Ingest queue, Stories, Documents, 
 ## 6. What's Weak / Unfinished / Missing
 
 ### Hard blockers before going public
-1. **No upload security yet (v3 in progress)** — public Submit allows arbitrary files. Need MIME allow-list, magic-byte sniffing, size cap, per-user rate limit.
-2. **Public submission is anonymous** — should require an account. (Tied to #1; same fix.)
-3. **No saved checkpoint since v1** — current state (chat bubble + ingest pipeline) is not yet snapshotted; cannot publish without it.
+1. **Upload security still needs a hardening pass** — the generalized public intake now captures better evidence metadata and publication safeguards, but the upload path still needs MIME allow-listing, magic-byte sniffing, size caps, and per-user rate limits before a public launch.
+2. **Public submission is still anonymous** — the intake can preserve submitter privacy, but production launch should require authenticated submission or at least stronger anti-abuse controls.
+3. **Checkpoint/push required** — the current evidence-platform rewrite should be committed and pushed before publication.
 
 ### Soft gaps (not blocking, real)
 4. **Evidence Archive needs approved uploaded evidence to display records.** The online viewer now uses a same-origin streaming proxy and public document read procedures normalize persisted file URLs to `/manus-storage/*`, preventing stale CloudFront/S3 signed URLs from producing `AccessDenied` in inline viewers.
@@ -95,13 +95,13 @@ The platform supports buying or binding a domain in-app. Suggest `therenorecord.
 
 ## 9. Recommended Next Sequence
 
-1. **Save a checkpoint now** to lock the evidence viewing proxy and public document URL-normalization fix.
-2. **Finish v3 upload security + auth-gated submissions** (in progress; ~30 min).
-3. **Add Stripe via `webdev_add_feature`** and wire the paywall (v4) — needs your pricing call + Stripe keys.
+1. **Commit and push the public evidence-platform rewrite** to lock the generalized intake, broader public pages, and backend compatibility updates.
+2. **Finish upload security + auth-gated submissions** with MIME allow-listing, magic-byte sniffing, size caps, rate limits, and abuse controls.
+3. **Add Stripe/paywall only if the premium receipts tier is still desired** — this needs pricing confirmation and Stripe keys.
 4. **Custom domain + per-page SEO + first real evidence uploads** before going public.
-5. **Publish.**
+5. **Publish after the hardening pass.**
 
 
-## Misconduct-first pivot completed locally
+## Public evidence-platform rewrite completed locally
 
-The public framing has been shifted away from treating The Church Record as the whole product. It is now presented as one documented case example inside a broader public misconduct exposure archive. The main site navigation and home page now emphasize misconduct patterns, actors, evidence, timelines, public-records pressure, and review-safe publication. Docket Goblin ingest has also been expanded from a narrow summary/tag/timeline draft into a deeper advisory analysis that separates actors, evidence items, allegations, chronology, pattern signals, redaction risks, source quality, follow-up questions, and public-records targets before human review. The local browser preview rendered the new home-page framing successfully, and `pnpm check && pnpm test && pnpm build` passed after the pivot.
+The public framing has now moved beyond a single case archive. The Church Record remains as a documented supporting example, while the broader product is positioned as a Reno/Washoe public corruption evidence platform. The main public surfaces now emphasize cross-agency misconduct patterns, actor and institution dossiers, source evidence, public-records pressure, exposure timelines, and review-safe publication. The public Submit Evidence workflow has been redesigned into a structured intake that separates involved actors, agencies, evidence types, date ranges, pattern signals, records-request status, publication permissions, privacy needs, and follow-up contact preferences. The backend accepts the new generalized intake fields while preserving legacy story submission compatibility and existing tests. Verification completed successfully with `pnpm check`, `pnpm test`, and `pnpm build`.

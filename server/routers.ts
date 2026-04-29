@@ -58,6 +58,23 @@ const storyRouter = router({
         alias: z.string().max(120).optional(),
         email: z.string().email().max(320),
         phone: z.string().max(60).optional(),
+        headline: z.string().max(500).optional(),
+        agencyInstitution: z.string().max(240).optional(),
+        officeDepartment: z.string().max(160).optional(),
+        location: z.string().max(240).optional(),
+        incidentStart: isoDate,
+        incidentEnd: isoDate,
+        ongoingIncident: z.boolean().optional(),
+        relatedCaseNumber: z.string().max(160).optional(),
+        incidentTypes: z.array(z.string().max(160)).max(24).optional(),
+        actorDetails: z.string().max(12000).optional(),
+        evidenceDescription: z.string().max(12000).optional(),
+        timelineDescription: z.string().max(12000).optional(),
+        patternSignals: z.array(z.string().max(180)).max(32).optional(),
+        publicRecordsStatus: z.string().max(8000).optional(),
+        harmDescription: z.string().max(8000).optional(),
+        requestedFollowup: z.string().max(8000).optional(),
+        evidenceTypes: z.array(z.string().max(180)).max(32).optional(),
         caseNumber: z.string().max(120).optional(),
         court: z.string().max(200).optional(),
         department: z.string().max(120).optional(),
@@ -146,9 +163,72 @@ const storyRouter = router({
       }
 
       const ipHash = hashIp((ctx.req as any)?.ip);
+      const hasStructuredIntake = Boolean(
+        payload.headline ||
+          payload.agencyInstitution ||
+          payload.actorDetails ||
+          payload.evidenceDescription ||
+          payload.timelineDescription ||
+          payload.publicRecordsStatus ||
+          payload.requestedFollowup ||
+          payload.incidentTypes?.length ||
+          payload.patternSignals?.length ||
+          payload.evidenceTypes?.length,
+      );
+      const summaryForReview = hasStructuredIntake
+        ? [
+            payload.summary && `Narrative:\n${payload.summary}`,
+            payload.actorDetails && `Actors / institutions:\n${payload.actorDetails}`,
+            payload.evidenceDescription && `Evidence inventory:\n${payload.evidenceDescription}`,
+            payload.timelineDescription && `Timeline notes:\n${payload.timelineDescription}`,
+            payload.incidentTypes?.length && `Incident types: ${payload.incidentTypes.join(", ")}`,
+            payload.patternSignals?.length && `Pattern signals: ${payload.patternSignals.join(", ")}`,
+            payload.evidenceTypes?.length && `Evidence types: ${payload.evidenceTypes.join(", ")}`,
+            payload.publicRecordsStatus && `Public-records status:\n${payload.publicRecordsStatus}`,
+            payload.harmDescription && `Harm / public impact:\n${payload.harmDescription}`,
+            payload.requestedFollowup && `Suggested follow-up records:\n${payload.requestedFollowup}`,
+            payload.location && `Location / jurisdiction: ${payload.location}`,
+            payload.incidentEnd && `Last known date: ${payload.incidentEnd.toISOString().slice(0, 10)}`,
+          ]
+            .filter(Boolean)
+            .join("\n\n")
+        : payload.summary;
       const storyId = await db.insertStory({
-        ...payload,
-        dateCaseStarted: payload.dateCaseStarted ?? undefined,
+        submitterName: payload.submitterName,
+        alias: payload.alias,
+        email: payload.email,
+        phone: payload.phone,
+        caseNumber: payload.caseNumber || payload.relatedCaseNumber || undefined,
+        court: payload.court || payload.agencyInstitution || undefined,
+        department: payload.department || payload.officeDepartment || undefined,
+        judge: payload.judge,
+        prosecutor: payload.prosecutor,
+        defenseAttorney: payload.defenseAttorney || payload.actorDetails || undefined,
+        charges: payload.charges || payload.incidentTypes?.join(", ") || undefined,
+        dateCaseStarted: payload.dateCaseStarted ?? payload.incidentStart ?? undefined,
+        custodyDays: payload.custodyDays,
+        stillPending: payload.stillPending ?? payload.ongoingIncident,
+        trialHeld: payload.trialHeld,
+        requestedTrial: payload.requestedTrial,
+        counselWaivedTime: payload.counselWaivedTime,
+        filingsBlocked:
+          payload.filingsBlocked ??
+          payload.patternSignals?.some((s) => /blocked|ignored|never ruled/i.test(s)),
+        askedSelfRep: payload.askedSelfRep,
+        farettaHandled: payload.farettaHandled,
+        competencyRaised: payload.competencyRaised,
+        competencyContext: payload.competencyContext || payload.publicRecordsStatus || undefined,
+        discoveryMissing:
+          payload.discoveryMissing ??
+          payload.patternSignals?.some((s) => /missing|withheld|gap/i.test(s)),
+        warrantsUsed:
+          payload.warrantsUsed ??
+          payload.patternSignals?.some((s) => /custody|warrant|fine|supervision/i.test(s)),
+        familyHarm: payload.familyHarm || payload.harmDescription || undefined,
+        summary: summaryForReview,
+        mainIssue: payload.mainIssue || payload.headline,
+        publicPermission: payload.publicPermission,
+        redactionConfirmed: payload.redactionConfirmed,
         ownerUserId: ctx.user.id,
         submitterIpHash: ipHash ?? undefined,
       });

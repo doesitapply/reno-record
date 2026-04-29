@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -16,7 +15,75 @@ import { getLoginUrl } from "@/const";
 
 type Attachment = { filename: string; mimeType: string; dataBase64: string; size: number };
 
+type IntakeForm = {
+  submitterName: string;
+  alias: string;
+  email: string;
+  phone: string;
+  headline: string;
+  agencyInstitution: string;
+  officeDepartment: string;
+  location: string;
+  incidentStart: string;
+  incidentEnd: string;
+  ongoingIncident: boolean;
+  relatedCaseNumber: string;
+  incidentTypes: string[];
+  actorDetails: string;
+  evidenceDescription: string;
+  timelineDescription: string;
+  patternSignals: string[];
+  publicRecordsStatus: string;
+  harmDescription: string;
+  requestedFollowup: string;
+  evidenceTypes: string[];
+  summary: string;
+  publicPermission: boolean;
+  redactionConfirmed: boolean;
+};
+
 const MAX_TOTAL = 30 * 1024 * 1024; // 30 MB total
+
+const INCIDENT_TYPES = [
+  "Records obstruction",
+  "Judicial misconduct",
+  "Law enforcement misconduct",
+  "Prosecutorial misconduct",
+  "Public-defender conflict or failure",
+  "Retaliation or intimidation",
+  "Financial misconduct or self-dealing",
+  "Conflict of interest / cronyism",
+  "Jail, custody, or probation abuse",
+  "Election or public-office accountability",
+  "Agency silence / failure to respond",
+  "Other public corruption signal",
+];
+
+const PATTERN_SIGNALS = [
+  "same actor appears repeatedly",
+  "records request ignored or delayed",
+  "official explanation conflicts with records",
+  "missing order, transcript, email, or minutes",
+  "filing blocked, ignored, or never ruled on",
+  "retaliation after complaint or public-records request",
+  "pressure through custody, warrants, fines, or supervision",
+  "financial benefit, vendor tie, or insider relationship",
+  "policy says one thing; practice shows another",
+  "vulnerable person, family, housing, or employment harm",
+];
+
+const EVIDENCE_TYPES = [
+  "Court order / minute entry",
+  "Motion, filing, or pleading",
+  "Email, letter, or text message",
+  "Public-records request or response",
+  "Audio, video, photo, or bodycam reference",
+  "Financial, contract, payroll, or vendor record",
+  "Complaint, grievance, or internal-affairs record",
+  "Jail, custody, probation, or supervision record",
+  "News article, meeting agenda, or public statement",
+  "Witness account with supporting record",
+];
 
 const fileToBase64 = (f: File) =>
   new Promise<string>((resolve, reject) => {
@@ -36,12 +103,11 @@ function SignInGate() {
       <section className="py-20">
         <div className="container max-w-2xl text-center">
           <ShieldAlert className="mx-auto h-10 w-10 text-amber-500 mb-4" />
-          <h1 className="font-serif text-4xl mb-3">Sign in to submit your story</h1>
+          <h1 className="display-serif text-4xl mb-3">Sign in to submit evidence</h1>
           <p className="text-muted-foreground mb-8">
-            Submissions and document uploads require an account. This protects the archive
-            from spam, malware, and unauthorized publishing — and gives you a record you can
-            revisit, edit, and append to. We never publish anything without explicit admin
-            approval.
+            Submissions and document uploads require an account. This protects the archive from spam,
+            malware, and unauthorized publishing — and gives editors a way to follow up before anything
+            becomes public.
           </p>
           <div className="flex items-center justify-center gap-3">
             <a href={getLoginUrl()}>
@@ -56,8 +122,8 @@ function SignInGate() {
             </Link>
           </div>
           <p className="text-xs text-muted-foreground mt-6">
-            By signing in you confirm you have the right to share what you upload. Files are
-            scanned, size-limited (15 MB each), and held privately for review.
+            By signing in you confirm you have the right to share what you upload. Files are size-limited,
+            held privately for review, and never published without explicit approval.
           </p>
         </div>
       </section>
@@ -66,7 +132,12 @@ function SignInGate() {
 }
 
 export default function SubmitPage() {
-  useSEO({ title: "Submit Your Story", description: "Experienced similar patterns in Washoe County courts? Submit your account securely. All submissions reviewed before publication.", canonicalPath: "/submit" });
+  useSEO({
+    title: "Submit Evidence",
+    description:
+      "Submit public corruption evidence, records-obstruction signals, actor details, timelines, and source documents for editorial review by The Reno Record.",
+    canonicalPath: "/submit",
+  });
   const { isAuthenticated, loading: authLoading } = useAuth();
   if (authLoading) return null;
   if (!isAuthenticated) return <SignInGate />;
@@ -77,72 +148,44 @@ function SubmitForm() {
   const submit = trpc.story.submit.useMutation();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState<{
-    submitterName: string;
-    alias: string;
-    email: string;
-    phone: string;
-    caseNumber: string;
-    court: string;
-    department: string;
-    judge: string;
-    prosecutor: string;
-    defenseAttorney: string;
-    charges: string;
-    dateCaseStarted: string;
-    custodyDays: string;
-    stillPending: boolean;
-    trialHeld: boolean;
-    requestedTrial: boolean;
-    counselWaivedTime: boolean;
-    filingsBlocked: boolean;
-    askedSelfRep: boolean;
-    farettaHandled: boolean;
-    competencyRaised: boolean;
-    competencyContext: string;
-    discoveryMissing: boolean;
-    warrantsUsed: boolean;
-    familyHarm: string;
-    summary: string;
-    mainIssue: string;
-    publicPermission: boolean;
-    redactionConfirmed: boolean;
-  }>({
+  const [form, setForm] = useState<IntakeForm>({
     submitterName: "",
     alias: "",
     email: "",
     phone: "",
-    caseNumber: "",
-    court: "",
-    department: "",
-    judge: "",
-    prosecutor: "",
-    defenseAttorney: "",
-    charges: "",
-    dateCaseStarted: "",
-    custodyDays: "",
-    stillPending: false,
-    trialHeld: false,
-    requestedTrial: false,
-    counselWaivedTime: false,
-    filingsBlocked: false,
-    askedSelfRep: false,
-    farettaHandled: false,
-    competencyRaised: false,
-    competencyContext: "",
-    discoveryMissing: false,
-    warrantsUsed: false,
-    familyHarm: "",
+    headline: "",
+    agencyInstitution: "",
+    officeDepartment: "",
+    location: "",
+    incidentStart: "",
+    incidentEnd: "",
+    ongoingIncident: false,
+    relatedCaseNumber: "",
+    incidentTypes: [],
+    actorDetails: "",
+    evidenceDescription: "",
+    timelineDescription: "",
+    patternSignals: [],
+    publicRecordsStatus: "",
+    harmDescription: "",
+    requestedFollowup: "",
+    evidenceTypes: [],
     summary: "",
-    mainIssue: "",
     publicPermission: false,
     redactionConfirmed: false,
   });
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [success, setSuccess] = useState<number | null>(null);
 
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
+  const set = <K extends keyof IntakeForm>(k: K, v: IntakeForm[K]) =>
     setForm((s) => ({ ...s, [k]: v }));
+
+  const toggle = (key: "incidentTypes" | "patternSignals" | "evidenceTypes", value: string) => {
+    setForm((s) => ({
+      ...s,
+      [key]: s[key].includes(value) ? s[key].filter((item) => item !== value) : [...s[key], value],
+    }));
+  };
 
   const onFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -175,7 +218,15 @@ function SubmitForm() {
       return;
     }
     if (!form.email) {
-      toast.error("A contact email is required so you can be reached for follow-up.");
+      toast.error("A contact email is required so editors can follow up.");
+      return;
+    }
+    if (!form.headline.trim()) {
+      toast.error("Please provide a one-line misconduct signal headline.");
+      return;
+    }
+    if (!form.agencyInstitution.trim()) {
+      toast.error("Please name the agency, court, office, contractor, or institution involved.");
       return;
     }
     if (!form.summary || form.summary.trim().length < 20) {
@@ -185,8 +236,25 @@ function SubmitForm() {
     try {
       const res = await submit.mutateAsync({
         ...form,
-        custodyDays: form.custodyDays ? Number(form.custodyDays) : undefined,
-        dateCaseStarted: form.dateCaseStarted || null,
+        mainIssue: form.headline,
+        caseNumber: form.relatedCaseNumber,
+        court: form.agencyInstitution,
+        department: form.officeDepartment,
+        defenseAttorney: form.actorDetails,
+        charges: form.incidentTypes.join(", "),
+        dateCaseStarted: form.incidentStart || null,
+        stillPending: form.ongoingIncident,
+        familyHarm: form.harmDescription,
+        competencyContext: form.publicRecordsStatus,
+        filingsBlocked: form.patternSignals.some((s) => s.includes("blocked") || s.includes("ignored")),
+        discoveryMissing: form.patternSignals.some((s) => s.includes("missing")),
+        warrantsUsed: form.patternSignals.some((s) => s.includes("custody") || s.includes("warrants")),
+        requestedTrial: false,
+        trialHeld: false,
+        counselWaivedTime: false,
+        askedSelfRep: false,
+        farettaHandled: false,
+        competencyRaised: false,
         attachments: attachments.map(({ filename, mimeType, dataBase64 }) => ({
           filename,
           mimeType,
@@ -194,7 +262,7 @@ function SubmitForm() {
         })),
       });
       setSuccess(res.id);
-      toast.success("Submission received. You'll hear back after review.");
+      toast.success("Evidence received. It is now queued for review.");
     } catch (e: any) {
       toast.error(e?.message || "Submission failed.");
     }
@@ -209,20 +277,20 @@ function SubmitForm() {
               <Check className="h-6 w-6 text-foreground" />
             </div>
             <div className="eyebrow mt-6">Submission #{success}</div>
-            <h1 className="display-serif text-4xl mt-2">On the record.</h1>
+            <h1 className="display-serif text-4xl mt-2">Evidence queued for review.</h1>
             <p className="mt-4 text-muted-foreground">
-              Your submission is in the moderation queue. Nothing you sent is public yet — every
-              story and document is reviewed before publication. We'll reach out at the email you
-              provided if we need clarification or additional records.
+              Your materials are private while editors separate actors, evidence items, allegations,
+              pattern signals, timeline events, redaction risks, and follow-up public-records targets.
+              Nothing appears publicly unless it is explicitly approved.
             </p>
-            <div className="mt-7 flex gap-3 justify-center">
-              <Link href="/">
-                <Button variant="outline">Back to home</Button>
-              </Link>
-              <Link href="/the-church-record">
+            <div className="mt-7 flex gap-3 justify-center flex-wrap">
+              <Link href="/patterns">
                 <Button className="bg-foreground text-background gap-2">
-                  Read the main record <ArrowRight className="h-4 w-4" />
+                  See pattern dashboard <ArrowRight className="h-4 w-4" />
                 </Button>
+              </Link>
+              <Link href="/evidence">
+                <Button variant="outline">Browse evidence archive</Button>
               </Link>
             </div>
           </div>
@@ -236,14 +304,14 @@ function SubmitForm() {
       <section className="container py-14 md:py-20">
         <div className="grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-4">
-            <div className="eyebrow">Public Intake</div>
+            <div className="eyebrow">Public Evidence Intake</div>
             <h1 className="display-serif text-5xl md:text-6xl mt-3 leading-[1.02]">
-              Submit your story.
+              Submit misconduct evidence.
             </h1>
             <p className="mt-5 text-foreground/85 leading-relaxed">
-              Tell us what happened. Send the receipts. Submissions are reviewed before
-              publication. The Reno Record does not provide legal advice and does not act as your
-              attorney.
+              This form is built to separate the mess: actors, agencies, source records, timeline events,
+              alleged misconduct, pattern signals, harms, and follow-up public-records targets. The goal is
+              not to publish accusations quickly; the goal is to make corruption patterns provable.
             </p>
             <div className="mt-7 paper-card p-5 border-l-4 border-[var(--rust)]">
               <div className="flex items-start gap-3">
@@ -251,30 +319,38 @@ function SubmitForm() {
                 <div>
                   <div className="font-semibold tracking-tight">Redact first.</div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Do not upload Social Security numbers, full birth dates, medical records,
-                    minor-children PII, financial account numbers, addresses of non-public people,
-                    or sealed records unless legally authorized.
+                    Do not upload Social Security numbers, full birth dates, medical records, minor-child
+                    PII, financial account numbers, addresses of non-public people, passwords, or sealed
+                    records unless legally authorized.
                   </p>
                 </div>
               </div>
             </div>
+            <div className="mt-5 paper-card p-5 bg-[var(--amber-soft)]">
+              <div className="eyebrow !text-[0.62rem]">What happens next</div>
+              <p className="text-sm text-foreground/80 mt-2 leading-relaxed">
+                Uploaded files stay private. Editors and the ingest assistant draft structured notes, then a
+                human reviewer decides what can be safely published as evidence, timeline, actor, or pattern
+                material.
+              </p>
+            </div>
           </div>
 
           <form className="lg:col-span-8 space-y-8" onSubmit={onSubmit}>
-            <FieldGroup title="Contact">
+            <FieldGroup title="Contact for follow-up">
               <Row>
-                <Field label="Name (or alias is fine)">
+                <Field label="Name, handle, or source label">
                   <Input
                     value={form.submitterName}
                     onChange={(e) => set("submitterName", e.target.value)}
-                    placeholder="Jane Doe"
+                    placeholder="Jane Doe, agency employee, family member, observer…"
                   />
                 </Field>
-                <Field label="Public alias (optional)">
+                <Field label="Public alias if approved">
                   <Input
                     value={form.alias}
                     onChange={(e) => set("alias", e.target.value)}
-                    placeholder="If approved, this name appears on the public site"
+                    placeholder="Anonymous Washoe resident"
                   />
                 </Field>
               </Row>
@@ -288,180 +364,122 @@ function SubmitForm() {
                     placeholder="you@example.com"
                   />
                 </Field>
-                <Field label="Phone (optional)">
+                <Field label="Phone or secure contact note">
                   <Input
                     value={form.phone}
                     onChange={(e) => set("phone", e.target.value)}
-                    placeholder="775-…"
+                    placeholder="Optional"
                   />
                 </Field>
               </Row>
             </FieldGroup>
 
-            <FieldGroup title="Case">
+            <FieldGroup title="Misconduct signal">
+              <Field label="One-line headline" required>
+                <Input
+                  required
+                  value={form.headline}
+                  onChange={(e) => set("headline", e.target.value)}
+                  placeholder="e.g. Records request ignored after complaint against county official"
+                />
+              </Field>
+              <CheckGrid
+                label="Type of conduct"
+                items={INCIDENT_TYPES}
+                selected={form.incidentTypes}
+                onToggle={(item) => toggle("incidentTypes", item)}
+              />
               <Row>
-                <Field label="Case number">
+                <Field label="Agency, court, office, contractor, or institution" required>
                   <Input
-                    value={form.caseNumber}
-                    onChange={(e) => set("caseNumber", e.target.value)}
+                    required
+                    value={form.agencyInstitution}
+                    onChange={(e) => set("agencyInstitution", e.target.value)}
+                    placeholder="Washoe County, Reno Police, Second Judicial District Court…"
                   />
                 </Field>
-                <Field label="Court">
+                <Field label="Division, department, office, or unit">
                   <Input
-                    value={form.court}
-                    onChange={(e) => set("court", e.target.value)}
-                    placeholder="e.g. Second Judicial District Court, Washoe County"
+                    value={form.officeDepartment}
+                    onChange={(e) => set("officeDepartment", e.target.value)}
+                    placeholder="Records office, Dept. __, jail unit, campaign, board…"
                   />
                 </Field>
               </Row>
               <Row>
-                <Field label="Department">
+                <Field label="Location / jurisdiction">
                   <Input
-                    value={form.department}
-                    onChange={(e) => set("department", e.target.value)}
-                    placeholder="Dept. ___"
+                    value={form.location}
+                    onChange={(e) => set("location", e.target.value)}
+                    placeholder="Reno, Sparks, Washoe County, Nevada…"
                   />
                 </Field>
-                <Field label="Judge">
-                  <Input value={form.judge} onChange={(e) => set("judge", e.target.value)} />
-                </Field>
-              </Row>
-              <Row>
-                <Field label="Prosecutor">
+                <Field label="Related case, request, complaint, or contract number">
                   <Input
-                    value={form.prosecutor}
-                    onChange={(e) => set("prosecutor", e.target.value)}
-                  />
-                </Field>
-                <Field label="Defense attorney / public defender">
-                  <Input
-                    value={form.defenseAttorney}
-                    onChange={(e) => set("defenseAttorney", e.target.value)}
+                    value={form.relatedCaseNumber}
+                    onChange={(e) => set("relatedCaseNumber", e.target.value)}
+                    placeholder="Optional; court case, PRR number, IA complaint, contract ID…"
                   />
                 </Field>
               </Row>
               <Row>
-                <Field label="Charges">
-                  <Input value={form.charges} onChange={(e) => set("charges", e.target.value)} />
-                </Field>
-                <Field label="Date case started">
+                <Field label="First known date">
                   <Input
                     type="date"
-                    value={form.dateCaseStarted}
-                    onChange={(e) => set("dateCaseStarted", e.target.value)}
+                    value={form.incidentStart}
+                    onChange={(e) => set("incidentStart", e.target.value)}
                   />
                 </Field>
-              </Row>
-              <Row>
-                <Field label="Time in custody (days)">
+                <Field label="Last known date">
                   <Input
-                    type="number"
-                    min={0}
-                    value={form.custodyDays}
-                    onChange={(e) => set("custodyDays", e.target.value)}
+                    type="date"
+                    value={form.incidentEnd}
+                    onChange={(e) => set("incidentEnd", e.target.value)}
                   />
                 </Field>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <Toggle
-                    label="Still pending"
-                    value={form.stillPending}
-                    onChange={(v) => set("stillPending", v)}
-                  />
-                  <Toggle
-                    label="Trial held"
-                    value={form.trialHeld}
-                    onChange={(v) => set("trialHeld", v)}
-                  />
-                </div>
               </Row>
+              <label className="flex items-start gap-3 cursor-pointer paper-card !p-3">
+                <Checkbox
+                  checked={form.ongoingIncident}
+                  onCheckedChange={(v) => set("ongoingIncident", Boolean(v))}
+                />
+                <span className="text-sm text-foreground/90">
+                  This appears to be ongoing, unresolved, or still being hidden from the public record.
+                </span>
+              </label>
             </FieldGroup>
 
-            <FieldGroup title="Procedural posture">
-              <div className="grid sm:grid-cols-2 gap-3">
-                <Toggle
-                  label="I requested trial"
-                  value={form.requestedTrial}
-                  onChange={(v) => set("requestedTrial", v)}
-                />
-                <Toggle
-                  label="Counsel waived time without my consent"
-                  value={form.counselWaivedTime}
-                  onChange={(v) => set("counselWaivedTime", v)}
-                />
-                <Toggle
-                  label="Filings blocked, struck, or ignored"
-                  value={form.filingsBlocked}
-                  onChange={(v) => set("filingsBlocked", v)}
-                />
-                <Toggle
-                  label="I asked to represent myself"
-                  value={form.askedSelfRep}
-                  onChange={(v) => set("askedSelfRep", v)}
-                />
-                <Toggle
-                  label="Faretta canvass was held"
-                  value={form.farettaHandled}
-                  onChange={(v) => set("farettaHandled", v)}
-                />
-                <Toggle
-                  label="Competency was raised"
-                  value={form.competencyRaised}
-                  onChange={(v) => set("competencyRaised", v)}
-                />
-                <Toggle
-                  label="Discovery missing"
-                  value={form.discoveryMissing}
-                  onChange={(v) => set("discoveryMissing", v)}
-                />
-                <Toggle
-                  label="Warrants / OSCs used against me"
-                  value={form.warrantsUsed}
-                  onChange={(v) => set("warrantsUsed", v)}
-                />
-              </div>
-              <Field label="What happened right before competency was raised?">
+            <FieldGroup title="Actors, roles, and institutions">
+              <Field label="Named actors and roles">
                 <Textarea
-                  rows={3}
-                  value={form.competencyContext}
-                  onChange={(e) => set("competencyContext", e.target.value)}
-                  placeholder="If applicable. What you filed, asserted, or asked for in the days/weeks before competency surfaced."
+                  rows={6}
+                  value={form.actorDetails}
+                  onChange={(e) => set("actorDetails", e.target.value)}
+                  placeholder="List each person, office, agency, contractor, campaign, or institution on its own line if possible. Include role, agency, and what the record shows they did or failed to do."
                 />
               </Field>
             </FieldGroup>
 
-            <FieldGroup title="Harm & narrative">
-              <Field label="Family / caregiver / employment / housing / medical harm">
+            <FieldGroup title="Evidence and source quality">
+              <CheckGrid
+                label="Evidence type"
+                items={EVIDENCE_TYPES}
+                selected={form.evidenceTypes}
+                onToggle={(item) => toggle("evidenceTypes", item)}
+              />
+              <Field label="What records prove or support this?">
                 <Textarea
-                  rows={3}
-                  value={form.familyHarm}
-                  onChange={(e) => set("familyHarm", e.target.value)}
-                  placeholder="Concrete impact on dependents, jobs, housing, medical care, etc."
+                  rows={5}
+                  value={form.evidenceDescription}
+                  onChange={(e) => set("evidenceDescription", e.target.value)}
+                  placeholder="Name the orders, emails, public-records responses, contracts, videos, filings, meeting minutes, receipts, screenshots, or witnesses. Say what each item proves."
                 />
               </Field>
-              <Field label="Main issue, in one sentence">
-                <Input
-                  value={form.mainIssue}
-                  onChange={(e) => set("mainIssue", e.target.value)}
-                  placeholder="e.g. Speedy trial demand ignored for 18 months."
-                />
-              </Field>
-              <Field label="Short story" required>
-                <Textarea
-                  rows={8}
-                  required
-                  value={form.summary}
-                  onChange={(e) => set("summary", e.target.value)}
-                  placeholder="Dates, orders, requests, responses, silences. Stick to what you can prove or sourced from records."
-                />
-              </Field>
-            </FieldGroup>
-
-            <FieldGroup title="Evidence">
               <div className="paper-card p-5 border-dashed border-2 border-border bg-secondary/40 text-center">
                 <FileUp className="h-6 w-6 mx-auto text-muted-foreground" />
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Attach orders, motions, emails, transcripts, jail records (PDF, image, audio,
-                  video). Up to 30 MB total.
+                  Attach source documents, images, audio, video, transcripts, emails, records responses, or
+                  other receipts. Up to 30 MB total.
                 </p>
                 <input
                   ref={fileRef}
@@ -502,15 +520,69 @@ function SubmitForm() {
               )}
             </FieldGroup>
 
-            <FieldGroup title="Consent">
+            <FieldGroup title="Timeline and pattern separation">
+              <Field label="Chronology">
+                <Textarea
+                  rows={6}
+                  value={form.timelineDescription}
+                  onChange={(e) => set("timelineDescription", e.target.value)}
+                  placeholder="Give dates in order. Include what happened, who acted, what record exists, and what is missing. Approximate dates are better than no dates."
+                />
+              </Field>
+              <CheckGrid
+                label="Pattern signals"
+                items={PATTERN_SIGNALS}
+                selected={form.patternSignals}
+                onToggle={(item) => toggle("patternSignals", item)}
+              />
+              <Field label="Public-records status">
+                <Textarea
+                  rows={3}
+                  value={form.publicRecordsStatus}
+                  onChange={(e) => set("publicRecordsStatus", e.target.value)}
+                  placeholder="Have records been requested? Who was asked, when, what deadline passed, what was denied, and what remains missing?"
+                />
+              </Field>
+            </FieldGroup>
+
+            <FieldGroup title="Narrative, harm, and next records">
+              <Field label="What happened, in sourced paragraphs" required>
+                <Textarea
+                  rows={8}
+                  required
+                  value={form.summary}
+                  onChange={(e) => set("summary", e.target.value)}
+                  placeholder="Stick to what you personally know, what the record shows, and what remains an allegation. Separate facts from suspicion."
+                />
+              </Field>
+              <Field label="Concrete harm or public impact">
+                <Textarea
+                  rows={3}
+                  value={form.harmDescription}
+                  onChange={(e) => set("harmDescription", e.target.value)}
+                  placeholder="Family, employment, housing, custody, public funds, civil rights, public safety, voter information, or agency accountability impacts."
+                />
+              </Field>
+              <Field label="What should be requested or verified next?">
+                <Textarea
+                  rows={3}
+                  value={form.requestedFollowup}
+                  onChange={(e) => set("requestedFollowup", e.target.value)}
+                  placeholder="Missing emails, bodycam, calendars, audit logs, policies, contracts, complaints, disciplinary files, minute entries, transcripts, etc."
+                />
+              </Field>
+            </FieldGroup>
+
+            <FieldGroup title="Consent and publication safety">
               <label className="flex items-start gap-3 cursor-pointer">
                 <Checkbox
                   checked={form.redactionConfirmed}
                   onCheckedChange={(v) => set("redactionConfirmed", Boolean(v))}
                 />
                 <span className="text-sm text-foreground/90">
-                  I confirm I have permission to share these materials and have redacted SSNs,
-                  full DOBs, medical records, minor-child PII, and any sealed information.
+                  I confirm I have permission to share these materials and have redacted SSNs, full DOBs,
+                  medical records, minor-child PII, private addresses, financial account numbers, passwords,
+                  and any sealed or legally restricted information.
                 </span>
               </label>
               <label className="flex items-start gap-3 cursor-pointer">
@@ -519,14 +591,14 @@ function SubmitForm() {
                   onCheckedChange={(v) => set("publicPermission", Boolean(v))}
                 />
                 <span className="text-sm text-foreground/90">
-                  I understand my submission will be reviewed by editors and that nothing is
-                  published without explicit admin approval. I consent to publication of approved,
-                  appropriately redacted material under my chosen alias.
+                  I understand this submission will be reviewed before publication. I consent to publication
+                  of approved, appropriately redacted material under my chosen alias, and I understand that
+                  allegations will be described as allegations unless records corroborate them.
                 </span>
               </label>
             </FieldGroup>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <Button
                 type="submit"
                 disabled={submit.isPending}
@@ -539,7 +611,7 @@ function SubmitForm() {
                   </>
                 ) : (
                   <>
-                    Submit for review <ArrowRight className="h-4 w-4" />
+                    Submit evidence for review <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </Button>
@@ -562,9 +634,11 @@ function FieldGroup({ title, children }: { title: string; children: React.ReactN
     </div>
   );
 }
+
 function Row({ children }: { children: React.ReactNode }) {
   return <div className="grid sm:grid-cols-2 gap-4">{children}</div>;
 }
+
 function Field({
   label,
   required,
@@ -583,19 +657,38 @@ function Field({
     </div>
   );
 }
-function Toggle({
+
+function CheckGrid({
   label,
-  value,
-  onChange,
+  items,
+  selected,
+  onToggle,
 }: {
   label: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
+  items: string[];
+  selected: string[];
+  onToggle: (item: string) => void;
 }) {
   return (
-    <label className="flex items-center justify-between gap-3 paper-card !p-3 cursor-pointer">
-      <span className="text-sm">{label}</span>
-      <Switch checked={value} onCheckedChange={onChange} />
-    </label>
+    <div>
+      <Label className="eyebrow !text-[0.62rem] mb-2 block">{label}</Label>
+      <div className="grid sm:grid-cols-2 gap-2">
+        {items.map((item) => {
+          const checked = selected.includes(item);
+          return (
+            <label
+              key={item}
+              className={
+                "flex items-start gap-2.5 rounded-sm border p-3 cursor-pointer transition-colors " +
+                (checked ? "border-[var(--amber)] bg-[var(--amber-soft)]" : "border-border bg-background hover:bg-secondary/50")
+              }
+            >
+              <Checkbox checked={checked} onCheckedChange={() => onToggle(item)} />
+              <span className="text-sm leading-snug">{item}</span>
+            </label>
+          );
+        })}
+      </div>
+    </div>
   );
 }

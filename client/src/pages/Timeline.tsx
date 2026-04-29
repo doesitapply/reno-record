@@ -23,7 +23,7 @@ const CATEGORIES = [
 ] as const;
 
 export default function TimelinePage() {
-  useSEO({ title: "Timeline", description: "A chronological record of every documented event — hearings, filings, orders, and delays — with source documents.", canonicalPath: "/timeline" });
+  useSEO({ title: "Timeline", description: "A chronological exposure map of documented events, agency responses, filings, orders, delays, records requests, and misconduct signals with source documents.", canonicalPath: "/timeline" });
   const [cat, setCat] = useState<(typeof CATEGORIES)[number]["value"]>("all");
   const events = trpc.timeline.listPublic.useQuery({ category: cat });
 
@@ -32,13 +32,14 @@ export default function TimelinePage() {
       <section className="container py-14 md:py-20">
         <div className="grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-4">
-            <div className="eyebrow">The Record</div>
+            <div className="eyebrow">Exposure Timeline</div>
             <h1 className="display-serif text-5xl md:text-6xl mt-3 leading-[1.02]">
-              Docket, in order.
+              Receipts, in order.
             </h1>
             <p className="mt-5 text-foreground/80 leading-relaxed">
-              Every approved event with its date, category, status, and links to source documents.
-              Filter by category. Each card connects to the underlying record where available.
+              Every approved incident, filing, agency response, records request, and pattern signal with
+              its date, category, status, and links to source documents. Filter by category and trace
+              each card back to the underlying record where available.
             </p>
             <div className="mt-7 flex flex-wrap gap-2">
               {CATEGORIES.map((c) => (
@@ -126,12 +127,12 @@ export default function TimelinePage() {
               <div>
                 <div className="eyebrow">Add to the docket</div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Submitter timelines feed this archive after admin review.
+                  Submitted dates, records, and actor references feed this archive after redaction review and approval.
                 </p>
               </div>
               <Link href="/submit">
                 <Button className="bg-foreground text-background gap-2">
-                  Submit Your Story <ArrowRight className="h-4 w-4" />
+                  Submit Evidence <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>

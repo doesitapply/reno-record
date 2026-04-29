@@ -47,7 +47,7 @@ export default function ActorsPage() {
   useSEO({
     title: "Actors",
     description:
-      "Profiles of judges, attorneys, officials, and institutions documented in the Reno Record archive.",
+      "Profiles of public actors, agencies, contractors, officials, attorneys, and institutions documented in the Reno Record evidence archive.",
     canonicalPath: "/actors",
   });
   const [, params] = useRoute("/actors/:slug");
@@ -67,14 +67,14 @@ function ActorIndex() {
               Names on the record.
             </h1>
             <p className="mt-5 text-foreground/80 leading-relaxed">
-              Profiles of judges, attorneys, officials, and institutions documented in the cases
-              archived here. Each profile aggregates every timeline event, source document, and
-              public records request where that actor appears.
+              Profiles of public actors, agencies, contractors, officials, attorneys, and institutions
+              documented in the evidence archive. Each profile aggregates every timeline event, source
+              document, and public-records request where that actor or institution appears.
             </p>
             <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
-              Profiles describe documented conduct in the cases archived here. The Reno Record
-              presents allegations as reported until corroborated by records and does not assert
-              misconduct as proven fact.
+              Profiles describe documented conduct in archived evidence and reviewed submissions. The
+              Reno Record presents allegations as reported until corroborated by records and does not
+              assert misconduct as proven fact.
             </p>
           </div>
           <div className="lg:col-span-8 grid sm:grid-cols-2 gap-4">
@@ -109,7 +109,7 @@ function ActorIndex() {
                     </p>
                   )}
                   <div className="mt-4 text-xs text-amber-600 font-medium">
-                    View dossier →
+                    View evidence dossier →
                   </div>
                 </div>
               </Link>
@@ -223,7 +223,7 @@ function ActorDetail({ slug }: { slug: string }) {
               {actor.notes && (
                 <div>
                   <div className="eyebrow">Documented in this archive</div>
-                  <h2 className="display-serif text-2xl mt-2 rule-amber">Conduct on record</h2>
+                  <h2 className="display-serif text-2xl mt-2 rule-amber">Conduct, records, and pattern signals</h2>
                   <p className="mt-4 whitespace-pre-line text-foreground/85 leading-relaxed">
                     {actor.notes}
                   </p>

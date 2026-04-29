@@ -48,7 +48,7 @@ export default function PublicRecordsPage() {
   useSEO({
     title: "Public Records Tracker",
     description:
-      "Live status of all public records requests filed with Washoe County courts, the DA, and related agencies.",
+      "Live status of public records requests filed with Reno, Washoe County, courts, law enforcement, contractors, boards, and related agencies.",
     canonicalPath: "/public-records",
   });
   const prrs = trpc.prr.listPublic.useQuery();
@@ -63,12 +63,12 @@ export default function PublicRecordsPage() {
               Every request. Every silence.
             </h1>
             <p className="mt-5 text-foreground/80 leading-relaxed">
-              The Reno Record's running log of public records requests, deadlines, and what
-              actually came back. Non-responses are the news.
+              The Reno Record's running log of records requests, agency deadlines, production gaps,
+              denials, appeals, and what actually came back. Non-responses are part of the evidence.
             </p>
             <div className="mt-6 paper-card p-4 text-sm text-muted-foreground leading-relaxed">
-              Each request now includes a public status trail, so readers can see when a
-              request was sent, when a deadline passed, and what the agency ultimately did.
+              Each request includes a public status trail, so readers can see when a request was sent,
+              when a deadline passed, which agency held the record, and what the agency ultimately did.
             </div>
           </div>
 

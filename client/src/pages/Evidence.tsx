@@ -35,7 +35,7 @@ const SOURCE_TYPES = [
 ];
 
 export default function EvidencePage() {
-  useSEO({ title: "Evidence Archive", description: "Searchable archive of source documents: transcripts, orders, motions, and filings. Every claim has a receipt.", canonicalPath: "/evidence" });
+  useSEO({ title: "Evidence Archive", description: "Searchable archive of source documents: public records, filings, orders, emails, contracts, images, audio, video, and other receipts behind misconduct-pattern claims.", canonicalPath: "/evidence" });
   const [, params] = useRoute("/evidence/:id");
   if (params?.id) return <EvidenceDetail id={Number(params.id)} />;
   return <EvidenceList />;
@@ -65,9 +65,9 @@ function EvidenceList() {
               Receipts, on file.
             </h1>
             <p className="mt-5 text-foreground/80 leading-relaxed">
-              Approved orders, motions, transcripts, warrants, emails, and public records
-              responses. PDFs open inline. Searchable by title, description, actor, and case
-              number.
+              Approved public records, filings, orders, contracts, warrants, emails, transcripts, images,
+              audio, video, and agency responses. Source files are searchable by title, description,
+              actor, agency, and reference number.
             </p>
 
             <div className="mt-7 space-y-4">
@@ -116,8 +116,8 @@ function EvidenceList() {
                 <FileText className="h-8 w-8 mx-auto text-muted-foreground" />
                 <h3 className="display-serif text-2xl mt-4">No documents match.</h3>
                 <p className="text-muted-foreground mt-2">
-                  Try a different filter or clear your search. Approved evidence will appear here as
-                  it lands in the archive.
+                  Try a different filter or clear your search. Approved evidence will appear here after
+                  redaction review, source classification, and editorial approval.
                 </p>
               </div>
             )}
@@ -216,7 +216,7 @@ function EvidenceDetail({ id }: { id: number }) {
                       doc.documentDate ? new Date(doc.documentDate).toLocaleDateString() : "—"
                     }
                   />
-                  <Meta label="Case number" value={doc.caseNumber || "—"} />
+                  <Meta label="Case / reference" value={doc.caseNumber || "—"} />
                   <Meta label="Actors" value={doc.actorNames || "—"} />
                   <Meta label="MIME" value={doc.mimeType || "—"} />
                   <Meta label="Redaction" value={doc.redactionStatus.replace(/_/g, " ")} />
@@ -231,7 +231,7 @@ function EvidenceDetail({ id }: { id: number }) {
                 )}
                 {doc.aiSummary && (
                   <>
-                    <div className="eyebrow mt-6">Goblin summary (advisory)</div>
+                    <div className="eyebrow mt-6">Ingest summary (advisory)</div>
                     <p className="mt-2 text-sm text-muted-foreground leading-relaxed italic">
                       {doc.aiSummary}
                     </p>

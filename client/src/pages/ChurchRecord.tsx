@@ -21,7 +21,7 @@ const SECTIONS = [
 ];
 
 export default function ChurchRecord() {
-  useSEO({ title: "The Church Record", description: "The documented case of systemic due process failures in Washoe County — court delay, ignored filings, pretrial detention, and the record that proves it.", ogType: "article", canonicalPath: "/the-church-record" });
+  useSEO({ title: "The Church Record", description: "A documented case example inside The Reno Record's broader public corruption evidence platform — court delay, ignored filings, custody pressure, and records silence.", ogType: "article", canonicalPath: "/the-church-record" });
   const featured = trpc.story.featured.useQuery();
   const events = trpc.timeline.listPublic.useQuery(undefined);
   const churchEvents = (events.data ?? []).filter(
@@ -34,14 +34,14 @@ export default function ChurchRecord() {
       <section className="border-b border-border bg-foreground text-background">
         <div className="container py-16 md:py-24 grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8">
-            <div className="eyebrow !text-background/70">Featured Case · Vol. 1</div>
+              <div className="eyebrow !text-background/70">Documented Example · Court-System Cluster</div>
             <h1 className="display-serif hero-headline text-5xl md:text-6xl mt-3 leading-[1.02]">
               The Church Record
             </h1>
             <p className="mt-5 max-w-2xl text-background/80 text-lg leading-relaxed">
-              The central case file. Documented delay, blocked filings, competency detours, no-bail
-              warrant practice, and unresolved motions in Washoe County's criminal courts —
-              presented with sourced records and a structured timeline.
+              One documented case file inside a larger public evidence platform. The Church Record shows
+              how delay, blocked filings, competency detours, no-bail warrant practice, unresolved motions,
+              and records silence can be converted into source-backed pattern evidence.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <span className="stamp text-[var(--amber)]">≈ 110 days custody</span>
@@ -70,12 +70,13 @@ export default function ChurchRecord() {
       <Section id="overview" eyebrow="Section 1" title="Overview">
         <p>
           {featured.data?.summary ||
-            `The Church Record traces a single Washoe County criminal case through the procedural machinery that has kept it pending for more than 1,000 days. The defendant was held in custody for approximately 110 days. Across that time, the docket reflects repeated, documented requests for rulings, self-representation, written findings, and trial — and a pattern of delay, filing restrictions, competency detours, no-bail warrant practice, unresolved motions, and silence where written answers should exist.`}
+            `The Church Record traces one Washoe County criminal case through procedural machinery that has kept it pending for more than 1,000 days. The defendant was held in custody for approximately 110 days. Across that time, the docket reflects repeated, documented requests for rulings, self-representation, written findings, and trial — and a pattern of delay, filing restrictions, competency detours, no-bail warrant practice, unresolved motions, and silence where written answers should exist.`}
         </p>
         <p>
-          This page presents the case as a structured record. Each claim links, where available, to
-          the underlying document in the Evidence Archive. Items not yet corroborated by records are
-          flagged as such.
+          This page presents the case as a structured example, not the entire mission. Each claim links,
+          where available, to the underlying document in the Evidence Archive. Items not yet corroborated
+          by records are flagged as such, and the same method is now applied to other Reno and Washoe
+          misconduct signals.
         </p>
       </Section>
 
@@ -232,17 +233,17 @@ export default function ChurchRecord() {
       <section className="container py-16">
         <div className="paper-card p-10 grid md:grid-cols-12 gap-6 items-center">
           <div className="md:col-span-8">
-            <div className="eyebrow">If your case shares this machinery</div>
-            <h2 className="display-serif text-3xl mt-2">Add your record.</h2>
+            <div className="eyebrow">If your records show the same machinery</div>
+            <h2 className="display-serif text-3xl mt-2">Add evidence to the public corruption map.</h2>
             <p className="mt-3 text-muted-foreground max-w-2xl">
-              Submissions are reviewed before publication. Your documents and timelines help build a
-              cross-case comparator that no single defendant can build alone.
+              Submissions are reviewed before publication. Your documents, dates, actors, and records
+              requests help build a cross-agency comparator that no single person can build alone.
             </p>
           </div>
           <div className="md:col-span-4 flex md:justify-end">
             <Link href="/submit">
               <Button size="lg" className="bg-foreground text-background gap-2">
-                Submit Your Story <ArrowRight className="h-4 w-4" />
+                Submit Evidence <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
