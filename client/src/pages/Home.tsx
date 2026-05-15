@@ -99,40 +99,38 @@ export default function Home() {
     <SiteShell>
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-border bg-foreground text-background">
-        <div className="absolute inset-0 opacity-90">
+        <div className="absolute inset-0 opacity-55 sm:opacity-75">
           <HeroDocketArt />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground via-foreground/85 to-transparent" />
-        <div className="relative container py-20 md:py-28 lg:py-32 grid lg:grid-cols-12 gap-10 items-center">
+        <div className="absolute inset-0 bg-gradient-to-r from-foreground via-foreground/95 to-foreground/70 lg:to-transparent" />
+        <div className="relative container py-14 md:py-24 lg:py-32 grid lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-7">
-            <div className="inline-flex items-center gap-2 mb-6">
-              <span className="stamp text-[var(--amber)]">Vol. 1 · Washoe County</span>
-              <span className="eyebrow !text-background/70">Receipts for Due Process</span>
+            <div className="flex flex-col sm:inline-flex sm:flex-row sm:items-center gap-2 mb-5 max-w-full">
+              <span className="stamp text-[var(--amber)] w-fit">Vol. 1 · Washoe County</span>
+              <span className="eyebrow !text-background/70 whitespace-normal">Receipts for Due Process</span>
             </div>
             <h1 className="display-serif hero-headline text-5xl md:text-6xl lg:text-7xl text-background leading-[0.98]">
               The Reno
               <br />
               Record.
             </h1>
-            <p className="mt-6 max-w-xl text-base md:text-lg text-background/80 leading-relaxed">
-              A public exposure archive for misconduct patterns: who was involved, what records prove it,
-              how the timeline fits together, which agencies failed to respond, and where one case
-              becomes evidence of a larger system.
+            <p className="mt-5 max-w-[21rem] sm:max-w-xl text-base md:text-lg text-background/85 leading-relaxed">
+              Search receipts, see the timeline, and connect misconduct patterns across actors, agencies, and court records.
             </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Link href="/patterns">
-                <Button size="lg" className="bg-[var(--amber)] text-[var(--ink)] hover:bg-[var(--amber)]/90 gap-2">
-                  Start with the Patterns <ArrowRight className="h-4 w-4" />
+            <div className="mt-8 grid gap-3 max-w-[21rem] sm:max-w-none sm:flex sm:flex-wrap">
+              <Link href="/patterns" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto bg-[var(--amber)] text-[var(--ink)] hover:bg-[var(--amber)]/90 gap-2">
+                  View Patterns <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/submit">
-                <Button size="lg" variant="outline" className="border-background/30 text-background bg-transparent hover:bg-background/10 gap-2">
-                  Submit Evidence
-                </Button>
-              </Link>
-              <Link href="/evidence">
-                <Button size="lg" variant="ghost" className="text-background hover:bg-background/10 gap-2">
+              <Link href="/evidence" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto border-background/30 text-background bg-transparent hover:bg-background/10 gap-2">
                   Browse Evidence <FileSearch className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/submit" className="w-full sm:w-auto">
+                <Button size="lg" variant="ghost" className="w-full sm:w-auto text-background hover:bg-background/10 gap-2">
+                  Submit Evidence
                 </Button>
               </Link>
             </div>
@@ -164,10 +162,7 @@ export default function Home() {
         </div>
         <div className="md:col-span-7 space-y-5 text-[1.04rem] leading-relaxed text-foreground/85">
           <p>
-            <strong>The Reno Record is a misconduct evidence archive, not a rant archive.</strong> Dates. Orders.
-            Emails. Warrants. Transcripts. Public records. Custody time. Missing findings. Each
-            entry is organized into actors, events, evidence, allegations, redaction risks, and pattern
-            indicators so one incident can be compared against the next.
+            <strong>The Reno Record is a misconduct evidence archive, not a rant archive.</strong> It is built around records that can be checked: dates, orders, emails, warrants, transcripts, public records, custody time, and missing findings.
           </p>
           <p>
             The point is not to make one case the whole story. The point is to expose the machinery: court
