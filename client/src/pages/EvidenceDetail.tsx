@@ -64,6 +64,17 @@ function formatBytes(bytes: number | null | undefined) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function sameOriginStorageUrl(fileKey?: string | null, fileUrl?: string | null): string {
+  if (fileKey) {
+    const encodedKey = fileKey
+      .split("/")
+      .map((part) => encodeURIComponent(part))
+      .join("/");
+    return `/manus-storage/${encodedKey}`;
+  }
+  return fileUrl ?? "";
+}
+
 export default function EvidenceDetail() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -159,7 +170,14 @@ export default function EvidenceDetail() {
     );
   }
 
-  const isPdf = doc.mimeType === "application/pdf" || doc.fileUrl?.endsWith(".pdf");
+  const evidenceUrl = sameOriginStorageUrl(doc.fileKey, doc.fileUrl);
+  const mimeType = doc.mimeType ?? "";
+  const lowerUrl = evidenceUrl.toLowerCase().split("?")[0];
+  const hasEvidenceFile = evidenceUrl.length > 0;
+  const isPdf = mimeType === "application/pdf" || lowerUrl.endsWith(".pdf");
+  const isImage = mimeType.startsWith("image/");
+  const isAudio = mimeType.startsWith("audio/");
+  const isVideo = mimeType.startsWith("video/");
 
   return (
     <SiteShell>
@@ -269,69 +287,82 @@ export default function EvidenceDetail() {
                   </div>
                 )}
 
-                {/* PDF Viewer / Download */}
+                {/* Evidence file viewer */}
                 <div className="paper-card overflow-hidden">
-                  <div className="p-4 border-b border-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-amber-400" />
-                      <span className="font-medium text-foreground text-sm truncate max-w-[200px]">
-                        {doc.title}
-                      </span>
-                      {doc.fileSize && (
-                        <span className="text-xs text-muted-foreground font-mono">
-                          {formatBytes(doc.fileSize)}
-                        </span>
-                      )}
+                  <div className="p-4 border-b border-border/40 flex flex-col gap-3">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <FileText className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <div className="font-medium text-foreground text-sm leading-snug break-words">
+                          {doc.title}
+                        </div>
+                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground font-mono">
+                          {mimeType && <span>{mimeType}</span>}
+                          {doc.fileSize && <span>{formatBytes(doc.fileSize)}</span>}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {isPdf && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setPdfOpen(!pdfOpen)}
-                          className="text-xs"
-                        >
-                          {pdfOpen ? "Hide Preview" : "View PDF"}
-                        </Button>
+
+                    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                      {hasEvidenceFile ? (
+                        <>
+                          <Button
+                            size="sm"
+                            asChild
+                            className="bg-amber-400 text-navy-900 hover:bg-amber-300 text-xs"
+                          >
+                            <a href={evidenceUrl} target="_blank" rel="noopener noreferrer" download>
+                              <Download className="w-3 h-3 mr-1" />
+                              Download
+                            </a>
+                          </Button>
+                          <Button size="sm" variant="outline" asChild className="text-xs">
+                            <a href={evidenceUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Open original
+                            </a>
+                          </Button>
+                        </>
+                      ) : (
+                        <div className="col-span-2 text-xs text-muted-foreground">
+                          This record has metadata but no stored evidence file attached.
+                        </div>
                       )}
-                      <Button
-                        size="sm"
-                        asChild
-                        className="bg-amber-400 text-navy-900 hover:bg-amber-300 text-xs"
-                      >
-                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download>
-                          <Download className="w-3 h-3 mr-1" />
-                          Download
-                        </a>
-                      </Button>
-                      <Button size="sm" variant="outline" asChild className="text-xs">
-                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-3 h-3 mr-1" />
-                          Open
-                        </a>
-                      </Button>
                     </div>
                   </div>
 
-                  {isPdf && pdfOpen && (
-                    <div className="w-full bg-black/20">
-                      <iframe
-                        src={`${doc.fileUrl}#toolbar=1`}
-                        className="w-full"
-                        style={{ height: "70vh", minHeight: 400 }}
-                        title={doc.title}
-                      />
-                    </div>
-                  )}
-
-                  {!isPdf && (
+                  {!hasEvidenceFile ? (
                     <div className="p-6 text-center text-muted-foreground">
                       <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                      <p className="text-sm">
-                        {doc.mimeType?.startsWith("audio/") ? "Audio file" :
-                         doc.mimeType?.startsWith("video/") ? "Video file" :
-                         doc.mimeType?.startsWith("image/") ? "Image file" : "File"} — use the Download or Open button above to view.
-                      </p>
+                      <p className="text-sm">No evidence file is available for inline viewing.</p>
+                    </div>
+                  ) : isPdf ? (
+                    <div className="w-full bg-card">
+                      <object data={`${evidenceUrl}#toolbar=1`} type="application/pdf" className="w-full h-[72vh] min-h-[520px]">
+                        <iframe
+                          src={`${evidenceUrl}#toolbar=1`}
+                          className="w-full h-[72vh] min-h-[520px] border-0"
+                          title={doc.title}
+                        />
+                      </object>
+                    </div>
+                  ) : isImage ? (
+                    <div className="bg-card p-2 sm:p-4">
+                      <img src={evidenceUrl} alt={doc.title} className="mx-auto max-h-[72vh] w-full object-contain rounded-sm" />
+                    </div>
+                  ) : isAudio ? (
+                    <div className="p-5 sm:p-8">
+                      <audio controls src={evidenceUrl} className="w-full" />
+                    </div>
+                  ) : isVideo ? (
+                    <div className="bg-black">
+                      <video controls src={evidenceUrl} className="w-full max-h-[72vh]" />
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center text-muted-foreground">
+                      <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                      <h3 className="font-serif text-xl text-foreground">Preview unavailable for this file type</h3>
+                      <p className="mt-2 text-sm">Use Open original or Download above. The URL now goes through the same-origin storage proxy to avoid the broken direct-file error.</p>
                     </div>
                   )}
                 </div>

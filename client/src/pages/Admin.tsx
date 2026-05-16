@@ -1173,8 +1173,8 @@ function DocumentReview({ id }: { id: number }) {
           </aside>
 
           <div className="lg:col-span-8">
-<<<<<<< Updated upstream
-            <div className="paper-card overflow-hidden">
+            <AdminDeleteControls documentId={id} onDeleted={() => { utils.document.adminList.invalidate(); }} />
+            <div className="paper-card overflow-hidden mt-4">
               <div className="flex items-center justify-between gap-3 border-b border-border p-3">
                 <div className="min-w-0">
                   <div className="eyebrow !mb-0">Evidence file</div>
@@ -1186,10 +1186,6 @@ function DocumentReview({ id }: { id: number }) {
                   </a>
                 )}
               </div>
-=======
-            <AdminDeleteControls documentId={id} onDeleted={() => { utils.document.adminList.invalidate(); }} />
-            <div className="paper-card overflow-hidden mt-4">
->>>>>>> Stashed changes
               <div className="h-[80vh]">
                 {!fileUrl ? (
                   <div className="grid h-full place-items-center p-8 text-center text-muted-foreground">

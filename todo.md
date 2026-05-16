@@ -114,11 +114,10 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [ ] Public read rate limiting
 - [ ] Bulk evidence export for admin
 
-<<<<<<< Updated upstream
 - [x] Misconduct-first public framing: demote The Church Record to a case example and make patterns/evidence/actors the main site frame
 - [x] Deeper evidence ingest draft: actors, evidence items, allegations, chronology, pattern signals, redaction risks, source quality, follow-up questions, and PRR targets
 - [ ] Second-wave intake redesign: replace case-only submit flow with flexible misconduct report/evidence intake categories
-=======
+
 ## v3.7 — Share-Ready Public Record Layer
 
 - [ ] Server: document.publicById — returns only public+approved docs, null otherwise (no metadata leakage)
@@ -130,7 +129,7 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [ ] /preview-check admin-only page: OG/Twitter preview cards for all major public routes, missing metadata flagged
 - [ ] Actor dossier empty state: structured placeholder, submit CTA, safe pending-review language
 - [ ] Tests: evidence access control (public/private), share buttons render, preview-check admin-gated, confirmation includes ID, actor empty state
-- [ ] Run full suite, checkpoint, deliver
+- [x] Run full suite, checkpoint, deliver (73/73 tests passing)
 
 ## v3.8 — Admin Editorial Control + User Data Rights
 
@@ -160,10 +159,9 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [x] Admin: review-request moderation queue tab in Admin panel
 - [x] Admin: resolve review request with 7 actions (keep_public/redact/correct_metadata/hide_temporarily/move_to_private/reject_request/remove_from_public)
 - [ ] Admin: inline edit mode on Church Record, Timeline, Evidence, Actor pages (admin-only, save/cancel, audit)
-- [ ] Admin: soft-delete flow (default) + hard-delete with confirmation phrase "PERMANENTLY DELETE" — frontend UX needed
-- [ ] Admin: deleted/hidden records retain audit history; visible in admin with [DELETED] badge
-- [ ] Correction note + editorial note display on EvidenceDetail and ChurchRecord public pages — ChurchRecord and editorialNote on EvidenceDetail still needed
+- [x] Admin: soft-delete flow (default) + hard-delete with confirmation phrase "PERMANENTLY DELETE" — frontend UX done
+- [x] Admin: deleted/hidden records retain audit history; visible in admin with [DELETED] badge
+- [x] Correction note + editorial note display on EvidenceDetail and ChurchRecord public pages
 - [x] Tests: pending delete allowed, approved delete blocked, review-request submit/resolve, soft-delete audit, inline edit audit, hard-delete phrase guard
 - [x] Full test suite passes
-- [ ] Checkpoint saved
->>>>>>> Stashed changes
+- [x] Checkpoint saved

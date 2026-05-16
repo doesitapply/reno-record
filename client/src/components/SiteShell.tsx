@@ -166,13 +166,6 @@ export default function SiteShell({ children }: { children: ReactNode }) {
                 </Button>
               </Link>
             )}
-<<<<<<< Updated upstream
-            <Link href="/submit">
-              <Button size="sm" className="bg-foreground text-background hover:bg-[var(--navy)] gap-1.5">
-                <ScrollText className="h-3.5 w-3.5" /> Submit Evidence
-              </Button>
-            </Link>
-=======
             {isAuthenticated ? (
               <>
                 <Link href="/submit">
@@ -196,7 +189,6 @@ export default function SiteShell({ children }: { children: ReactNode }) {
                 </Link>
               </>
             )}
->>>>>>> Stashed changes
           </div>
 
           <button
@@ -254,13 +246,9 @@ export default function SiteShell({ children }: { children: ReactNode }) {
                   </Link>
                 )}
                 <Link href="/submit" onClick={() => setOpen(false)} className="flex-1">
-<<<<<<< Updated upstream
-                  <Button className="w-full bg-foreground text-background">Submit Evidence</Button>
-=======
                   <Button className="w-full bg-foreground text-background gap-1.5">
                     <ScrollText className="h-3.5 w-3.5" /> Submit
                   </Button>
->>>>>>> Stashed changes
                 </Link>
                 {isAuthenticated && (
                   <button
