@@ -1,0 +1,27 @@
+{
+  "query": "\nSELECT COUNT(*) as total_docs, SUM(public_status) as public_docs FROM documents;\nSELECT COUNT(*) as total_stories, SUM(public_permission) as public_stories FROM stories;\nSELECT COUNT(*) as total_actors FROM actors;\nSELECT COUNT(*) as total_events FROM timeline_events;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT COUNT(*) as total_docs, SUM(public_status) as public_docs FROM documents;\nSELECT COUNT(*) as total_stories, SUM(public_permission) as public_stories FROM stories;\nSELECT COUNT(*) as total_actors FROM actors;\nSELECT COUNT(*) as total_events FROM timeline_events;\n",
+  "rows": [
+    {
+      "total_docs": "23",
+      "public_docs": "7"
+    },
+    {
+      "total_docs": "total_stories",
+      "public_docs": "public_stories"
+    },
+    {
+      "total_docs": "0",
+      "public_docs": "NULL"
+    }
+  ],
+  "messages": [
+    "total_actors",
+    "5",
+    "total_events",
+    "6"
+  ],
+  "stdout": "total_docs\tpublic_docs\n23\t7\ntotal_stories\tpublic_stories\n0\tNULL\ntotal_actors\n5\ntotal_events\n6\n",
+  "stderr": "",
+  "execution_time_ms": 798
+}

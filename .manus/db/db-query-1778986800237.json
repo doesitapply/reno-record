@@ -1,0 +1,49 @@
+{
+  "query": "\nSELECT COUNT(*) as stories FROM stories;\nSELECT COUNT(*) as documents FROM documents;\nSELECT COUNT(*) as actors FROM actors;\nSELECT COUNT(*) as timeline_events FROM timeline_events;\nSELECT COUNT(*) as users FROM users;\nSHOW COLUMNS FROM stories LIKE '%public%';\nSHOW COLUMNS FROM documents LIKE '%public%';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT COUNT(*) as stories FROM stories;\nSELECT COUNT(*) as documents FROM documents;\nSELECT COUNT(*) as actors FROM actors;\nSELECT COUNT(*) as timeline_events FROM timeline_events;\nSELECT COUNT(*) as users FROM users;\nSHOW COLUMNS FROM stories LIKE '%public%';\nSHOW COLUMNS FROM documents LIKE '%public%';\n",
+  "rows": [
+    {
+      "stories": "0"
+    },
+    {
+      "stories": "documents"
+    },
+    {
+      "stories": "23"
+    },
+    {
+      "stories": "actors"
+    },
+    {
+      "stories": "5"
+    },
+    {
+      "stories": "timeline_events"
+    },
+    {
+      "stories": "6"
+    },
+    {
+      "stories": "users"
+    },
+    {
+      "stories": "2"
+    },
+    {
+      "stories": "Field\tType\tNull\tKey\tDefault\tExtra"
+    },
+    {
+      "stories": "public_permission\ttinyint(1)\tNO\t\t0\t"
+    },
+    {
+      "stories": "Field\tType\tNull\tKey\tDefault\tExtra"
+    },
+    {
+      "stories": "public_status\ttinyint(1)\tNO\tMUL\t0\t"
+    }
+  ],
+  "messages": [],
+  "stdout": "stories\n0\ndocuments\n23\nactors\n5\ntimeline_events\n6\nusers\n2\nField\tType\tNull\tKey\tDefault\tExtra\npublic_permission\ttinyint(1)\tNO\t\t0\t\nField\tType\tNull\tKey\tDefault\tExtra\npublic_status\ttinyint(1)\tNO\tMUL\t0\t\n",
+  "stderr": "",
+  "execution_time_ms": 897
+}

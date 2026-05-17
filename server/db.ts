@@ -76,9 +76,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-  return result[0];
+  return result[0] ?? null;
 }
 
 /* ================= Stories ================= */
@@ -102,25 +102,25 @@ export async function listAllStories() {
 }
 export async function getStoryById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const r = await db.select().from(stories).where(eq(stories.id, id)).limit(1);
-  return r[0];
+  return r[0] ?? null;
 }
 export async function getStoryBySlug(slug: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const r = await db.select().from(stories).where(eq(stories.slug, slug)).limit(1);
-  return r[0];
+  return r[0] ?? null;
 }
 export async function getFeaturedStory() {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const r = await db
     .select()
     .from(stories)
     .where(and(eq(stories.featured, true), eq(stories.status, "approved")))
     .limit(1);
-  return r[0];
+  return r[0] ?? null;
 }
 export async function updateStory(id: number, patch: Partial<InsertStory>) {
   const db = await getDb();
@@ -182,9 +182,9 @@ export async function listAllDocuments(filter?: {
 }
 export async function getDocumentById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const r = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
-  return r[0];
+  return r[0] ?? null;
 }
 export async function updateDocument(id: number, patch: Partial<InsertDocument>) {
   const db = await getDb();
@@ -251,9 +251,9 @@ export async function listPublicActors() {
 }
 export async function getActorBySlug(slug: string) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const r = await db.select().from(actors).where(eq(actors.slug, slug)).limit(1);
-  return r[0];
+  return r[0] ?? null;
 }
 export async function updateActor(id: number, patch: Partial<InsertActor>) {
   const db = await getDb();
@@ -445,9 +445,9 @@ export async function updateIngestJob(id: number, patch: Partial<InsertIngestJob
 }
 export async function getIngestJob(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const r = await db.select().from(ingestJobs).where(eq(ingestJobs.id, id)).limit(1);
-  return r[0];
+  return r[0] ?? null;
 }
 export async function listIngestJobs(opts: { status?: string; limit?: number } = {}) {
   const db = await getDb();
@@ -521,9 +521,9 @@ export async function listUsers() {
 
 export async function getUserById(id: number) {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const r = await db.select().from(users).where(eq(users.id, id)).limit(1);
-  return r[0];
+  return r[0] ?? null;
 }
 
 
@@ -737,11 +737,11 @@ export async function createReviewRequest(
   return insertId;
 }
 
-export async function getReviewRequestById(id: number): Promise<ReviewRequest | undefined> {
+export async function getReviewRequestById(id: number): Promise<ReviewRequest | null> {
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) return null;
   const r = await db.select().from(reviewRequests).where(eq(reviewRequests.id, id)).limit(1);
-  return r[0];
+  return r[0] ?? null;
 }
 
 export async function listReviewRequestsByUser(userId: number): Promise<ReviewRequest[]> {

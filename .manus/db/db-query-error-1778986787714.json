@@ -1,0 +1,16 @@
+{
+  "query": "\nSELECT 'stories' as tbl, COUNT(*) as total FROM stories;\nSELECT 'documents' as tbl, COUNT(*) as total FROM documents;\nSELECT 'actors' as tbl, COUNT(*) as total FROM actors;\nSELECT 'timeline_events' as tbl, COUNT(*) as total FROM timeline_events;\nSELECT 'prrs' as tbl, COUNT(*) as total FROM prrs;\nSELECT 'users' as tbl, COUNT(*) as total FROM users;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT 'stories' as tbl, COUNT(*) as total FROM stories;\nSELECT 'documents' as tbl, COUNT(*) as total FROM documents;\nSELECT 'actors' as tbl, COUNT(*) as total FROM actors;\nSELECT 'timeline_events' as tbl, COUNT(*) as total FROM timeline_events;\nSELECT 'prrs' as tbl, COUNT(*) as total FROM prrs;\nSELECT 'users' as tbl, COUNT(*) as total FROM users;\n",
+  "returncode": 1,
+  "logs": [
+    "tbl\ttotal",
+    "stories\t0",
+    "tbl\ttotal",
+    "documents\t23",
+    "tbl\ttotal",
+    "actors\t5",
+    "tbl\ttotal",
+    "timeline_events\t6",
+    "ERROR 1146 (42S02) at line 6: Table '3yhu3drkzf8z5bntvxatff.prrs' doesn't exist"
+  ]
+}

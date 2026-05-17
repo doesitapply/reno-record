@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT 'stories' as tbl, COUNT(*) as total, SUM(CASE WHEN public_status = 1 THEN 1 ELSE 0 END) as public_count FROM stories;\nSELECT 'documents' as tbl, COUNT(*) as total, SUM(CASE WHEN public_status = 1 THEN 1 ELSE 0 END) as public_count FROM documents;\nSELECT 'actors' as tbl, COUNT(*) as total FROM actors;\nSELECT 'timeline_events' as tbl, COUNT(*) as total FROM timeline_events;\nSELECT 'users' as tbl, COUNT(*) as total FROM users;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT 'stories' as tbl, COUNT(*) as total, SUM(CASE WHEN public_status = 1 THEN 1 ELSE 0 END) as public_count FROM stories;\nSELECT 'documents' as tbl, COUNT(*) as total, SUM(CASE WHEN public_status = 1 THEN 1 ELSE 0 END) as public_count FROM documents;\nSELECT 'actors' as tbl, COUNT(*) as total FROM actors;\nSELECT 'timeline_events' as tbl, COUNT(*) as total FROM timeline_events;\nSELECT 'users' as tbl, COUNT(*) as total FROM users;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'public_status' in ''"
+  ]
+}
