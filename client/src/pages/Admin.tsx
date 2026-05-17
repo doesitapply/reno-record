@@ -1054,7 +1054,11 @@ function DocumentReview({ id }: { id: number }) {
     toast.success("Draft applied to document (still not public until you publish).");
   };
 
-  const fileUrl = doc.fileUrl || "";
+  const fileUrl = doc.fileUrl || ""; // for download/open links
+  // embedUrl uses /api/file-proxy/ which always streams server-side (never redirects to CloudFront)
+  const embedUrl = doc.fileKey
+    ? `/api/file-proxy/${doc.fileKey.split("/").map(encodeURIComponent).join("/")}`
+    : fileUrl;
   const mimeType = doc.mimeType || "application/octet-stream";
   const canEmbed =
     /^image\//.test(mimeType) ||
@@ -1187,21 +1191,21 @@ function DocumentReview({ id }: { id: number }) {
                 )}
               </div>
               <div className="h-[80vh]">
-                {!fileUrl ? (
+                {!embedUrl ? (
                   <div className="grid h-full place-items-center p-8 text-center text-muted-foreground">
                     This document record does not have a stored file URL.
                   </div>
                 ) : /^image\//.test(mimeType) ? (
-                  <img src={fileUrl} alt={doc.title} className="w-full h-full object-contain" />
+                  <img src={embedUrl} alt={doc.title} className="w-full h-full object-contain" />
                 ) : /^audio\//.test(mimeType) ? (
                   <div className="p-8">
-                    <audio controls src={fileUrl} className="w-full" />
+                    <audio controls src={embedUrl} className="w-full" />
                   </div>
                 ) : /^video\//.test(mimeType) ? (
-                  <video controls src={fileUrl} className="w-full h-full" />
+                  <video controls src={embedUrl} className="w-full h-full" />
                 ) : canEmbed ? (
-                  <object data={fileUrl} type={mimeType} className="w-full h-full">
-                    <iframe src={fileUrl} title={doc.title} className="w-full h-full border-0" />
+                  <object data={embedUrl} type={mimeType} className="w-full h-full">
+                    <iframe src={embedUrl} title={doc.title} className="w-full h-full border-0" />
                   </object>
                 ) : (
                   <div className="grid h-full place-items-center p-8 text-center">

@@ -64,7 +64,18 @@ function formatBytes(bytes: number | null | undefined) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function sameOriginStorageUrl(fileKey?: string | null, fileUrl?: string | null): string {
+/** URL for inline embedding — always streams server-side, never redirects to CloudFront */
+function fileProxyUrl(fileKey?: string | null): string {
+  if (!fileKey) return "";
+  const encodedKey = fileKey
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+  return `/api/file-proxy/${encodedKey}`;
+}
+
+/** URL for download / open-in-new-tab — uses /manus-storage/ redirect (fine for navigation) */
+function storageDownloadUrl(fileKey?: string | null, fileUrl?: string | null): string {
   if (fileKey) {
     const encodedKey = fileKey
       .split("/")
@@ -170,11 +181,14 @@ export default function EvidenceDetail() {
     );
   }
 
-  const evidenceUrl = sameOriginStorageUrl(doc.fileKey, doc.fileUrl);
+  // embedUrl: server-side proxy — never redirects, safe for iframe/object/audio/video
+  const embedUrl = fileProxyUrl(doc.fileKey);
+  // downloadUrl: /manus-storage/ redirect — fine for <a href> download/open
+  const downloadUrl = storageDownloadUrl(doc.fileKey, doc.fileUrl);
   const mimeType = doc.mimeType ?? "";
-  const lowerUrl = evidenceUrl.toLowerCase().split("?")[0];
-  const hasEvidenceFile = evidenceUrl.length > 0;
-  const isPdf = mimeType === "application/pdf" || lowerUrl.endsWith(".pdf");
+  const lowerKey = (doc.fileKey ?? "").toLowerCase();
+  const hasEvidenceFile = !!(doc.fileKey || doc.fileUrl);
+  const isPdf = mimeType === "application/pdf" || lowerKey.endsWith(".pdf");
   const isImage = mimeType.startsWith("image/");
   const isAudio = mimeType.startsWith("audio/");
   const isVideo = mimeType.startsWith("video/");
@@ -311,13 +325,13 @@ export default function EvidenceDetail() {
                             asChild
                             className="bg-amber-400 text-navy-900 hover:bg-amber-300 text-xs"
                           >
-                            <a href={evidenceUrl} target="_blank" rel="noopener noreferrer" download>
+                            <a href={downloadUrl} target="_blank" rel="noopener noreferrer" download>
                               <Download className="w-3 h-3 mr-1" />
                               Download
                             </a>
                           </Button>
                           <Button size="sm" variant="outline" asChild className="text-xs">
-                            <a href={evidenceUrl} target="_blank" rel="noopener noreferrer">
+                            <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="w-3 h-3 mr-1" />
                               Open original
                             </a>
@@ -338,9 +352,9 @@ export default function EvidenceDetail() {
                     </div>
                   ) : isPdf ? (
                     <div className="w-full bg-card">
-                      <object data={`${evidenceUrl}#toolbar=1`} type="application/pdf" className="w-full h-[72vh] min-h-[520px]">
+                      <object data={`${embedUrl}#toolbar=1`} type="application/pdf" className="w-full h-[72vh] min-h-[520px]">
                         <iframe
-                          src={`${evidenceUrl}#toolbar=1`}
+                          src={`${embedUrl}#toolbar=1`}
                           className="w-full h-[72vh] min-h-[520px] border-0"
                           title={doc.title}
                         />
@@ -348,15 +362,15 @@ export default function EvidenceDetail() {
                     </div>
                   ) : isImage ? (
                     <div className="bg-card p-2 sm:p-4">
-                      <img src={evidenceUrl} alt={doc.title} className="mx-auto max-h-[72vh] w-full object-contain rounded-sm" />
+                      <img src={embedUrl} alt={doc.title} className="mx-auto max-h-[72vh] w-full object-contain rounded-sm" />
                     </div>
                   ) : isAudio ? (
                     <div className="p-5 sm:p-8">
-                      <audio controls src={evidenceUrl} className="w-full" />
+                      <audio controls src={embedUrl} className="w-full" />
                     </div>
                   ) : isVideo ? (
                     <div className="bg-black">
-                      <video controls src={evidenceUrl} className="w-full max-h-[72vh]" />
+                      <video controls src={embedUrl} className="w-full max-h-[72vh]" />
                     </div>
                   ) : (
                     <div className="p-6 text-center text-muted-foreground">

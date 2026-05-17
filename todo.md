@@ -165,3 +165,10 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [x] Tests: pending delete allowed, approved delete blocked, review-request submit/resolve, soft-delete audit, inline edit audit, hard-delete phrase guard
 - [x] Full test suite passes
 - [x] Checkpoint saved
+
+## Hotfix — Evidence File Viewer (AccessDenied on embed)
+
+- [x] Server: add /api/file-proxy/* route (server/fileProxy.ts) that always streams S3 content server-side — never redirects to CloudFront (fixes iframe/object AccessDenied)
+- [x] EvidenceDetail: use /api/file-proxy/ embedUrl for inline PDF/image/audio/video; keep /manus-storage/ downloadUrl for Download and Open original buttons
+- [x] Admin DocumentReview: use /api/file-proxy/ embedUrl for inline file viewer
+- [x] 73/73 tests passing, 0 TS errors
