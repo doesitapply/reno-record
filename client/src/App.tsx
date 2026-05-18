@@ -19,6 +19,8 @@ import AdminPage from "./pages/Admin";
 import AdminManagePage from "./pages/AdminManage";
 import PreviewCheckPage from "./pages/PreviewCheck";
 import ProfilePage from "./pages/Profile";
+import AgenciesPage from "./pages/Agencies";
+import AgencyDetailPage from "./pages/AgencyDetail";
 import DocketGoblinBubble from "./components/DocketGoblinBubble";
 
 function Router() {
@@ -33,6 +35,8 @@ function Router() {
       <Route path="/public-records" component={PublicRecordsPage} />
       <Route path="/actors" component={ActorsPage} />
       <Route path="/actors/:slug" component={ActorsPage} />
+      <Route path="/agencies" component={AgenciesPage} />
+      <Route path="/agencies/:slug" component={AgencyDetailPage} />
       <Route path="/election" component={ElectionPage} />
       <Route path="/patterns" component={PatternsPage} />
       <Route path="/privacy" component={PrivacyPage} />

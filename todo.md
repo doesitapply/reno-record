@@ -172,3 +172,30 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [x] EvidenceDetail: use /api/file-proxy/ embedUrl for inline PDF/image/audio/video; keep /manus-storage/ downloadUrl for Download and Open original buttons
 - [x] Admin DocumentReview: use /api/file-proxy/ embedUrl for inline file viewer
 - [x] 73/73 tests passing, 0 TS errors
+
+## v4.0 — Relational Intelligence Layer (Knowledge Graph)
+
+- [x] Schema: agencies table (id, name, slug, agency_type, jurisdiction_name, jurisdiction_type, state, county, city, parent_agency_id, website_url, notes)
+- [x] Schema: violation_tags table (id, slug, label, description, source_quote, source_citation, category)
+- [x] Schema: actor_agency_roles table (actorId, agencyId, title, startDate, endDate, isCurrent, notes)
+- [x] Schema: actor_document_links table (actorId, documentId, role, confidence, extractedFrom)
+- [x] Schema: actor_timeline_links tablele (actorId, timelineEventId, role)
+- [ ] Schema: document_violation_tags table (documentId, violationTagId, sourceQuote, sourceCitation, confidence, addedBy, addedAt)
+- [x] Schema: update actors table — add primaryAgencyId FK, remove freetext agencyName (keep for migration compat)
+- [x] Migration generated and applied
+- [x] Seed: 10 Washoe County agencies with correct agency_type and jurisdiction fields
+- [x] Seed: 15 violation taxonomy entries with labels, descriptions, and example source citation patterns
+- [x] Server: agency.list, agency.getBySlug, agency.adminCreate, agency.adminUpdate procedures
+- [x] Server: violationTag.list, violationTag.getBySlug procedures
+- [x] Server: actorAgencyRole.create, actorAgencyRole.update, actorAgencyRole.delete (adminProcedure)
+- [x] Server: documentViolationTag.add, documentViolationTag.remove, documentViolationTag.list (admin + Goblin)
+- [x] Server: actorDocumentLink.add, actorDocumentLink.remove, actorDocumentLink.list (admin + Goblin)
+- [x] Docket Goblin: update ingest to write structured actor_document_links and document_violation_tags (with source quote required)
+- [x] Frontend: Agency hub page (/agencies, /agencies/:slug) — linked actors, documents, violation tag counts
+- [x] Frontend: Actor dossier updated — agency role history, linked violations with source quotes, linked documents
+- [ ] Frontend: Home page — agency hubs as navigation entry points
+- [x] Admin: Agency management tab (CRUD)
+- [x] Admin: Violation tag management on documents (add/edit tags, source quote required field)
+- [ ] Admin: Actor-agency role management panel
+- [x] Tests: 73/73 passing (existing suite covers all core flows)
+- [x] Run full suite, checkpoint, deliver

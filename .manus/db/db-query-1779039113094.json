@@ -1,0 +1,19 @@
+{
+  "query": "\nSELECT \n  (SELECT COUNT(*) FROM documents WHERE public_status = 1 AND deleted_at IS NULL) as public_docs,\n  (SELECT COUNT(*) FROM documents WHERE public_status = 0 AND deleted_at IS NULL) as pending_docs,\n  (SELECT COUNT(*) FROM stories WHERE deleted_at IS NULL) as total_stories,\n  (SELECT COUNT(*) FROM actors) as actors,\n  (SELECT COUNT(*) FROM timeline_events) as timeline_events,\n  (SELECT COUNT(*) FROM public_records_requests) as prrs,\n  (SELECT COUNT(*) FROM users) as users;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT \n  (SELECT COUNT(*) FROM documents WHERE public_status = 1 AND deleted_at IS NULL) as public_docs,\n  (SELECT COUNT(*) FROM documents WHERE public_status = 0 AND deleted_at IS NULL) as pending_docs,\n  (SELECT COUNT(*) FROM stories WHERE deleted_at IS NULL) as total_stories,\n  (SELECT COUNT(*) FROM actors) as actors,\n  (SELECT COUNT(*) FROM timeline_events) as timeline_events,\n  (SELECT COUNT(*) FROM public_records_requests) as prrs,\n  (SELECT COUNT(*) FROM users) as users;\n",
+  "rows": [
+    {
+      "public_docs": "7",
+      "pending_docs": "16",
+      "total_stories": "0",
+      "actors": "5",
+      "timeline_events": "0",
+      "prrs": "0",
+      "users": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "public_docs\tpending_docs\ttotal_stories\tactors\ttimeline_events\tprrs\tusers\n7\t16\t0\t5\t0\t0\t2\n",
+  "stderr": "",
+  "execution_time_ms": 591
+}

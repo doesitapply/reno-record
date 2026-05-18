@@ -9,6 +9,9 @@ import {
   ExternalLink,
   BookOpen,
   ClipboardList,
+  Building2,
+  ShieldAlert,
+  Link2,
 } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +44,30 @@ const SOURCE_LABELS: Record<string, string> = {
   jail_record: "Jail Record",
   risk_notice: "Risk Notice",
   other: "Document",
+};
+
+const VIOLATION_CATEGORY_LABELS: Record<string, string> = {
+  constitutional: "Constitutional",
+  procedural: "Procedural",
+  discovery: "Discovery",
+  judicial_conduct: "Judicial Conduct",
+  prosecutorial_conduct: "Prosecutorial Conduct",
+  law_enforcement: "Law Enforcement",
+  public_records: "Public Records",
+  civil_rights: "Civil Rights",
+  other: "Other",
+};
+
+const VIOLATION_CATEGORY_COLORS: Record<string, string> = {
+  constitutional: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  procedural: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  discovery: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  judicial_conduct: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  prosecutorial_conduct: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300",
+  law_enforcement: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+  public_records: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300",
+  civil_rights: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
+  other: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300",
 };
 
 export default function ActorsPage() {
@@ -127,8 +154,33 @@ function ActorDetail({ slug }: { slug: string }) {
     { name: actor?.name ?? "" },
     { enabled: !!actor?.name },
   );
+  const { data: agencyRoles, isLoading: rolesLoading } = trpc.actorLink.getAgencyRoles.useQuery(
+    { actorId: actor?.id ?? 0 },
+    { enabled: !!actor?.id },
+  );
+  const { data: linkedDocs, isLoading: linkedDocsLoading } = trpc.actorLink.getDocumentLinks.useQuery(
+    { actorId: actor?.id ?? 0 },
+    { enabled: !!actor?.id },
+  );
 
-  const isLoading = actorLoading || dossierLoading;
+  const isLoading = actorLoading || dossierLoading || rolesLoading || linkedDocsLoading;
+
+  // Collect all violation tags across linked documents (deduplicated by tag slug)
+  const violationTagMap = new Map<string, {
+    tagSlug: string;
+    tagLabel: string;
+    tagCategory: string;
+    sourceQuote: string | null;
+    sourceCitation: string | null;
+    docTitle: string | null;
+    docId: number;
+    confidence: number;
+    addedBy: string;
+  }[]>();
+
+  // We need per-document violation tags — fetch them via the dossier documents
+  // For now we surface what we have from linkedDocs (actor_document_links)
+  // Violation tags per document are fetched in the ViolationTagsForDoc sub-component
 
   return (
     <SiteShell>
@@ -184,25 +236,58 @@ function ActorDetail({ slug }: { slug: string }) {
               </div>
 
               {/* Dossier stats */}
-              {dossier && (
-                <div className="paper-card p-4 grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-amber-600">
-                      {dossier.events.length}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">Events</div>
+              <div className="paper-card p-4 grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-amber-600">
+                    {dossier?.events.length ?? 0}
                   </div>
-                  <div>
-                    <div className="text-2xl font-bold text-amber-600">
-                      {dossier.documents.length}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">Documents</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Events</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-amber-600">
+                    {linkedDocs?.length ?? dossier?.documents.length ?? 0}
                   </div>
-                  <div>
-                    <div className="text-2xl font-bold text-amber-600">
-                      {dossier.prrs.length}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">PRRs</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">Documents</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-amber-600">
+                    {dossier?.prrs.length ?? 0}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">PRRs</div>
+                </div>
+              </div>
+
+              {/* Agency roles (v4.0) */}
+              {agencyRoles && agencyRoles.length > 0 && (
+                <div className="paper-card p-5">
+                  <div className="eyebrow flex items-center gap-1.5 mb-3">
+                    <Building2 className="h-3.5 w-3.5" /> Agency Affiliations
+                  </div>
+                  <div className="space-y-3">
+                    {agencyRoles.map((role) => (
+                      <div key={role.id} className="flex items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <Link href={`/agencies/${role.agencySlug}`}>
+                            <span className="text-sm font-medium hover:text-amber-600 transition-colors cursor-pointer">
+                              {role.agencyName}
+                            </span>
+                          </Link>
+                          <div className="text-xs text-muted-foreground mt-0.5">{role.title}</div>
+                          {(role.startDate || role.endDate) && (
+                            <div className="text-xs text-muted-foreground mt-0.5 font-mono">
+                              {role.startDate ? new Date(role.startDate).getFullYear() : "?"}
+                              {" – "}
+                              {role.isCurrent ? "present" : role.endDate ? new Date(role.endDate).getFullYear() : "?"}
+                            </div>
+                          )}
+                        </div>
+                        {role.isCurrent && (
+                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 font-mono text-[9px] uppercase shrink-0">
+                            Current
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -227,6 +312,60 @@ function ActorDetail({ slug }: { slug: string }) {
                   <p className="mt-4 whitespace-pre-line text-foreground/85 leading-relaxed">
                     {actor.notes}
                   </p>
+                </div>
+              )}
+
+              {/* Linked documents (v4.0 structured) */}
+              {linkedDocs && linkedDocs.length > 0 && (
+                <div>
+                  <div className="eyebrow flex items-center gap-2">
+                    <Link2 className="h-3.5 w-3.5" /> Linked Documents
+                  </div>
+                  <h2 className="display-serif text-2xl mt-2 rule-amber">
+                    Structured document links ({linkedDocs.length})
+                  </h2>
+                  <div className="mt-5 space-y-3">
+                    {linkedDocs.map((doc) => (
+                      <Link key={doc.id} href={`/evidence/${doc.documentId}`}>
+                        <div className="paper-card p-4 hover:-translate-y-0.5 transition-transform cursor-pointer">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {doc.docDate && (
+                                  <span className="font-mono text-xs text-muted-foreground">
+                                    {new Date(doc.docDate).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    })}
+                                  </span>
+                                )}
+                                {doc.role && (
+                                  <Badge variant="outline" className="font-mono uppercase text-[9px]">
+                                    {doc.role}
+                                  </Badge>
+                                )}
+                                {doc.addedBy === "goblin" && (
+                                  <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 font-mono text-[9px] uppercase">
+                                    AI-linked
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="font-medium mt-1 text-sm">{doc.docTitle ?? "Untitled document"}</div>
+                              {doc.extractedFrom && (
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-1 italic">
+                                  "{doc.extractedFrom}"
+                                </p>
+                              )}
+                            </div>
+                            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-1" />
+                          </div>
+                          {/* Inline violation tags for this document */}
+                          <DocumentViolationBadges documentId={doc.documentId} />
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -276,14 +415,14 @@ function ActorDetail({ slug }: { slug: string }) {
                 </div>
               )}
 
-              {/* Source documents */}
-              {dossier && dossier.documents.length > 0 && (
+              {/* Source documents (legacy name-match dossier) */}
+              {dossier && dossier.documents.length > 0 && (!linkedDocs || linkedDocs.length === 0) && (
                 <div>
                   <div className="eyebrow flex items-center gap-2">
-                    <FileText className="h-3.5 w-3.5" /> Evidence
+                    <FileText className="h-3.5 w-3.5" /> Source Documents
                   </div>
                   <h2 className="display-serif text-2xl mt-2 rule-amber">
-                    Source documents ({dossier.documents.length})
+                    Evidence ({dossier.documents.length})
                   </h2>
                   <div className="mt-5 space-y-3">
                     {dossier.documents.map((doc) => (
@@ -296,7 +435,7 @@ function ActorDetail({ slug }: { slug: string }) {
                                   <span className="font-mono text-xs text-muted-foreground">
                                     {new Date(doc.documentDate).toLocaleDateString("en-US", {
                                       year: "numeric",
-                                      month: "short",
+                                      month: "long",
                                       day: "numeric",
                                     })}
                                   </span>
@@ -305,13 +444,13 @@ function ActorDetail({ slug }: { slug: string }) {
                                   variant="outline"
                                   className="font-mono uppercase text-[9px]"
                                 >
-                                  {SOURCE_LABELS[doc.sourceType] ?? doc.sourceType}
+                                  {SOURCE_LABELS[doc.sourceType ?? "other"] ?? "Document"}
                                 </Badge>
                               </div>
                               <div className="font-medium mt-1 text-sm">{doc.title}</div>
-                              {doc.description && (
+                              {doc.aiSummary && (
                                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                  {doc.description}
+                                  {doc.aiSummary}
                                 </p>
                               )}
                             </div>
@@ -331,7 +470,7 @@ function ActorDetail({ slug }: { slug: string }) {
                     <ClipboardList className="h-3.5 w-3.5" /> Public Records
                   </div>
                   <h2 className="display-serif text-2xl mt-2 rule-amber">
-                    Related public records requests ({dossier.prrs.length})
+                    Records requests ({dossier.prrs.length})
                   </h2>
                   <div className="mt-5 space-y-3">
                     {dossier.prrs.map((prr) => (
@@ -396,7 +535,8 @@ function ActorDetail({ slug }: { slug: string }) {
               {dossier &&
                 dossier.events.length === 0 &&
                 dossier.documents.length === 0 &&
-                dossier.prrs.length === 0 && (
+                dossier.prrs.length === 0 &&
+                (!linkedDocs || linkedDocs.length === 0) && (
                   <div className="space-y-4">
                     <div className="paper-card p-8">
                       <div className="flex items-start gap-4">
@@ -434,5 +574,29 @@ function ActorDetail({ slug }: { slug: string }) {
         )}
       </section>
     </SiteShell>
+  );
+}
+
+/**
+ * Fetches and renders violation tag badges for a given document inline.
+ * Kept as a sub-component to avoid N+1 query issues at the page level —
+ * each document card independently fetches its own tags.
+ */
+function DocumentViolationBadges({ documentId }: { documentId: number }) {
+  const { data: tags } = trpc.violationTag.getDocumentTags.useQuery({ documentId });
+  if (!tags || tags.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-border/50">
+      {tags.map((tag) => (
+        <span
+          key={tag.id}
+          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono ${VIOLATION_CATEGORY_COLORS[tag.tagCategory ?? "other"]}`}
+          title={tag.sourceQuote ?? tag.sourceCitation ?? undefined}
+        >
+          <ShieldAlert className="h-2.5 w-2.5" />
+          {tag.tagLabel}
+        </span>
+      ))}
+    </div>
   );
 }

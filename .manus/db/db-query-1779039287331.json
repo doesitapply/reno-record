@@ -1,0 +1,9 @@
+{
+  "query": "\nSET FOREIGN_KEY_CHECKS = 0;\nDELETE FROM review_requests;\nDELETE FROM audit_log;\nDELETE FROM ingest_jobs;\nDELETE FROM chat_messages;\nDELETE FROM chat_sessions;\nDELETE FROM agent_tasks;\nDELETE FROM public_records_requests;\nDELETE FROM actors;\nDELETE FROM timeline_events;\nDELETE FROM documents;\nDELETE FROM stories;\nSET FOREIGN_KEY_CHECKS = 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSET FOREIGN_KEY_CHECKS = 0;\nDELETE FROM review_requests;\nDELETE FROM audit_log;\nDELETE FROM ingest_jobs;\nDELETE FROM chat_messages;\nDELETE FROM chat_sessions;\nDELETE FROM agent_tasks;\nDELETE FROM public_records_requests;\nDELETE FROM actors;\nDELETE FROM timeline_events;\nDELETE FROM documents;\nDELETE FROM stories;\nSET FOREIGN_KEY_CHECKS = 1;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1833
+}

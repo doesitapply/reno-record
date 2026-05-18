@@ -1401,15 +1401,70 @@ Submitter narrative: ${s.summary ?? ""}`;
         });
       }
 
+       // ── v4.0: Write structured actor-document links from draft.actors ──
+      if (draft?.actors?.length) {
+        const actorMatches = await db.findActorIdsByNames(
+          (draft.actors as any[]).map((a: any) => a.name),
+        );
+        const nameToId = new Map(actorMatches.map((a) => [a.name.toLowerCase(), a.id]));
+        for (const draftActor of draft.actors as any[]) {
+          const actorId = nameToId.get(draftActor.name.toLowerCase());
+          if (!actorId) continue;
+          const confidenceScore =
+            draftActor.confidence === "high" ? 90 :
+            draftActor.confidence === "medium" ? 70 : 50;
+          try {
+            await db.addActorDocumentLink({
+              actorId,
+              documentId: job.documentId,
+              role: draftActor.role ?? draftActor.category ?? null,
+              confidence: confidenceScore,
+              extractedFrom: draftActor.mentionContext?.slice(0, 295) ?? null,
+              addedBy: "goblin",
+              addedByUserId: ctx.user.id,
+            });
+          } catch {
+            // Duplicate link — skip silently
+          }
+        }
+      }
+
+      // ── v4.0: Map patternSignals to violation tags (require sourceQuote) ──
+      if (draft?.patternSignals?.length || draft?.allegations?.length) {
+        const allTags = await db.listViolationTags();
+        const tagsBySlug = new Map(allTags.map((t) => [t.slug, t]));
+
+        // Map patternSignals by tag slug match
+        for (const signal of (draft.patternSignals ?? []) as any[]) {
+          const tagSlug = signal.tag?.toLowerCase().replace(/-/g, "_");
+          const tag = tagsBySlug.get(tagSlug);
+          if (!tag) continue;
+          const sourceQuote = signal.description?.slice(0, 2000);
+          if (!sourceQuote || sourceQuote.length < 5) continue;
+          const confidenceScore = signal.severity === "high" ? 80 : signal.severity === "medium" ? 65 : 50;
+          try {
+            await db.addDocumentViolationTag({
+              documentId: job.documentId,
+              violationTagId: tag.id,
+              sourceQuote,
+              sourceCitation: `Docket Goblin analysis — pattern signal: ${signal.label}`,
+              confidence: confidenceScore,
+              addedBy: "goblin",
+              addedByUserId: ctx.user.id,
+            });
+          } catch {
+            // Duplicate tag — skip silently
+          }
+        }
+      }
+
       await db.updateIngestJob(input.jobId, {
         status: "approved",
         timelineEventId: timelineEventId ?? undefined,
       });
-
       return { ok: true, documentId: job.documentId, timelineEventId };
     }),
 });
-
 /* =============== User role management (audited) =============== */
 const userRouter = router({
   adminList: adminProcedure.query(async () => db.listUsers()),
@@ -1896,6 +1951,214 @@ const adminEditRouter = router({
 // Mounted into documentRouter via patch below; declared early so it sees auditRouter scope
 
 /* =============== Root =============== */
+
+/* ========== Agency Router (v4.0) ========== */
+const agencyRouter = router({
+  list: publicProcedure.query(async () => {
+    return db.listAgencies({ publicOnly: true });
+  }),
+
+  getBySlug: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ input }) => {
+      const agency = await db.getAgencyBySlug(input.slug);
+      if (!agency) throw new TRPCError({ code: "NOT_FOUND" });
+      const [actors, docCount] = await Promise.all([
+        db.getAgencyActors(agency.id),
+        db.getAgencyDocumentCount(agency.id),
+      ]);
+      return { agency, actors, docCount };
+    }),
+
+  adminCreate: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(2).max(300),
+        slug: z.string().min(2).max(200),
+        agencyType: z.enum([
+          "court", "prosecutor", "law_enforcement", "public_defender",
+          "government_department", "oversight_body", "municipality",
+          "state_agency", "federal_agency", "other",
+        ]),
+        jurisdictionName: z.string().optional(),
+        jurisdictionType: z.enum(["county", "city", "state", "federal", "multi_jurisdictional", "other"]).optional(),
+        state: z.string().optional(),
+        county: z.string().optional(),
+        city: z.string().optional(),
+        parentAgencyId: z.number().optional(),
+        websiteUrl: z.string().url().optional().or(z.literal("")),
+        notes: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      await db.createAgency(input);
+      await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "agency", targetId: 0, metadata: { action: "create", name: input.name } });
+      return { success: true };
+    }),
+
+  adminUpdate: adminProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        name: z.string().min(2).max(300).optional(),
+        agencyType: z.enum([
+          "court", "prosecutor", "law_enforcement", "public_defender",
+          "government_department", "oversight_body", "municipality",
+          "state_agency", "federal_agency", "other",
+        ]).optional(),
+        websiteUrl: z.string().optional(),
+        notes: z.string().optional(),
+        publicStatus: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { id, ...data } = input;
+      await db.updateAgency(id, data);
+      await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "agency", targetId: id, metadata: { action: "update", ...data } });
+      return { success: true };
+    }),
+
+  addActorRole: adminProcedure
+    .input(
+      z.object({
+        actorId: z.number(),
+        agencyId: z.number(),
+        title: z.string().min(1).max(200),
+        isCurrent: z.boolean().default(false),
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+        notes: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      await db.addActorAgencyRole(input);
+      await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "actor_agency_role", targetId: input.actorId, metadata: { agencyId: input.agencyId, title: input.title } });
+      return { success: true };
+    }),
+});
+
+/* ========== Violation Tag Router (v4.0) ========== */
+const violationTagRouter = router({
+  list: publicProcedure.query(async () => {
+    return db.listViolationTags();
+  }),
+
+  getDocumentTags: publicProcedure
+    .input(z.object({ documentId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getDocumentViolationTags(input.documentId);
+    }),
+
+  addToDocument: adminProcedure
+    .input(
+      z.object({
+        documentId: z.number(),
+        violationTagId: z.number(),
+        sourceQuote: z.string().min(5),
+        sourceCitation: z.string().optional(),
+        confidence: z.number().min(0).max(100).default(100),
+        addedBy: z.enum(["human", "goblin"]).default("human"),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const result = await db.addDocumentViolationTag({ ...input, addedByUserId: ctx.user.id });
+      await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "document_violation_tag", targetId: input.documentId, metadata: { action: "tag_added", violationTagId: input.violationTagId, confidence: input.confidence } });
+      return result;
+    }),
+
+  removeFromDocument: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      await db.removeDocumentViolationTag(input.id);
+      await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "document_violation_tag", targetId: input.id, metadata: { action: "tag_removed" } });
+      return { success: true };
+    }),
+
+  adminCreate: adminProcedure
+    .input(
+      z.object({
+        slug: z.string().min(2).max(120),
+        label: z.string().min(2).max(200),
+        description: z.string().optional(),
+        category: z.enum([
+          "constitutional", "procedural", "discovery", "judicial_conduct",
+          "prosecutorial_conduct", "law_enforcement", "public_records", "civil_rights", "other",
+        ]),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      await db.createViolationTag(input);
+      await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "violation_tag", targetId: 0, metadata: { action: "create", slug: input.slug } });
+      return { success: true };
+    }),
+});
+
+/* ========== Actor Link Router (v4.0) ========== */
+const actorLinkRouter = router({
+  getDocumentLinks: publicProcedure
+    .input(z.object({ actorId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getActorDocumentLinks(input.actorId);
+    }),
+
+  getDocumentActors: publicProcedure
+    .input(z.object({ documentId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getDocumentActorLinks(input.documentId);
+    }),
+
+  getTimelineLinks: publicProcedure
+    .input(z.object({ actorId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getActorTimelineLinks(input.actorId);
+    }),
+
+  getAgencyRoles: publicProcedure
+    .input(z.object({ actorId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getActorAgencyRoles(input.actorId);
+    }),
+
+  addDocumentLink: adminProcedure
+    .input(
+      z.object({
+        actorId: z.number(),
+        documentId: z.number(),
+        role: z.string().optional(),
+        confidence: z.number().min(0).max(100).default(100),
+        extractedFrom: z.string().optional(),
+        addedBy: z.enum(["human", "goblin"]).default("human"),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      await db.addActorDocumentLink({ ...input, addedByUserId: ctx.user.id });
+      await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "actor_document_link", targetId: input.actorId, metadata: { action: "link_added", documentId: input.documentId, role: input.role } });
+      return { success: true };
+    }),
+
+  removeDocumentLink: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      await db.removeActorDocumentLink(input.id);
+      await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "actor_document_link", targetId: input.id, metadata: { action: "link_removed" } });
+      return { success: true };
+    }),
+
+  addTimelineLink: adminProcedure
+    .input(
+      z.object({
+        actorId: z.number(),
+        timelineEventId: z.number(),
+        role: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      await db.addActorTimelineLink(input);
+      await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "actor_timeline_link", targetId: input.actorId, metadata: { action: "timeline_link_added", timelineEventId: input.timelineEventId } });
+      return { success: true };
+    }),
+});
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -1918,6 +2181,9 @@ export const appRouter = router({
   reviewRequest: reviewRequestRouter,
   userData: userDataRouter,
   adminEdit: adminEditRouter,
+  agency: agencyRouter,
+  violationTag: violationTagRouter,
+  actorLink: actorLinkRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -125,6 +125,8 @@ function AdminDashboard() {
             <TabsTrigger value="audit">Audit log</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="review_requests">Review Requests</TabsTrigger>
+            <TabsTrigger value="agencies">Agencies</TabsTrigger>
+            <TabsTrigger value="violation_tags">Violation Tags</TabsTrigger>
           </TabsList>
           <TabsContent value="ingest"><IngestTab /></TabsContent>
           <TabsContent value="stories"><StoriesTab /></TabsContent>
@@ -135,6 +137,8 @@ function AdminDashboard() {
           <TabsContent value="audit"><AuditTab /></TabsContent>
           <TabsContent value="users"><UsersTab /></TabsContent>
           <TabsContent value="review_requests"><ReviewRequestsTab /></TabsContent>
+          <TabsContent value="agencies"><AgenciesAdminTab /></TabsContent>
+          <TabsContent value="violation_tags"><ViolationTagsAdminTab /></TabsContent>
         </Tabs>
       </section>
     </SiteShell>
@@ -2339,6 +2343,341 @@ function AdminDeleteControls({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ============= Agencies Admin Tab (v4.0) ============= */
+function AgenciesAdminTab() {
+  const utils = trpc.useUtils();
+  const { data: agencies, isLoading } = trpc.agency.list.useQuery();
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    slug: "",
+    agencyType: "court" as const,
+    jurisdictionName: "Washoe County",
+    state: "NV",
+    websiteUrl: "",
+    notes: "",
+  });
+
+  const createAgency = trpc.agency.adminCreate.useMutation({
+    onSuccess: () => {
+      toast.success("Agency created");
+      utils.agency.list.invalidate();
+      setShowCreate(false);
+      setForm({ name: "", slug: "", agencyType: "court", jurisdictionName: "Washoe County", state: "NV", websiteUrl: "", notes: "" });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const AGENCY_TYPES = [
+    "court", "prosecutor", "law_enforcement", "public_defender",
+    "government_department", "oversight_body", "municipality",
+    "state_agency", "federal_agency", "other",
+  ] as const;
+
+  const autoSlug = (name: string) =>
+    name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+  return (
+    <div className="space-y-6 py-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="display-serif text-2xl">Agency Directory</h2>
+          <p className="text-sm text-muted-foreground">{agencies?.length ?? 0} agencies indexed</p>
+        </div>
+        <Button size="sm" className="gap-1.5" onClick={() => setShowCreate((v) => !v)}>
+          <Plus className="h-3.5 w-3.5" /> Add Agency
+        </Button>
+      </div>
+
+      {showCreate && (
+        <Card className="p-5 space-y-4">
+          <h3 className="font-semibold text-sm">New Agency</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <Label className="text-xs mb-1 block">Name</Label>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value, slug: autoSlug(e.target.value) }))}
+                placeholder="Washoe County District Attorney"
+                className="text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">Slug</Label>
+              <Input
+                value={form.slug}
+                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+                placeholder="washoe-county-da"
+                className="text-sm font-mono"
+              />
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">Type</Label>
+              <Select
+                value={form.agencyType}
+                onValueChange={(v) => setForm((f) => ({ ...f, agencyType: v as typeof form.agencyType }))}
+              >
+                <SelectTrigger className="text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {AGENCY_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>{t.replace(/_/g, " ")}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">Jurisdiction</Label>
+              <Input
+                value={form.jurisdictionName}
+                onChange={(e) => setForm((f) => ({ ...f, jurisdictionName: e.target.value }))}
+                className="text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">State</Label>
+              <Input
+                value={form.state}
+                onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
+                className="text-sm font-mono"
+                maxLength={2}
+              />
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs mb-1 block">Website URL (optional)</Label>
+              <Input
+                value={form.websiteUrl}
+                onChange={(e) => setForm((f) => ({ ...f, websiteUrl: e.target.value }))}
+                placeholder="https://..."
+                className="text-sm"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs mb-1 block">Notes (optional)</Label>
+              <Textarea
+                value={form.notes}
+                onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+                className="text-sm"
+                rows={2}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={() => createAgency.mutate({ ...form, jurisdictionType: "county" })}
+              disabled={createAgency.isPending || !form.name || !form.slug}
+            >
+              {createAgency.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+              Create
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setShowCreate(false)}>Cancel</Button>
+          </div>
+        </Card>
+      )}
+
+      {isLoading && (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => <div key={i} className="h-12 bg-muted animate-pulse rounded" />)}
+        </div>
+      )}
+
+      <div className="space-y-2">
+        {(agencies ?? []).map((agency) => (
+          <Card key={agency.id} className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="font-medium text-sm">{agency.name}</div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <Badge variant="outline" className="font-mono text-[9px] uppercase">{agency.agencyType}</Badge>
+                  <span className="font-mono text-xs text-muted-foreground">/agencies/{agency.slug}</span>
+                  {agency.jurisdictionName && (
+                    <span className="text-xs text-muted-foreground">{agency.jurisdictionName}</span>
+                  )}
+                </div>
+              </div>
+              <Link href={`/agencies/${agency.slug}`}>
+                <Button variant="outline" size="sm" className="text-xs shrink-0">View</Button>
+              </Link>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============= Violation Tags Admin Tab (v4.0) ============= */
+function ViolationTagsAdminTab() {
+  const utils = trpc.useUtils();
+  const { data: tags, isLoading } = trpc.violationTag.list.useQuery();
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({
+    slug: "",
+    label: "",
+    description: "",
+    category: "procedural" as const,
+  });
+
+  const createTag = trpc.violationTag.adminCreate.useMutation({
+    onSuccess: () => {
+      toast.success("Violation tag created");
+      utils.violationTag.list.invalidate();
+      setShowCreate(false);
+      setForm({ slug: "", label: "", description: "", category: "procedural" });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const CATEGORIES = [
+    "constitutional", "procedural", "discovery", "judicial_conduct",
+    "prosecutorial_conduct", "law_enforcement", "public_records", "civil_rights", "other",
+  ] as const;
+
+  const CATEGORY_COLORS: Record<string, string> = {
+    constitutional: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+    procedural: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+    discovery: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    judicial_conduct: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+    prosecutorial_conduct: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300",
+    law_enforcement: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+    public_records: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300",
+    civil_rights: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
+    other: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300",
+  };
+
+  const grouped = tags?.reduce(
+    (acc, tag) => {
+      const cat = tag.category ?? "other";
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(tag);
+      return acc;
+    },
+    {} as Record<string, typeof tags>,
+  );
+
+  return (
+    <div className="space-y-6 py-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="display-serif text-2xl">Violation Taxonomy</h2>
+          <p className="text-sm text-muted-foreground">
+            {tags?.length ?? 0} tags across {Object.keys(grouped ?? {}).length} categories.
+            Every tag applied to a document requires a sourceQuote or sourceCitation.
+          </p>
+        </div>
+        <Button size="sm" className="gap-1.5" onClick={() => setShowCreate((v) => !v)}>
+          <Plus className="h-3.5 w-3.5" /> Add Tag
+        </Button>
+      </div>
+
+      {showCreate && (
+        <Card className="p-5 space-y-4">
+          <h3 className="font-semibold text-sm">New Violation Tag</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs mb-1 block">Label</Label>
+              <Input
+                value={form.label}
+                onChange={(e) => setForm((f) => ({
+                  ...f,
+                  label: e.target.value,
+                  slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""),
+                }))}
+                placeholder="Brady Discovery Issue"
+                className="text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">Slug</Label>
+              <Input
+                value={form.slug}
+                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+                className="text-sm font-mono"
+              />
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">Category</Label>
+              <Select
+                value={form.category}
+                onValueChange={(v) => setForm((f) => ({ ...f, category: v as typeof form.category }))}
+              >
+                <SelectTrigger className="text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>{c.replace(/_/g, " ")}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs mb-1 block">Description (optional)</Label>
+              <Textarea
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                className="text-sm"
+                rows={2}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={() => createTag.mutate(form)}
+              disabled={createTag.isPending || !form.label || !form.slug}
+            >
+              {createTag.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+              Create
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setShowCreate(false)}>Cancel</Button>
+          </div>
+        </Card>
+      )}
+
+      {isLoading && (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => <div key={i} className="h-12 bg-muted animate-pulse rounded" />)}
+        </div>
+      )}
+
+      <div className="space-y-6">
+        {CATEGORIES.map((cat) => {
+          const group = grouped?.[cat];
+          if (!group?.length) return null;
+          return (
+            <div key={cat}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`px-2 py-0.5 rounded text-xs font-mono uppercase ${CATEGORY_COLORS[cat]}`}>
+                  {cat.replace(/_/g, " ")}
+                </span>
+                <span className="text-xs text-muted-foreground">({group.length})</span>
+              </div>
+              <div className="space-y-2">
+                {group.map((tag) => (
+                  <Card key={tag.id} className="p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="font-medium text-sm">{tag.label}</div>
+                        <div className="font-mono text-xs text-muted-foreground mt-0.5">{tag.slug}</div>
+                        {tag.description && (
+                          <p className="text-xs text-muted-foreground mt-1">{tag.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -36,6 +36,13 @@
       "when": 1777144157812,
       "tag": "0004_dry_electro",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1779079288385,
+      "tag": "0005_volatile_rhodey",
+      "breakpoints": true
     }
   ]
 }

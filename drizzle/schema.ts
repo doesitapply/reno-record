@@ -438,3 +438,174 @@ export const reviewRequests = mysqlTable(
 );
 export type ReviewRequest = typeof reviewRequests.$inferSelect;
 export type InsertReviewRequest = typeof reviewRequests.$inferInsert;
+
+/* ========== Agencies (v4.0 — jurisdiction-generic) ========== */
+export const agencies = mysqlTable(
+  "agencies",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 300 }).notNull(),
+    slug: varchar("slug", { length: 200 }).notNull().unique(),
+    agencyType: mysqlEnum("agency_type", [
+      "court",
+      "prosecutor",
+      "law_enforcement",
+      "public_defender",
+      "government_department",
+      "oversight_body",
+      "municipality",
+      "state_agency",
+      "federal_agency",
+      "other",
+    ])
+      .default("other")
+      .notNull(),
+    jurisdictionName: varchar("jurisdiction_name", { length: 200 }),
+    jurisdictionType: mysqlEnum("jurisdiction_type", [
+      "county",
+      "city",
+      "state",
+      "federal",
+      "multi_jurisdictional",
+      "other",
+    ]).default("county"),
+    state: varchar("state", { length: 60 }),
+    county: varchar("county", { length: 120 }),
+    city: varchar("city", { length: 120 }),
+    parentAgencyId: int("parent_agency_id"),
+    websiteUrl: varchar("website_url", { length: 500 }),
+    notes: text("notes"),
+    publicStatus: boolean("public_status").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    slugIdx: index("agencies_slug_idx").on(t.slug),
+    typeIdx: index("agencies_type_idx").on(t.agencyType),
+  }),
+);
+export type Agency = typeof agencies.$inferSelect;
+export type InsertAgency = typeof agencies.$inferInsert;
+
+/* ========== Violation Tags (v4.0 — generic taxonomy, source-anchored) ========== */
+export const violationTags = mysqlTable(
+  "violation_tags",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    slug: varchar("slug", { length: 120 }).notNull().unique(),
+    label: varchar("label", { length: 200 }).notNull(),
+    description: text("description"),
+    category: mysqlEnum("category", [
+      "constitutional",
+      "procedural",
+      "discovery",
+      "judicial_conduct",
+      "prosecutorial_conduct",
+      "law_enforcement",
+      "public_records",
+      "civil_rights",
+      "other",
+    ])
+      .default("other")
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    slugIdx: index("violation_tags_slug_idx").on(t.slug),
+    categoryIdx: index("violation_tags_category_idx").on(t.category),
+  }),
+);
+export type ViolationTag = typeof violationTags.$inferSelect;
+export type InsertViolationTag = typeof violationTags.$inferInsert;
+
+/* ========== Document Violation Tags (v4.0 — source quote required) ========== */
+export const documentViolationTags = mysqlTable(
+  "document_violation_tags",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    documentId: int("document_id").notNull(),
+    violationTagId: int("violation_tag_id").notNull(),
+    /** Direct quote from the document that supports this tag */
+    sourceQuote: text("source_quote").notNull(),
+    /** Citation: page number, paragraph, exhibit label, etc. */
+    sourceCitation: varchar("source_citation", { length: 300 }),
+    /** 0.0–1.0 confidence; 1.0 = human-verified, <1.0 = AI-suggested */
+    confidence: int("confidence").default(100).notNull(),
+    /** 'human' | 'goblin' */
+    addedBy: mysqlEnum("added_by", ["human", "goblin"]).default("human").notNull(),
+    addedByUserId: int("added_by_user_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    docIdx: index("dvt_document_idx").on(t.documentId),
+    tagIdx: index("dvt_tag_idx").on(t.violationTagId),
+  }),
+);
+export type DocumentViolationTag = typeof documentViolationTags.$inferSelect;
+export type InsertDocumentViolationTag = typeof documentViolationTags.$inferInsert;
+
+/* ========== Actor Agency Roles (v4.0 — structured role history) ========== */
+export const actorAgencyRoles = mysqlTable(
+  "actor_agency_roles",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    actorId: int("actor_id").notNull(),
+    agencyId: int("agency_id").notNull(),
+    title: varchar("title", { length: 200 }).notNull(),
+    startDate: timestamp("start_date"),
+    endDate: timestamp("end_date"),
+    isCurrent: boolean("is_current").default(false).notNull(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    actorIdx: index("aar_actor_idx").on(t.actorId),
+    agencyIdx: index("aar_agency_idx").on(t.agencyId),
+  }),
+);
+export type ActorAgencyRole = typeof actorAgencyRoles.$inferSelect;
+export type InsertActorAgencyRole = typeof actorAgencyRoles.$inferInsert;
+
+/* ========== Actor Document Links (v4.0 — FK join, replaces freetext actorNames) ========== */
+export const actorDocumentLinks = mysqlTable(
+  "actor_document_links",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    actorId: int("actor_id").notNull(),
+    documentId: int("document_id").notNull(),
+    /** Role of the actor in this document: subject, signatory, witness, mentioned, etc. */
+    role: varchar("role", { length: 120 }),
+    /** 0–100 confidence; 100 = human-verified */
+    confidence: int("confidence").default(100).notNull(),
+    /** Where was this link extracted from (page, paragraph, exhibit) */
+    extractedFrom: varchar("extracted_from", { length: 300 }),
+    addedBy: mysqlEnum("added_by", ["human", "goblin"]).default("human").notNull(),
+    addedByUserId: int("added_by_user_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    actorIdx: index("adl_actor_idx").on(t.actorId),
+    docIdx: index("adl_document_idx").on(t.documentId),
+  }),
+);
+export type ActorDocumentLink = typeof actorDocumentLinks.$inferSelect;
+export type InsertActorDocumentLink = typeof actorDocumentLinks.$inferInsert;
+
+/* ========== Actor Timeline Links (v4.0 — FK join for timeline events) ========== */
+export const actorTimelineLinks = mysqlTable(
+  "actor_timeline_links",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    actorId: int("actor_id").notNull(),
+    timelineEventId: int("timeline_event_id").notNull(),
+    role: varchar("role", { length: 120 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    actorIdx: index("atl_actor_idx").on(t.actorId),
+    eventIdx: index("atl_event_idx").on(t.timelineEventId),
+  }),
+);
+export type ActorTimelineLink = typeof actorTimelineLinks.$inferSelect;
+export type InsertActorTimelineLink = typeof actorTimelineLinks.$inferInsert;

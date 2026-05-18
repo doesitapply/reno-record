@@ -2,20 +2,32 @@ import { and, asc, count, desc, eq, gte, like, lte, or, sql } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   actors,
+  actorAgencyRoles,
+  actorDocumentLinks,
+  actorTimelineLinks,
+  agencies,
   agentTasks,
   auditLog,
   documents,
+  documentViolationTags,
   InsertActor,
+  InsertActorAgencyRole,
+  InsertActorDocumentLink,
+  InsertActorTimelineLink,
+  InsertAgency,
   InsertAgentTask,
   InsertDocument,
+  InsertDocumentViolationTag,
   InsertPublicRecordsRequest,
   InsertStory,
   InsertTimelineEvent,
   InsertUser,
+  InsertViolationTag,
   publicRecordsRequests,
   stories,
   timelineEvents,
   users,
+  violationTags,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -837,4 +849,242 @@ export async function hardDeleteDocument(id: number): Promise<void> {
 /* ================= Alias for updatePrr casing compatibility ================= */
 export async function updatePrr(id: number, patch: Partial<InsertPublicRecordsRequest>): Promise<void> {
   return updatePRR(id, patch);
+}
+
+/* ================= Agencies (v4.0) ================= */
+export async function listAgencies(opts?: { publicOnly?: boolean }) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select()
+    .from(agencies)
+    .where(opts?.publicOnly ? eq(agencies.publicStatus, true) : undefined)
+    .orderBy(asc(agencies.agencyType), asc(agencies.name));
+  return rows;
+}
+
+export async function getAgencyBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(agencies).where(eq(agencies.slug, slug)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getAgencyById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(agencies).where(eq(agencies.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function createAgency(data: InsertAgency) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(agencies).values(data);
+}
+
+export async function updateAgency(id: number, data: Partial<InsertAgency>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(agencies).set(data).where(eq(agencies.id, id));
+}
+
+/* ================= Violation Tags (v4.0) ================= */
+export async function listViolationTags() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(violationTags).orderBy(asc(violationTags.category), asc(violationTags.label));
+}
+
+export async function getViolationTagBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(violationTags).where(eq(violationTags.slug, slug)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function createViolationTag(data: InsertViolationTag) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(violationTags).values(data);
+}
+
+/* ================= Document Violation Tags (v4.0) ================= */
+export async function getDocumentViolationTags(documentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      id: documentViolationTags.id,
+      documentId: documentViolationTags.documentId,
+      violationTagId: documentViolationTags.violationTagId,
+      sourceQuote: documentViolationTags.sourceQuote,
+      sourceCitation: documentViolationTags.sourceCitation,
+      confidence: documentViolationTags.confidence,
+      addedBy: documentViolationTags.addedBy,
+      createdAt: documentViolationTags.createdAt,
+      tagSlug: violationTags.slug,
+      tagLabel: violationTags.label,
+      tagCategory: violationTags.category,
+    })
+    .from(documentViolationTags)
+    .innerJoin(violationTags, eq(documentViolationTags.violationTagId, violationTags.id))
+    .where(eq(documentViolationTags.documentId, documentId))
+    .orderBy(asc(violationTags.category));
+}
+
+export async function addDocumentViolationTag(data: InsertDocumentViolationTag) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const [result] = await db.insert(documentViolationTags).values(data).$returningId();
+  return result;
+}
+
+export async function removeDocumentViolationTag(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.delete(documentViolationTags).where(eq(documentViolationTags.id, id));
+}
+
+/* ================= Actor Agency Roles (v4.0) ================= */
+export async function getActorAgencyRoles(actorId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      id: actorAgencyRoles.id,
+      actorId: actorAgencyRoles.actorId,
+      agencyId: actorAgencyRoles.agencyId,
+      title: actorAgencyRoles.title,
+      startDate: actorAgencyRoles.startDate,
+      endDate: actorAgencyRoles.endDate,
+      isCurrent: actorAgencyRoles.isCurrent,
+      notes: actorAgencyRoles.notes,
+      agencyName: agencies.name,
+      agencySlug: agencies.slug,
+      agencyType: agencies.agencyType,
+    })
+    .from(actorAgencyRoles)
+    .innerJoin(agencies, eq(actorAgencyRoles.agencyId, agencies.id))
+    .where(eq(actorAgencyRoles.actorId, actorId))
+    .orderBy(desc(actorAgencyRoles.isCurrent), desc(actorAgencyRoles.startDate));
+}
+
+export async function getAgencyActors(agencyId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      id: actorAgencyRoles.id,
+      actorId: actorAgencyRoles.actorId,
+      title: actorAgencyRoles.title,
+      isCurrent: actorAgencyRoles.isCurrent,
+      startDate: actorAgencyRoles.startDate,
+      endDate: actorAgencyRoles.endDate,
+      actorName: actors.name,
+      actorSlug: actors.slug,
+      actorRole: actors.role,
+    })
+    .from(actorAgencyRoles)
+    .innerJoin(actors, eq(actorAgencyRoles.actorId, actors.id))
+    .where(eq(actorAgencyRoles.agencyId, agencyId))
+    .orderBy(desc(actorAgencyRoles.isCurrent), asc(actors.name));
+}
+
+export async function addActorAgencyRole(data: InsertActorAgencyRole) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(actorAgencyRoles).values(data);
+}
+
+/* ================= Actor Document Links (v4.0) ================= */
+export async function getActorDocumentLinks(actorId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      id: actorDocumentLinks.id,
+      documentId: actorDocumentLinks.documentId,
+      role: actorDocumentLinks.role,
+      confidence: actorDocumentLinks.confidence,
+      extractedFrom: actorDocumentLinks.extractedFrom,
+      addedBy: actorDocumentLinks.addedBy,
+      docTitle: documents.title,
+      docDate: documents.documentDate,
+      docPublicStatus: documents.publicStatus,
+    })
+    .from(actorDocumentLinks)
+    .innerJoin(documents, eq(actorDocumentLinks.documentId, documents.id))
+    .where(and(eq(actorDocumentLinks.actorId, actorId), eq(documents.publicStatus, true)))
+    .orderBy(desc(documents.documentDate));
+}
+
+export async function getDocumentActorLinks(documentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      id: actorDocumentLinks.id,
+      actorId: actorDocumentLinks.actorId,
+      role: actorDocumentLinks.role,
+      confidence: actorDocumentLinks.confidence,
+      actorName: actors.name,
+      actorSlug: actors.slug,
+      actorRole: actors.role,
+    })
+    .from(actorDocumentLinks)
+    .innerJoin(actors, eq(actorDocumentLinks.actorId, actors.id))
+    .where(eq(actorDocumentLinks.documentId, documentId))
+    .orderBy(asc(actors.name));
+}
+
+export async function addActorDocumentLink(data: InsertActorDocumentLink) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(actorDocumentLinks).values(data);
+}
+
+export async function removeActorDocumentLink(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.delete(actorDocumentLinks).where(eq(actorDocumentLinks.id, id));
+}
+
+/* ================= Actor Timeline Links (v4.0) ================= */
+export async function addActorTimelineLink(data: InsertActorTimelineLink) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(actorTimelineLinks).values(data);
+}
+
+export async function getActorTimelineLinks(actorId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      id: actorTimelineLinks.id,
+      timelineEventId: actorTimelineLinks.timelineEventId,
+      role: actorTimelineLinks.role,
+      eventTitle: timelineEvents.title,
+      eventDate: timelineEvents.eventDate,
+      eventCategory: timelineEvents.category,
+    })
+    .from(actorTimelineLinks)
+    .innerJoin(timelineEvents, eq(actorTimelineLinks.timelineEventId, timelineEvents.id))
+    .where(eq(actorTimelineLinks.actorId, actorId))
+    .orderBy(desc(timelineEvents.eventDate));
+}
+
+/* ================= Agency Document Count (v4.0) ================= */
+export async function getAgencyDocumentCount(agencyId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  // Count documents linked to actors who have roles at this agency
+  const rows = await db
+    .select({ cnt: count() })
+    .from(actorDocumentLinks)
+    .innerJoin(actorAgencyRoles, eq(actorDocumentLinks.actorId, actorAgencyRoles.actorId))
+    .innerJoin(documents, eq(actorDocumentLinks.documentId, documents.id))
+    .where(and(eq(actorAgencyRoles.agencyId, agencyId), eq(documents.publicStatus, true)));
+  return rows[0]?.cnt ?? 0;
 }

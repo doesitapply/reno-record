@@ -12,6 +12,7 @@ const NAV = [
   { href: "/patterns", label: "Misconduct Patterns" },
   { href: "/evidence", label: "Evidence" },
   { href: "/actors", label: "Actors" },
+  { href: "/agencies", label: "Agencies" },
   { href: "/public-records", label: "Public Records" },
   { href: "/timeline", label: "Timeline" },
   { href: "/the-church-record", label: "Case Example" },
