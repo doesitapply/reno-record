@@ -1,6 +1,6 @@
 # The Reno Record — tRPC API Reference
 
-**Version:** 1.0 (platform release v3.5)
+**Version:** 2.0 (platform release v4.0)
 
 All application logic is exposed through tRPC procedures at `/api/trpc`. There are no ad-hoc REST endpoints for application features. Procedures are called from the React frontend via the tRPC React Query client (`client/src/lib/trpc.ts`). External callers (e.g., scheduled tasks, scripts) can call procedures using the tRPC HTTP client with the session cookie for authentication.
 
@@ -615,6 +615,152 @@ Sends a notification to the platform owner via the Manus notification API.
 **Input:** `{ title: string; content: string }`
 
 **Output:** `{ sent: boolean }`
+
+---
+
+## `agency` router (v4.0)
+
+### `agency.list` `[public]`
+
+Returns all agencies where `publicStatus: true`, ordered by name.
+
+**Output:** `Array<{ id, name, slug, agencyType, jurisdictionName, jurisdictionType, state, county, city, parentAgencyId, websiteUrl, notes }>`
+
+### `agency.getBySlug` `[public]`
+
+Returns a single agency by slug, including linked actors and document count.
+
+**Input:** `{ slug: string }`
+
+**Output:** `{ agency, actors: Array<{ actor, roles }>, documentCount: number }`
+
+### `agency.adminCreate` `[admin]`
+
+Creates a new agency record.
+
+**Input:** `{ name, slug, agencyType, jurisdictionName?, jurisdictionType?, state?, county?, city?, parentAgencyId?, websiteUrl?, notes? }`
+
+**Output:** `{ id: number }`
+
+### `agency.adminUpdate` `[admin]`
+
+Updates an existing agency record.
+
+**Input:** `{ id: number } & Partial<agency fields>`
+
+**Output:** `{ ok: true }`
+
+---
+
+## `violationTag` router (v4.0)
+
+### `violationTag.list` `[public]`
+
+Returns all violation tags, ordered by category then slug.
+
+**Output:** `Array<{ id, slug, label, description, category, createdAt }>`
+
+### `violationTag.getBySlug` `[public]`
+
+Returns a single violation tag by slug.
+
+**Input:** `{ slug: string }`
+
+**Output:** `ViolationTag | null`
+
+### `violationTag.adminCreate` `[admin]`
+
+Creates a new violation tag in the taxonomy.
+
+**Input:** `{ slug, label, description?, category }`
+
+**Output:** `{ id: number }`
+
+---
+
+## `actorLink` router (v4.0)
+
+### `actorLink.addDocumentLink` `[admin]`
+
+Creates a structured link between an actor and a document.
+
+**Input:** `{ actorId, documentId, role?, confidence?, extractedFrom? }`
+
+**Output:** `{ id: number }`
+
+### `actorLink.removeDocumentLink` `[admin]`
+
+Deletes an actor-document link by ID.
+
+**Input:** `{ id: number }`
+
+**Output:** `{ ok: true }`
+
+### `actorLink.listDocumentLinks` `[admin]`
+
+Returns all actor-document links for a given document.
+
+**Input:** `{ documentId: number }`
+
+**Output:** `Array<{ id, actorId, documentId, role, confidence, extractedFrom, addedBy, createdAt, actor: { name, slug } }>`
+
+### `actorLink.addAgencyRole` `[admin]`
+
+Creates a structured agency role for an actor.
+
+**Input:** `{ actorId, agencyId, title, startDate?, endDate?, isCurrent?, notes? }`
+
+**Output:** `{ id: number }`
+
+### `actorLink.updateAgencyRole` `[admin]`
+
+Updates an existing actor agency role.
+
+**Input:** `{ id: number } & Partial<role fields>`
+
+**Output:** `{ ok: true }`
+
+### `actorLink.removeAgencyRole` `[admin]`
+
+Deletes an actor agency role by ID.
+
+**Input:** `{ id: number }`
+
+**Output:** `{ ok: true }`
+
+### `actorLink.listAgencyRoles` `[public]`
+
+Returns all agency roles for a given actor.
+
+**Input:** `{ actorId: number }`
+
+**Output:** `Array<{ id, actorId, agencyId, title, startDate, endDate, isCurrent, notes, agency: { name, slug, agencyType } }>`
+
+### `actorLink.addViolationTag` `[admin]`
+
+Applies a violation tag to a document. `sourceQuote` is required — the procedure rejects empty strings.
+
+**Input:** `{ documentId, violationTagId, sourceQuote: string (required), sourceCitation?, confidence? }`
+
+**Output:** `{ id: number }`
+
+**Errors:** `BAD_REQUEST` if `sourceQuote` is empty.
+
+### `actorLink.removeViolationTag` `[admin]`
+
+Removes a violation tag from a document.
+
+**Input:** `{ id: number }`
+
+**Output:** `{ ok: true }`
+
+### `actorLink.listViolationTags` `[public]`
+
+Returns all violation tags applied to a document.
+
+**Input:** `{ documentId: number }`
+
+**Output:** `Array<{ id, documentId, violationTagId, sourceQuote, sourceCitation, confidence, addedBy, createdAt, tag: { slug, label, category } }>`
 
 ---
 

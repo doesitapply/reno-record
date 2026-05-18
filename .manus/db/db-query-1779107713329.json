@@ -1,0 +1,66 @@
+{
+  "query": "SHOW COLUMNS FROM documents LIKE 'deleted_by'; SHOW COLUMNS FROM documents LIKE 'correction_note'; SHOW COLUMNS FROM stories LIKE 'deleted_by'; SHOW COLUMNS FROM stories LIKE 'correction_note';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SHOW COLUMNS FROM documents LIKE 'deleted_by'; SHOW COLUMNS FROM documents LIKE 'correction_note'; SHOW COLUMNS FROM stories LIKE 'deleted_by'; SHOW COLUMNS FROM stories LIKE 'correction_note';",
+  "rows": [
+    {
+      "Field": "deleted_by",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "Field",
+      "Type": "Type",
+      "Null": "Null",
+      "Key": "Key",
+      "Default": "Default",
+      "Extra": "Extra"
+    },
+    {
+      "Field": "correction_note",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "Field",
+      "Type": "Type",
+      "Null": "Null",
+      "Key": "Key",
+      "Default": "Default",
+      "Extra": "Extra"
+    },
+    {
+      "Field": "deleted_by",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "Field",
+      "Type": "Type",
+      "Null": "Null",
+      "Key": "Key",
+      "Default": "Default",
+      "Extra": "Extra"
+    },
+    {
+      "Field": "correction_note",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\ndeleted_by\tint\tYES\t\tNULL\t\nField\tType\tNull\tKey\tDefault\tExtra\ncorrection_note\ttext\tYES\t\tNULL\t\nField\tType\tNull\tKey\tDefault\tExtra\ndeleted_by\tint\tYES\t\tNULL\t\nField\tType\tNull\tKey\tDefault\tExtra\ncorrection_note\ttext\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 740
+}

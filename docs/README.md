@@ -88,7 +88,7 @@ The dev server starts on `http://localhost:3000`. Both the Express API and the V
 pnpm test
 ```
 
-All 41 tests must pass before any commit. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the test requirements and PR checklist.
+All 73 tests must pass before any commit. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the test requirements and PR checklist.
 
 ---
 
@@ -112,6 +112,8 @@ reno-record/
 │       │   ├── Submit.tsx
 │       │   ├── PublicRecords.tsx
 │       │   ├── Actors.tsx
+│       │   ├── Agencies.tsx        # v4.0 agency hub index
+│       │   ├── AgencyDetail.tsx    # v4.0 per-agency detail
 │       │   ├── Election.tsx
 │       │   ├── Patterns.tsx
 │       │   ├── Admin.tsx
@@ -120,7 +122,7 @@ reno-record/
 │       └── index.css           # Design system tokens
 ├── drizzle/
 │   ├── schema.ts               # Single source of truth for all tables
-│   └── 0000–0003_*.sql         # Applied migrations
+│   └── 0000–0005_*.sql         # Applied migrations
 ├── scripts/
 │   ├── seed.mjs                # Initial content seed
 │   └── migrate000*.mjs         # Migration runner scripts
@@ -133,7 +135,7 @@ reno-record/
 │   ├── routers.ts              # All tRPC procedures
 │   ├── storage.ts              # S3 helpers (storagePut / storageGet)
 │   ├── auth.logout.test.ts     # Auth test (reference)
-│   └── renoRecord.test.ts      # Full feature test suite (41 tests)
+│   └── renoRecord.test.ts      # Full feature test suite (73 tests)
 ├── docs/
 │   ├── README.md               # This file
 │   ├── WHITEPAPER.md
@@ -153,7 +155,9 @@ reno-record/
 
 **No auto-publishing.** Every submitted story and every uploaded document defaults to `reviewStatus: "pending"` and `publicStatus: false`. Nothing becomes publicly visible without an explicit admin approval action. This is enforced at the server procedure level, not just the UI.
 
-**Advisory AI only.** Docket Goblin can draft tags, summaries, and proposed timeline events. It writes only to the `aiSummary`, `aiTags`, and `ingest_jobs.draftJson` fields. It has no write access to `publicStatus`, `reviewStatus`, or `documentVisibility`. This is enforced in code, not policy.
+**Advisory AI only.** Docket Goblin can draft tags, summaries, and proposed timeline events. On `approveIngest`, it writes structured `actor_document_links` and `document_violation_tags` from its draft — but all Goblin-generated entries are marked `addedBy: "goblin"` and `confidence < 100` for human review. It has no write access to `publicStatus` or `reviewStatus`. This is enforced in code, not policy.
+
+**Source quotes required.** Every `document_violation_tags` row requires a non-empty `source_quote` — a direct excerpt from the document supporting the tag. This is enforced at the database level (`NOT NULL`) and the application level. Goblin-generated source quotes are AI-generated descriptions marked for human replacement; they are not treated as verified document excerpts.
 
 **Audit everything.** Every security-relevant action — submission, upload, approval, rejection, visibility change, AI policy change, role change, rate-limit trigger, upload rejection — is written to the `audit_log` table with actor, role, target, timestamp, IP hash, and metadata. The audit log is append-only and admin-viewable with full filtering and CSV export.
 
@@ -176,8 +180,9 @@ Admin lockout protection is enforced: an admin cannot remove their own admin rol
 | v1 | Shipped | Full public site, all pages, seeded Church Record case |
 | v2 | Shipped | Docket Goblin chat bubble + auto-ingest pipeline |
 | v3 | Shipped | Auth-gated submissions, upload guard, 7-state visibility, AI policy, audit log |
-| v3.5 | Shipped | Audit log viewer, user management, SMTP, email outcome metadata, 41 tests |
-| v4 | Spec written | Receipts paywall, Goblin Pro, Founding lifetimes, credit packs, Stripe |
+| v3.5 | Shipped | Audit log viewer, user management, SMTP, email outcome metadata, 58 tests |
+| v4.0 | Shipped | Agency registry, violation taxonomy, relational graph (actor-agency-document-tag joins), source-quote enforcement, Goblin structured ingest output, 73 tests |
+| v4 (paywall) | Spec written | Receipts paywall, Goblin Pro, Founding lifetimes, credit packs, Stripe |
 | v5 | Planned | Team/multi-seat plans, API keys, affiliate/referral, comments |
 
 See [V4_MONETIZATION.md](./V4_MONETIZATION.md) for the full v4 spec.

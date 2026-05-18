@@ -1,6 +1,6 @@
 # The Reno Record — Architecture Reference
 
-**Version:** 1.0 (platform release v3.5)
+**Version:** 2.0 (platform release v4.0)
 
 ---
 
@@ -69,7 +69,9 @@ App.tsx (ThemeProvider → TooltipProvider → Toaster → Router)
   │     ├── Evidence.tsx
   │     ├── Submit.tsx (auth-gated: sign-in CTA if not authenticated)
   │     ├── PublicRecords.tsx
-  │     ├── Actors.tsx
+  │     ├── Actors.tsx          ← v4.0: agency roles, violation tags, linked docs
+  │     ├── Agencies.tsx        ← v4.0: agency hub index
+  │     ├── AgencyDetail.tsx    ← v4.0: per-agency actor roster + document list
   │     ├── Election.tsx
   │     ├── Patterns.tsx
   │     └── Privacy.tsx
@@ -80,7 +82,9 @@ App.tsx (ThemeProvider → TooltipProvider → Toaster → Router)
   │     ├── IngestTab (Goblin draft review)
   │     ├── PrrTab (public records requests)
   │     ├── AuditTab (log viewer + CSV export)
-  │     └── UsersTab (user management + role control)
+  │     ├── UsersTab (user management + role control)
+  │     ├── AgenciesTab         ← v4.0: agency CRUD
+  │     └── ViolationTagsTab    ← v4.0: taxonomy management
   │
   └── DocketGoblinBubble.tsx (floating, admin-only, all pages)
 ```
@@ -127,18 +131,23 @@ The context is built by verifying the session cookie JWT. If the cookie is missi
 
 ```
 appRouter
-  ├── auth.me          (public)
-  ├── auth.logout      (public)
-  ├── system.notifyOwner (protected)
-  ├── story.*          (mix: public reads, protected submit, admin moderation)
-  ├── document.*       (mix: public reads, admin upload/update)
-  ├── timeline.*       (mix: public reads, admin CRUD)
-  ├── actor.*          (mix: public reads, admin CRUD)
-  ├── prr.*            (mix: public reads, admin CRUD)
-  ├── patterns.metrics (public)
-  ├── docketGoblin.*   (admin only: chat, ingest, approveIngest, ingestList, history, resetChat)
-  ├── user.*           (admin only: adminList, adminListWithCounts, setRole)
-  └── audit.*          (admin only: list, exportCsv)
+  ├── auth.me                    (public)
+  ├── auth.logout                (public)
+  ├── system.notifyOwner         (protected)
+  ├── story.*                    (mix: public reads, protected submit, admin moderation)
+  ├── document.*                 (mix: public reads, admin upload/update)
+  ├── timeline.*                 (mix: public reads, admin CRUD)
+  ├── actor.*                    (mix: public reads, admin CRUD)
+  ├── prr.*                      (mix: public reads, admin CRUD)
+  ├── patterns.metrics           (public)
+  ├── docketGoblin.*             (admin only: chat, ingest, approveIngest, ingestList, history, resetChat)
+  ├── user.*                     (admin only: adminList, adminListWithCounts, setRole)
+  ├── audit.*                    (admin only: list, exportCsv)
+  ├── reviewRequest.*            (protected submit; admin resolve)
+  ├── adminEdit.*                (admin only: softDelete, hardDelete, restore, inlineEdit)
+  ├── agency.*                   (v4.0 — public list/getBySlug; admin create/update)
+  ├── violationTag.*             (v4.0 — public list/getBySlug; admin create)
+  └── actorLink.*                (v4.0 — admin: actorDocumentLink, actorAgencyRole, documentViolationTag CRUD)
 ```
 
 ---
@@ -220,7 +229,8 @@ Admin drops file onto Goblin chat bubble
   │     response_format: { type: "json_schema", schema: ingest_draft_schema }
   │   })
   │   └── Returns: { title, summary, sourceType, caseNumber, documentDate,
-  │                  actorNames, tags, proposedTimeline, warnings }
+  │                  actors[{name, role, confidence}], patternSignals[{slug, description}],
+  │                  proposedTimeline, warnings }
   │
   ├── Server: DB insert → documents (publicStatus: false, reviewStatus: "pending",
   │                                   visibility: "pending_review", aiPolicy: "no_ai_processing")
@@ -241,14 +251,47 @@ Admin reviews draft in Admin → Ingest tab
               ├── Updates document.reviewStatus = "approved"
               ├── Sets document.publicStatus = input.publishDocument
               ├── Optionally creates timeline_events record
+              ├── Writes actor_document_links from draft.actors
+              │     └── Matches actor names to actors table (fuzzy)
+              │     └── Inserts with confidence from LLM, addedBy: "goblin"
+              ├── Writes document_violation_tags from draft.patternSignals
+              │     └── Matches signal.slug to violation_tags table
+              │     └── sourceQuote = signal.description (AI-generated, marked for review)
+              │     └── confidence < 100, addedBy: "goblin"
               └── writeAudit(document_approved)
 ```
 
-The Goblin has no path to set `publicStatus: true` without the admin explicitly passing `publishDocument: true` in the approve call. Even then, the admin must click the button.
+The Goblin has no path to set `publicStatus: true` without the admin explicitly passing `publishDocument: true` in the approve call. Goblin-generated actor links and violation tags are marked `addedBy: "goblin"` and `confidence < 100` for human review. Source quotes from the Goblin are AI-generated descriptions, not verified document excerpts — human curation via the Admin panel is required for evidentiary use.
 
 ---
 
-## 8. Email flow
+## 8. Relational graph (v4.0)
+
+The v4.0 relational layer replaces legacy freetext fields with structured join tables. The graph connects actors, agencies, documents, timeline events, and violation tags.
+
+```
+actors ──────────────────────────────────────────────────────────────┐
+  │                                                                   │
+  ├── actor_agency_roles ──► agencies                                │
+  │     (title, startDate, endDate, isCurrent)                       │
+  │                                                                   │
+  ├── actor_document_links ──► documents                             │
+  │     (role, confidence, extractedFrom, addedBy)                   │
+  │                                                                   │
+  └── actor_timeline_links ──► timeline_events                       │
+        (role)                                                        │
+                                                                      │
+documents ────────────────────────────────────────────────────────────┘
+  │
+  └── document_violation_tags ──► violation_tags
+        (sourceQuote NOT NULL, sourceCitation, confidence, addedBy)
+```
+
+**Design invariant:** Every `document_violation_tags` row requires a `source_quote`. This is enforced at the database level (`NOT NULL`) and the application level (procedures reject empty quotes). The graph is the accountability layer; the source quote is the receipt.
+
+---
+
+## 9. Email flow
 
 ```
 Trigger event (story submit / file upload / admin decision)
@@ -271,14 +314,14 @@ Email outcome is written to audit_log metadata:
 
 ---
 
-## 9. Audit log flow
+## 10. Audit log flow
 
 ```
 Any security-relevant action
   │
   └── writeAudit({
         actorUserId, actorRole,
-        action,           // one of 13 enum values
+        action,           // one of 24 enum values
         targetType,       // "story" | "document" | "user" | "ingest_job" | etc.
         targetId,
         metadata,         // JSON: old/new values, email outcome, etc.
@@ -295,41 +338,46 @@ Admin views audit log
 Admin exports audit log
   └── trpc.audit.exportCsv({ same filters })
         └── Returns CSV string: id,createdAt,actorUserId,actorRole,
-                                action,targetType,targetId,metadata,ipHash
+            action,targetType,targetId,metadata,ipHash
 ```
 
 ---
 
-## 10. Database schema overview
-
-Fourteen tables across four migrations. See [DATA_DICTIONARY.md](./DATA_DICTIONARY.md) for full column-level documentation.
+## 11. Key files
 
 ```
-users               ← Manus OAuth accounts, roles
-stories             ← Submitted narratives, moderation state
-documents           ← Uploaded evidence files, visibility, AI policy
-timeline_events     ← Chronological case events, source doc links
-actors              ← Judges, attorneys, officials, institutions
-public_records_requests ← PRR tracking (status, agency, dates)
-agent_tasks         ← Legacy AI task queue (pre-Goblin)
-chat_sessions       ← Goblin chat session headers
-chat_messages       ← Goblin chat message history
-ingest_jobs         ← Goblin ingest pipeline state
-audit_log           ← Immutable security event log
+drizzle/schema.ts          ← Canonical DB schema (source of truth)
+server/db.ts               ← All DB query helpers
+server/routers.ts          ← All tRPC procedures
+server/_core/              ← Framework plumbing (do not edit)
+  ├── context.ts           ← Request context builder
+  ├── trpc.ts              ← Procedure tiers
+  ├── oauth.ts             ← Manus OAuth handler
+  ├── llm.ts               ← invokeLLM helper
+  ├── notification.ts      ← notifyOwner helper
+  └── index.ts             ← Express server entry point
+client/src/
+  ├── App.tsx              ← Routes + ThemeProvider
+  ├── index.css            ← Design tokens + global styles
+  ├── lib/trpc.ts          ← tRPC client binding
+  ├── pages/               ← Page-level components
+  └── components/          ← Reusable UI components
 ```
 
 ---
 
-## 11. Key design decisions and rationale
+## 12. Environment variables
 
-**Single process, single port.** Eliminates CORS, simplifies deployment, reduces operational surface. The tradeoff is that a CPU-intensive LLM call blocks the event loop. Mitigated by: LLM calls are admin-only (low concurrency), Node.js is non-blocking for I/O, and the platform is not expected to handle high concurrent load in v1.
-
-**tRPC over REST.** End-to-end type safety without a code generation step. The TypeScript types are the contract. This eliminates an entire class of frontend/backend drift bugs. The tradeoff is that tRPC is less familiar to external contributors and cannot be called from non-TypeScript clients without the generated types.
-
-**Drizzle over Prisma.** Drizzle is lighter, faster at startup, and produces SQL that is easier to audit. The schema-as-code model means migrations are explicit SQL files that can be reviewed before application. The tradeoff is less ecosystem tooling.
-
-**Append-only audit log.** The audit log has no delete or update procedure. This is intentional: the log must be trustworthy. If an admin could delete audit entries, the log would not be a reliable accountability record. The tradeoff is that the log grows indefinitely — a future archival/rotation strategy will be needed at scale.
-
-**Magic-byte MIME validation.** Checking only the declared MIME type or file extension is insufficient. A malicious actor can rename `evil.exe` to `evidence.pdf`. The upload guard reads the first 16 bytes of every file and compares them against known magic byte signatures for each allowed MIME type. Files that fail this check are rejected regardless of their declared type.
-
-**Fail-safe email.** Email is a notification channel, not a security boundary. If SMTP is misconfigured, the platform must continue to function. The fail-safe design ensures that a missing `SMTP_HOST` env var does not cause submission failures or server errors.
+| Variable | Used by | Purpose |
+|---|---|---|
+| `DATABASE_URL` | Server | MySQL/TiDB connection string |
+| `JWT_SECRET` | Server | Session cookie signing |
+| `VITE_APP_ID` | Client | Manus OAuth application ID |
+| `OAUTH_SERVER_URL` | Server | Manus OAuth backend |
+| `VITE_OAUTH_PORTAL_URL` | Client | Manus login portal URL |
+| `OWNER_OPEN_ID` | Server | Auto-promotes owner to admin |
+| `OWNER_NAME` | Server | Owner display name |
+| `BUILT_IN_FORGE_API_KEY` | Server | LLM + storage API key |
+| `BUILT_IN_FORGE_API_URL` | Server | LLM + storage API base URL |
+| `VITE_FRONTEND_FORGE_API_KEY` | Client | Frontend API key (currently server-side only) |
+| `VITE_FRONTEND_FORGE_API_URL` | Client | Frontend API URL |

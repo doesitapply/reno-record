@@ -1,0 +1,49 @@
+{
+  "query": "SHOW TABLES LIKE 'agencies'; SHOW TABLES LIKE 'violation_tags'; SHOW TABLES LIKE 'document_violation_tags'; SHOW TABLES LIKE 'actor_agency_roles'; SHOW TABLES LIKE 'actor_document_links'; SHOW TABLES LIKE 'actor_timeline_links'; SHOW TABLES LIKE 'review_requests';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SHOW TABLES LIKE 'agencies'; SHOW TABLES LIKE 'violation_tags'; SHOW TABLES LIKE 'document_violation_tags'; SHOW TABLES LIKE 'actor_agency_roles'; SHOW TABLES LIKE 'actor_document_links'; SHOW TABLES LIKE 'actor_timeline_links'; SHOW TABLES LIKE 'review_requests';",
+  "rows": [
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "agencies"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (violation_tags)"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "violation_tags"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (document_violation_tags)"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "document_violation_tags"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (actor_agency_roles)"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "actor_agency_roles"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (actor_document_links)"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "actor_document_links"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (actor_timeline_links)"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "actor_timeline_links"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (review_requests)"
+    },
+    {
+      "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)": "review_requests"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_3yhU3DrKzf8Z5BNtvxatFF (agencies)\nagencies\nTables_in_3yhU3DrKzf8Z5BNtvxatFF (violation_tags)\nviolation_tags\nTables_in_3yhU3DrKzf8Z5BNtvxatFF (document_violation_tags)\ndocument_violation_tags\nTables_in_3yhU3DrKzf8Z5BNtvxatFF (actor_agency_roles)\nactor_agency_roles\nTables_in_3yhU3DrKzf8Z5BNtvxatFF (actor_document_links)\nactor_document_links\nTables_in_3yhU3DrKzf8Z5BNtvxatFF (actor_timeline_links)\nactor_timeline_links\nTables_in_3yhU3DrKzf8Z5BNtvxatFF (review_requests)\nreview_requests\n",
+  "stderr": "",
+  "execution_time_ms": 854
+}

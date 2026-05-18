@@ -1,6 +1,6 @@
 # The Reno Record — Operator Launch Checklist
 
-**Status:** Pre-launch · v3.6  
+**Status:** Pre-launch · v4.0  
 **Estimated time to complete:** 45–90 minutes (mostly waiting on DNS propagation)
 
 This checklist covers every step you need to execute personally — things that require real files, credentials, or external accounts that cannot be wired by code. Everything else is already built and tested.
@@ -9,7 +9,7 @@ This checklist covers every step you need to execute personally — things that 
 
 ## 1. Publish the Site (5 minutes)
 
-The site is built and checkpoint `0461e127` is stable.
+The site is built and checkpoint `f3dc0803` (v4.0) is stable.
 
 1. Open the Management UI (right panel in Manus).
 2. Click **Publish** in the top-right header.
@@ -138,11 +138,12 @@ Actor dossier pages are live but only show actors you've created.
 4. Fill in:
    - **Name** (exact — this is matched against document `actorNames` and timeline `actors` fields)
    - **Role** (e.g. "District Court Judge", "Deputy District Attorney")
-   - **Agency** (e.g. "Second Judicial District Court, Washoe County")
+   - **Agency** (legacy freetext — also assign a structured agency role via the Agencies tab after creating the actor)
    - **Judicial Actor** checkbox if applicable
    - **Bio** and **Notes** (notes appear as "Conduct on record" on the dossier page)
 5. Save.
-6. The actor's dossier at `/actors/[slug]` will automatically aggregate all timeline events and documents where their name appears.
+6. The actor's dossier at `/actors/[slug]` will show agency role history, linked violation tags with source quotes, and linked documents from the structured join tables.
+7. Assign agency roles via **Admin → Agencies** tab → select agency → add actor role. Or use the `actorLink.addAgencyRole` procedure directly.
 
 > **Critical:** The name you enter here must exactly match how the name appears in document `actorNames` and timeline `actors` fields. If documents say "Barry Breslow" and the actor profile says "B. Breslow", they won't link. Use the Goblin's extracted actor names as the canonical form.
 
@@ -181,6 +182,9 @@ Run through these before announcing:
 - [ ] `/timeline` shows at least 5 real events
 - [ ] `/evidence` shows at least 3 approved documents
 - [ ] `/actors` shows at least 1 actor profile
+- [ ] `/agencies` shows all 10 Washoe County agencies
+- [ ] At least one actor has a structured agency role assigned
+- [ ] At least one document has a violation tag with a verified source quote
 - [ ] `/submit` requires sign-in (test in incognito)
 - [ ] Submit a test story → receive confirmation email
 - [ ] Admin approves test story → submitter receives decision email
