@@ -247,7 +247,7 @@ const storyRouter = router({
       for (const att of validated) {
         try {
           const { key, url } = await storagePut(
-            `submissions/story-${storyId}/${att.filename}`,
+            `submissions/story-${storyId}/${att.storageFilename}`,
             att.buffer,
             att.mime,
           );
@@ -558,7 +558,7 @@ const documentRouter = router({
         buffer,
       });
       const { key, url } = await storagePut(
-        `evidence/${v.filename}`,
+        `evidence/${v.storageFilename}`,
         v.buffer,
         v.mime,
       );
@@ -1261,7 +1261,7 @@ Submitter narrative: ${s.summary ?? ""}`;
 
       try {
         const { key, url } = await storagePut(
-          `evidence/ingest-${jobId}-${v.filename}`,
+          `evidence/ingest-${jobId}-${v.storageFilename}`,
           v.buffer,
           v.mime,
         );

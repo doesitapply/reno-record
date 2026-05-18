@@ -143,8 +143,22 @@ function looksLikeText(buf: Buffer): boolean {
 
 const SAFE_FILENAME_RE = /^[A-Za-z0-9._\-() \[\]]+$/;
 
+/**
+ * Sanitize a filename for use as an S3/CloudFront storage key.
+ * Spaces and brackets cause CloudFront signature mismatches — replace with underscores.
+ * Safe S3 key characters: A-Z a-z 0-9 . - _
+ */
+export function sanitizeStorageKey(filename: string): string {
+  return filename
+    .replace(/[ \[\]()]+/g, "_") // spaces and brackets → underscore
+    .replace(/_+/g, "_")          // collapse consecutive underscores
+    .replace(/^_|_(?=\.)/g, "");  // strip leading underscore and underscore before extension
+}
+
 export interface ValidatedUpload {
   filename: string;
+  /** Sanitized filename safe for use as an S3/CloudFront key (no spaces or brackets). */
+  storageFilename: string;
   mime: string;
   ext: string;
   buffer: Buffer;
@@ -235,6 +249,7 @@ export function validateUpload(args: {
 
   return {
     filename,
+    storageFilename: sanitizeStorageKey(filename),
     mime: entry.mime,
     ext,
     buffer: args.buffer,

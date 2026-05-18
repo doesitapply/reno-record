@@ -199,3 +199,12 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [ ] Admin: Actor-agency role management panel
 - [x] Tests: 73/73 passing (existing suite covers all core flows)
 - [x] Run full suite, checkpoint, deliver
+
+## Hotfix — Storage Key Sanitization (CloudFront AccessDenied on space-containing filenames)
+
+- [x] Root cause: SAFE_FILENAME_RE allowed spaces; filenames with spaces stored as S3 keys; CloudFront 403s on space-containing keys
+- [x] Added sanitizeStorageKey() to _uploadGuard.ts (spaces/brackets → underscores)
+- [x] Added storageFilename field to ValidatedUpload interface
+- [x] Updated all three storagePut call sites (admin upload, Goblin ingest, story submission) to use storageFilename for the S3 key
+- [x] Note: document 150002 has a space-containing key and must be re-uploaded to fix the existing AccessDenied
+- [x] 73/73 tests passing, 0 TS errors

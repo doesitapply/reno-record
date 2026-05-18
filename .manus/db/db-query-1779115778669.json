@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, title, file_key, LEFT(file_url, 120) as file_url_preview, mime_type FROM documents WHERE id = 150002;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, title, file_key, LEFT(file_url, 120) as file_url_preview, mime_type FROM documents WHERE id = 150002;",
+  "rows": [
+    {
+      "id": "150002",
+      "title": "Legal Memorandum: Analysis of State of Nevada vs. Cameron Doyle Church (CR23-0657) Exhibits",
+      "file_key": "evidence/ingest-180002-2024 state all of _Combined_with_Index_daa1d1fb.pdf",
+      "file_url_preview": "/manus-storage/evidence/ingest-180002-2024%20state%20all%20of%20_Combined_with_Index_daa1d1fb.pdf",
+      "mime_type": "application/pdf"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tfile_key\tfile_url_preview\tmime_type\n150002\tLegal Memorandum: Analysis of State of Nevada vs. Cameron Doyle Church (CR23-0657) Exhibits\tevidence/ingest-180002-2024 state all of _Combined_with_Index_daa1d1fb.pdf\t/manus-storage/evidence/ingest-180002-2024%20state%20all%20of%20_Combined_with_Index_daa1d1fb.pdf\tapplication/pdf\n",
+  "stderr": "",
+  "execution_time_ms": 1392
+}
