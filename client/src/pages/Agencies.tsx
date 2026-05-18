@@ -3,6 +3,8 @@ import { trpc } from "@/lib/trpc";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Scale, Shield, Users, FileText, ChevronRight } from "lucide-react";
+import SiteShell from "@/components/SiteShell";
+import { useSEO } from "@/hooks/useSEO";
 
 const AGENCY_TYPE_LABELS: Record<string, string> = {
   court: "Court",
@@ -62,7 +64,10 @@ export default function Agencies() {
     "state_agency", "federal_agency", "other",
   ];
 
+  useSEO({ title: "Agency Directory — The Reno Record" });
+
   return (
+    <SiteShell>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b bg-card">
@@ -160,5 +165,6 @@ export default function Agencies() {
         )}
       </div>
     </div>
+    </SiteShell>
   );
 }

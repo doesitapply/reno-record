@@ -174,6 +174,29 @@ export default function PatternsPage() {
                 </div>
               </div>
             ))}
+            {/* v4.0: violation tag evidence signals from document taxonomy */}
+            {(d.tagCounts?.length ?? 0) > 0 && (
+              <div>
+                <div className="eyebrow">Evidence signals</div>
+                <h2 className="display-serif text-2xl mt-2 rule-amber">Document-level procedural concerns</h2>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-3xl">
+                  Counts from structured violation tags applied to ingested documents. Each tag requires a
+                  source quote from the document — no unsupported assertions.
+                </p>
+                <div className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(d.tagCounts as Array<{ slug: string; label: string; count: number }>).map((t) => (
+                    <MetricCard
+                      key={t.slug}
+                      m={{
+                        label: t.label,
+                        value: t.count,
+                        tone: t.count > 3 ? "alarm" : t.count > 0 ? "warning" : "neutral",
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

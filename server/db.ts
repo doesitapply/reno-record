@@ -382,7 +382,20 @@ export async function getPatternMetrics() {
       familyHarm: sql<number>`SUM(CASE WHEN ${stories.familyHarm} IS NOT NULL AND CHAR_LENGTH(${stories.familyHarm}) > 0 THEN 1 ELSE 0 END)`,
     })
     .from(stories);
-  return agg as any;
+
+  // v4.0: violation tag counts from document evidence
+  const tagCounts = await db
+    .select({
+      slug: violationTags.slug,
+      label: violationTags.label,
+      count: sql<number>`COUNT(${documentViolationTags.id})`,
+    })
+    .from(violationTags)
+    .leftJoin(documentViolationTags, eq(documentViolationTags.violationTagId, violationTags.id))
+    .groupBy(violationTags.id, violationTags.slug, violationTags.label)
+    .orderBy(desc(sql`COUNT(${documentViolationTags.id})`));
+
+  return { ...(agg as any), tagCounts };
 }
 
 

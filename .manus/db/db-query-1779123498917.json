@@ -1,0 +1,9 @@
+{
+  "query": "\nUPDATE documents \nSET file_key = 'evidence/ingest-180001-2023_all_of_it_Combined_with_Index_5cb625f8.pdf',\n    file_url = '/manus-storage/evidence/ingest-180001-2023_all_of_it_Combined_with_Index_5cb625f8.pdf',\n    editorial_note = 'FILE NEEDS RE-UPLOAD: original S3 key had spaces (CloudFront 403). Re-ingest the original PDF to restore.'\nWHERE id = 150001;\n\nUPDATE documents \nSET file_key = 'evidence/ingest-180002-2024_state_all_of_Combined_with_Index_daa1d1fb.pdf',\n    file_url = '/manus-storage/evidence/ingest-180002-2024_state_all_of_Combined_with_Index_daa1d1fb.pdf',\n    editorial_note = 'FILE NEEDS RE-UPLOAD: original S3 key had spaces (CloudFront 403). Re-ingest the original PDF to restore.'\nWHERE id = 150002;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nUPDATE documents \nSET file_key = 'evidence/ingest-180001-2023_all_of_it_Combined_with_Index_5cb625f8.pdf',\n    file_url = '/manus-storage/evidence/ingest-180001-2023_all_of_it_Combined_with_Index_5cb625f8.pdf',\n    editorial_note = 'FILE NEEDS RE-UPLOAD: original S3 key had spaces (CloudFront 403). Re-ingest the original PDF to restore.'\nWHERE id = 150001;\n\nUPDATE documents \nSET file_key = 'evidence/ingest-180002-2024_state_all_of_Combined_with_Index_daa1d1fb.pdf',\n    file_url = '/manus-storage/evidence/ingest-180002-2024_state_all_of_Combined_with_Index_daa1d1fb.pdf',\n    editorial_note = 'FILE NEEDS RE-UPLOAD: original S3 key had spaces (CloudFront 403). Re-ingest the original PDF to restore.'\nWHERE id = 150002;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 698
+}

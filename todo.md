@@ -208,3 +208,13 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [x] Updated all three storagePut call sites (admin upload, Goblin ingest, story submission) to use storageFilename for the S3 key
 - [x] Note: document 150002 has a space-containing key and must be re-uploaded to fix the existing AccessDenied
 - [x] 73/73 tests passing, 0 TS errors
+
+## Audit Fixes (v4.1)
+
+- [x] Fix: Agencies and AgencyDetail pages missing SiteShell nav wrapper — added SiteShell + useSEO to both
+- [x] Fix: getPatternMetrics now returns tagCounts from document_violation_tags for Patterns page
+- [x] Feature: Patterns page shows "Document-level procedural concerns" section from violation taxonomy when tags exist
+- [x] Fix: S3 keys for docs 150001 and 150002 updated to sanitized versions in DB (files need re-upload)
+- [x] Confirmed: Patterns dashboard 0s are correct — stories table is empty, no public submissions yet
+- [x] Confirmed: agencyRouter console errors are stale (pre-restart), server is clean
+- [x] 73/73 tests passing, 0 TS errors

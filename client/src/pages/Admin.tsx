@@ -1063,6 +1063,7 @@ function DocumentReview({ id }: { id: number }) {
   const embedUrl = doc.fileKey
     ? `/api/file-proxy/${doc.fileKey.split("/").map(encodeURIComponent).join("/")}`
     : fileUrl;
+  const needsReupload = !!(doc as any).editorialNote?.startsWith("FILE NEEDS RE-UPLOAD");
   const mimeType = doc.mimeType || "application/octet-stream";
   const canEmbed =
     /^image\//.test(mimeType) ||
@@ -1194,6 +1195,12 @@ function DocumentReview({ id }: { id: number }) {
                   </a>
                 )}
               </div>
+              {needsReupload && (
+                <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                  <span className="font-semibold">⚠ File needs re-upload.</span>
+                  The original file had spaces in its name which broke CloudFront signing. Delete this record and re-ingest the file through Docket Goblin.
+                </div>
+              )}
               <div className="h-[80vh]">
                 {!embedUrl ? (
                   <div className="grid h-full place-items-center p-8 text-center text-muted-foreground">

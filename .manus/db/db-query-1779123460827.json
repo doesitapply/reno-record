@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, title, file_key FROM documents WHERE file_key LIKE '% %' OR file_key LIKE '%[%' OR file_key LIKE '%]%' OR file_key LIKE '%(%' OR file_key LIKE '%)%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, title, file_key FROM documents WHERE file_key LIKE '% %' OR file_key LIKE '%[%' OR file_key LIKE '%]%' OR file_key LIKE '%(%' OR file_key LIKE '%)%';",
+  "rows": [
+    {
+      "id": "150001",
+      "title": "Legal Memorandum: Analysis of Exhibits in State v. Cameron Doyle Church",
+      "file_key": "evidence/ingest-180001-2023 all of it_Combined_with_Index_5cb625f8.pdf"
+    },
+    {
+      "id": "150002",
+      "title": "Legal Memorandum: Analysis of State of Nevada vs. Cameron Doyle Church (CR23-0657) Exhibits",
+      "file_key": "evidence/ingest-180002-2024 state all of _Combined_with_Index_daa1d1fb.pdf"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tfile_key\n150001\tLegal Memorandum: Analysis of Exhibits in State v. Cameron Doyle Church\tevidence/ingest-180001-2023 all of it_Combined_with_Index_5cb625f8.pdf\n150002\tLegal Memorandum: Analysis of State of Nevada vs. Cameron Doyle Church (CR23-0657) Exhibits\tevidence/ingest-180002-2024 state all of _Combined_with_Index_daa1d1fb.pdf\n",
+  "stderr": "",
+  "execution_time_ms": 2777
+}

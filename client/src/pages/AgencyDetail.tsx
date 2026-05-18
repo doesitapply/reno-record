@@ -3,6 +3,8 @@ import { trpc } from "@/lib/trpc";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Scale, Shield, Users, FileText, ExternalLink, ChevronLeft, User } from "lucide-react";
+import SiteShell from "@/components/SiteShell";
+import { useSEO } from "@/hooks/useSEO";
 
 const AGENCY_TYPE_LABELS: Record<string, string> = {
   court: "Court",
@@ -26,8 +28,11 @@ export default function AgencyDetail() {
     { enabled: !!slug },
   );
 
+  useSEO({ title: data ? `${data.agency.name} — The Reno Record` : "Agency — The Reno Record" });
+
   if (isLoading) {
     return (
+      <SiteShell>
       <div className="container py-16">
         <div className="space-y-4 max-w-4xl mx-auto">
           <div className="h-8 w-64 bg-muted animate-pulse rounded" />
@@ -39,11 +44,13 @@ export default function AgencyDetail() {
           </div>
         </div>
       </div>
+      </SiteShell>
     );
   }
 
   if (error || !data) {
     return (
+      <SiteShell>
       <div className="container py-16 text-center">
         <Building2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-30" />
         <h2 className="text-xl font-semibold">Agency not found</h2>
@@ -52,6 +59,7 @@ export default function AgencyDetail() {
           ← Back to Agency Directory
         </Link>
       </div>
+      </SiteShell>
     );
   }
 
@@ -60,6 +68,7 @@ export default function AgencyDetail() {
   const formerActors = actors.filter((a) => !a.isCurrent);
 
   return (
+    <SiteShell>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b bg-card">
@@ -205,5 +214,6 @@ export default function AgencyDetail() {
         </div>
       </div>
     </div>
+    </SiteShell>
   );
 }
