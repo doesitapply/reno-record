@@ -1,0 +1,67 @@
+{
+  "query": "\nSELECT COUNT(*) as timeline_count FROM timeline_events;\nSELECT COUNT(*) as actor_count FROM actors;\nSELECT COUNT(*) as prr_count FROM public_records_requests;\nSELECT case_number, court, judge, prosecutor FROM stories WHERE id = 60001;\nSELECT event_date, title, category FROM timeline_events ORDER BY event_date ASC LIMIT 5;\nSELECT event_date, title, category FROM timeline_events ORDER BY event_date DESC LIMIT 5;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT COUNT(*) as timeline_count FROM timeline_events;\nSELECT COUNT(*) as actor_count FROM actors;\nSELECT COUNT(*) as prr_count FROM public_records_requests;\nSELECT case_number, court, judge, prosecutor FROM stories WHERE id = 60001;\nSELECT event_date, title, category FROM timeline_events ORDER BY event_date ASC LIMIT 5;\nSELECT event_date, title, category FROM timeline_events ORDER BY event_date DESC LIMIT 5;\n",
+  "rows": [
+    {
+      "timeline_count": "48"
+    },
+    {
+      "timeline_count": "actor_count"
+    },
+    {
+      "timeline_count": "17"
+    },
+    {
+      "timeline_count": "prr_count"
+    },
+    {
+      "timeline_count": "14"
+    },
+    {
+      "timeline_count": "case_number\tcourt\tjudge\tprosecutor"
+    },
+    {
+      "timeline_count": "CR23-0657\tSecond Judicial District Court, Washoe County, Nevada — Department 8\tBarry L. Breslow\tAziz Merchant, Deputy District Attorney (Washoe County DA)"
+    },
+    {
+      "timeline_count": "event_date\ttitle\tcategory"
+    },
+    {
+      "timeline_count": "2023-03-12 00:00:00\tDeclaration of probable cause and arrest\tstate_case"
+    },
+    {
+      "timeline_count": "2023-03-17 00:00:00\tEarly case assignment request filed\tstate_case"
+    },
+    {
+      "timeline_count": "2023-03-20 00:00:00\tOriginal criminal complaint filed (Reno Justice Court)\tstate_case"
+    },
+    {
+      "timeline_count": "2023-08-18 00:00:00\tAmended complaint, preliminary-hearing waiver, and bindover\tstate_case"
+    },
+    {
+      "timeline_count": "2023-09-01 00:00:00\tPretrial services court note — release condition issues\tstate_case"
+    },
+    {
+      "timeline_count": "event_date\ttitle\tcategory"
+    },
+    {
+      "timeline_count": "2025-11-26 00:00:00\tMotion to dismiss for structural constitutional violations; warrants quashed; written findings demanded\tmotion"
+    },
+    {
+      "timeline_count": "2025-10-23 00:00:00\tRenewed motion for criminal referral of DDA Aziz Merchant\tmotion"
+    },
+    {
+      "timeline_count": "2025-10-02 00:00:00\tDefendant files notice of constitutional violations — 900+ days of delay alleged\tmotion"
+    },
+    {
+      "timeline_count": "2025-09-26 00:00:00\tState files notice of bail-condition violation\tstate_case"
+    },
+    {
+      "timeline_count": "2025-08-21 00:00:00\tFigueroa withdrawal granted; no-bail warrant issued; Faretta conditioned on arrest\twarrant"
+    }
+  ],
+  "messages": [],
+  "stdout": "timeline_count\n48\nactor_count\n17\nprr_count\n14\ncase_number\tcourt\tjudge\tprosecutor\nCR23-0657\tSecond Judicial District Court, Washoe County, Nevada — Department 8\tBarry L. Breslow\tAziz Merchant, Deputy District Attorney (Washoe County DA)\nevent_date\ttitle\tcategory\n2023-03-12 00:00:00\tDeclaration of probable cause and arrest\tstate_case\n2023-03-17 00:00:00\tEarly case assignment request filed\tstate_case\n2023-03-20 00:00:00\tOriginal criminal complaint filed (Reno Justice Court)\tstate_case\n2023-08-18 00:00:00\tAmended complaint, preliminary-hearing waiver, and bindover\tstate_case\n2023-09-01 00:00:00\tPretrial services court note — release condition issues\tstate_case\nevent_date\ttitle\tcategory\n2025-11-26 00:00:00\tMotion to dismiss for structural constitutional violations; warrants quashed; written findings demanded\tmotion\n2025-10-23 00:00:00\tRenewed motion for criminal referral of DDA Aziz Merchant\tmotion\n2025-10-02 00:00:00\tDefendant files notice of constitutional violations — 900+ days of delay alleged\tmotion\n2025-09-26 00:00:00\tState files notice of bail-condition violation\tstate_case\n2025-08-21 00:00:00\tFigueroa withdrawal granted; no-bail warrant issued; Faretta conditioned on arrest\twarrant\n",
+  "stderr": "",
+  "execution_time_ms": 834
+}

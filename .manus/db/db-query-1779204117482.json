@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, case_number, court, judge, prosecutor, charges FROM stories LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, case_number, court, judge, prosecutor, charges FROM stories LIMIT 5;",
+  "rows": [
+    {
+      "id": "60001",
+      "case_number": "CR21-XXXX",
+      "court": "Second Judicial District Court, Washoe County",
+      "judge": "—",
+      "prosecutor": "Washoe County District Attorney",
+      "charges": "Multiple felony counts (originally charged); see public docket."
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcase_number\tcourt\tjudge\tprosecutor\tcharges\n60001\tCR21-XXXX\tSecond Judicial District Court, Washoe County\t—\tWashoe County District Attorney\tMultiple felony counts (originally charged); see public docket.\n",
+  "stderr": "",
+  "execution_time_ms": 568
+}

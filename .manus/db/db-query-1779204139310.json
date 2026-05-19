@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, name, role, agency FROM actors ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, name, role, agency FROM actors ORDER BY id;",
+  "rows": [
+    {
+      "id": "60001",
+      "name": "Second Judicial District Court of Nevada",
+      "role": "State trial court (Washoe County)",
+      "agency": "Washoe County"
+    },
+    {
+      "id": "60002",
+      "name": "Washoe County District Attorney's Office",
+      "role": "County prosecutor (elected office)",
+      "agency": "Washoe County"
+    },
+    {
+      "id": "60003",
+      "name": "Washoe County Public Defender's Office",
+      "role": "Indigent defense agency",
+      "agency": "Washoe County"
+    },
+    {
+      "id": "60004",
+      "name": "Washoe County Sheriff's Office",
+      "role": "Sheriff (elected office) — operates Washoe County Detention Facility",
+      "agency": "Washoe County"
+    },
+    {
+      "id": "60005",
+      "name": "Nevada Attorney General",
+      "role": "State attorney general (elected statewide office)",
+      "agency": "State of Nevada"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\tagency\n60001\tSecond Judicial District Court of Nevada\tState trial court (Washoe County)\tWashoe County\n60002\tWashoe County District Attorney's Office\tCounty prosecutor (elected office)\tWashoe County\n60003\tWashoe County Public Defender's Office\tIndigent defense agency\tWashoe County\n60004\tWashoe County Sheriff's Office\tSheriff (elected office) — operates Washoe County Detention Facility\tWashoe County\n60005\tNevada Attorney General\tState attorney general (elected statewide office)\tState of Nevada\n",
+  "stderr": "",
+  "execution_time_ms": 576
+}

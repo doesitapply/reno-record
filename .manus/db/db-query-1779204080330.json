@@ -1,0 +1,113 @@
+{
+  "query": "SHOW COLUMNS FROM actors; SELECT id, name, role FROM actors LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SHOW COLUMNS FROM actors; SELECT id, name, role FROM actors LIMIT 20;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "slug",
+      "Type": "varchar(160)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(200)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "role",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "agency",
+      "Type": "varchar(240)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "bio",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "notes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "enum('documented','alleged','needs_review')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "documented",
+      "Extra": ""
+    },
+    {
+      "Field": "public_status",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updated_at",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "judicial_actor",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    }
+  ],
+  "messages": [
+    "id\tname\trole",
+    "60001\tSecond Judicial District Court of Nevada\tState trial court (Washoe County)",
+    "60002\tWashoe County District Attorney's Office\tCounty prosecutor (elected office)",
+    "60003\tWashoe County Public Defender's Office\tIndigent defense agency",
+    "60004\tWashoe County Sheriff's Office\tSheriff (elected office) — operates Washoe County Detention Facility",
+    "60005\tNevada Attorney General\tState attorney general (elected statewide office)"
+  ],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nslug\tvarchar(160)\tNO\tUNI\tNULL\t\nname\tvarchar(200)\tNO\t\tNULL\t\nrole\tvarchar(200)\tYES\t\tNULL\t\nagency\tvarchar(240)\tYES\t\tNULL\t\nbio\ttext\tYES\t\tNULL\t\nnotes\ttext\tYES\t\tNULL\t\nstatus\tenum('documented','alleged','needs_review')\tNO\t\tdocumented\t\npublic_status\ttinyint(1)\tNO\t\t1\t\ncreated_at\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdated_at\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\njudicial_actor\ttinyint(1)\tNO\t\t0\t\nid\tname\trole\n60001\tSecond Judicial District Court of Nevada\tState trial court (Washoe County)\n60002\tWashoe County District Attorney's Office\tCounty prosecutor (elected office)\n60003\tWashoe County Public Defender's Office\tIndigent defense agency\n60004\tWashoe County Sheriff's Office\tSheriff (elected office) — operates Washoe County Detention Facility\n60005\tNevada Attorney General\tState attorney general (elected statewide office)\n",
+  "stderr": "",
+  "execution_time_ms": 634
+}

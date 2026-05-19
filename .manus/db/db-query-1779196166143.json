@@ -1,0 +1,91 @@
+{
+  "query": "SELECT id, event_date, title, summary, category, public_status, status FROM timeline_events ORDER BY event_date ASC LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, event_date, title, summary, category, public_status, status FROM timeline_events ORDER BY event_date ASC LIMIT 30;",
+  "rows": [
+    {
+      "id": "90002",
+      "event_date": "2021-09-14 20:00:00",
+      "title": "Defendant invokes speedy-trial right on record",
+      "summary": "SEED: First on-record demand for trial within statutory time; oral and written assertions documented.",
+      "category": "motion",
+      "public_status": "1",
+      "status": "confirmed"
+    },
+    {
+      "id": "90003",
+      "event_date": "2021-11-01 20:00:00",
+      "title": "Counsel waives time over recorded objection",
+      "summary": "SEED: Continuance entered; defendant's contemporaneous written objection filed and noted in subsequent filings.",
+      "category": "motion",
+      "public_status": "1",
+      "status": "confirmed"
+    },
+    {
+      "id": "90004",
+      "event_date": "2022-02-09 19:00:00",
+      "title": "Pro se motion to dismiss for speedy-trial violation filed",
+      "summary": "SEED: Pro se motion filed while counsel remained of record. Motion's disposition is among the records being publicly tracked.",
+      "category": "motion",
+      "public_status": "1",
+      "status": "alleged"
+    },
+    {
+      "id": "90005",
+      "event_date": "2022-04-21 20:00:00",
+      "title": "Defendant requests self-representation (Faretta)",
+      "summary": "SEED: On-record request to represent himself. Documentation of any subsequent canvass is being sought via public records.",
+      "category": "motion",
+      "public_status": "1",
+      "status": "confirmed"
+    },
+    {
+      "id": "90006",
+      "event_date": "2022-06-04 20:00:00",
+      "title": "Competency raised by counsel after rights assertions",
+      "summary": "SEED: Competency proceedings initiated following speedy-trial and self-representation requests. Temporal proximity documented.",
+      "category": "competency",
+      "public_status": "1",
+      "status": "alleged"
+    },
+    {
+      "id": "90007",
+      "event_date": "2022-09-18 20:00:00",
+      "title": "Pretrial detention exceeds one year without trial",
+      "summary": "SEED: Custody count surpasses 365 days; no trial date set or held.",
+      "category": "custody",
+      "public_status": "1",
+      "status": "confirmed"
+    },
+    {
+      "id": "90008",
+      "event_date": "2023-01-29 19:00:00",
+      "title": "Public records request filed with court administration",
+      "summary": "SEED: PRR seeking docket time-to-trial and pro se filing acceptance practices in Dept. ___ for the prior 24 months.",
+      "category": "public_records",
+      "public_status": "1",
+      "status": "confirmed"
+    },
+    {
+      "id": "90009",
+      "event_date": "2024-05-03 20:00:00",
+      "title": "Family-harm documentation collected",
+      "summary": "SEED: Caregiver-impact and dependent-care documentation collected during ongoing pretrial detention.",
+      "category": "communications",
+      "public_status": "1",
+      "status": "confirmed"
+    },
+    {
+      "id": "120001",
+      "event_date": "2024-12-24 00:00:00",
+      "title": "Defendant Files Motions to Dismiss, Disqualify, and Quash",
+      "summary": "On December 24, 2024, Cameron Doyle Church filed multiple motions, including a motion to dismiss, a motion to disqualify the presiding judge for 'criminal misconduct' and 'judicial incompetence,' and a motion to quash.",
+      "category": "motion",
+      "public_status": "1",
+      "status": "confirmed"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tevent_date\ttitle\tsummary\tcategory\tpublic_status\tstatus\n90002\t2021-09-14 20:00:00\tDefendant invokes speedy-trial right on record\tSEED: First on-record demand for trial within statutory time; oral and written assertions documented.\tmotion\t1\tconfirmed\n90003\t2021-11-01 20:00:00\tCounsel waives time over recorded objection\tSEED: Continuance entered; defendant's contemporaneous written objection filed and noted in subsequent filings.\tmotion\t1\tconfirmed\n90004\t2022-02-09 19:00:00\tPro se motion to dismiss for speedy-trial violation filed\tSEED: Pro se motion filed while counsel remained of record. Motion's disposition is among the records being publicly tracked.\tmotion\t1\talleged\n90005\t2022-04-21 20:00:00\tDefendant requests self-representation (Faretta)\tSEED: On-record request to represent himself. Documentation of any subsequent canvass is being sought via public records.\tmotion\t1\tconfirmed\n90006\t2022-06-04 20:00:00\tCompetency raised by counsel after rights assertions\tSEED: Competency proceedings initiated following speedy-trial and self-representation requests. Temporal proximity documented.\tcompetency\t1\talleged\n90007\t2022-09-18 20:00:00\tPretrial detention exceeds one year without trial\tSEED: Custody count surpasses 365 days; no trial date set or held.\tcustody\t1\tconfirmed\n90008\t2023-01-29 19:00:00\tPublic records request filed with court administration\tSEED: PRR seeking docket time-to-trial and pro se filing acceptance practices in Dept. ___ for the prior 24 months.\tpublic_records\t1\tconfirmed\n90009\t2024-05-03 20:00:00\tFamily-harm documentation collected\tSEED: Caregiver-impact and dependent-care documentation collected during ongoing pretrial detention.\tcommunications\t1\tconfirmed\n120001\t2024-12-24 00:00:00\tDefendant Files Motions to Dismiss, Disqualify, and Quash\tOn December 24, 2024, Cameron Doyle Church filed multiple motions, including a motion to dismiss, a motion to disqualify the presiding judge for 'criminal misconduct' and 'judicial incompetence,' and a motion to quash.\tmotion\t1\tconfirmed\n",
+  "stderr": "",
+  "execution_time_ms": 607
+}

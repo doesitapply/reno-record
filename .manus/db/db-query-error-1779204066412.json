@@ -1,0 +1,21 @@
+{
+  "query": "SHOW COLUMNS FROM actors; SELECT id, name, role, agency_name FROM actors LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SHOW COLUMNS FROM actors; SELECT id, name, role, agency_name FROM actors LIMIT 20;",
+  "returncode": 1,
+  "logs": [
+    "Field\tType\tNull\tKey\tDefault\tExtra",
+    "id\tint\tNO\tPRI\tNULL\tauto_increment",
+    "slug\tvarchar(160)\tNO\tUNI\tNULL\t",
+    "name\tvarchar(200)\tNO\t\tNULL\t",
+    "role\tvarchar(200)\tYES\t\tNULL\t",
+    "agency\tvarchar(240)\tYES\t\tNULL\t",
+    "bio\ttext\tYES\t\tNULL\t",
+    "notes\ttext\tYES\t\tNULL\t",
+    "status\tenum('documented','alleged','needs_review')\tNO\t\tdocumented\t",
+    "public_status\ttinyint(1)\tNO\t\t1\t",
+    "created_at\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t",
+    "updated_at\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP",
+    "judicial_actor\ttinyint(1)\tNO\t\t0",
+    "ERROR 1054 (42S22) at line 1: Unknown column 'agency_name' in 'field list'"
+  ]
+}

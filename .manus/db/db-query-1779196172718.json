@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN public_status = 1 THEN 1 ELSE 0 END) as public_count, SUM(CASE WHEN public_status = 0 THEN 1 ELSE 0 END) as private_count FROM timeline_events;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT COUNT(*) as total, SUM(CASE WHEN public_status = 1 THEN 1 ELSE 0 END) as public_count, SUM(CASE WHEN public_status = 0 THEN 1 ELSE 0 END) as private_count FROM timeline_events;",
+  "rows": [
+    {
+      "total": "9",
+      "public_count": "9",
+      "private_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tpublic_count\tprivate_count\n9\t9\t0\n",
+  "stderr": "",
+  "execution_time_ms": 609
+}
