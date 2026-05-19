@@ -73,32 +73,32 @@
   --amber-soft: oklch(0.93 0.08 80);
   --rust: oklch(0.52 0.16 28);
 
-  /* Dark Reno exclusive tokens */
-  --neon-gold: oklch(0.82 0.19 72);         /* hot neon gold — casino sign */
-  --felt: oklch(0.22 0.06 155);             /* casino felt green */
-  --casino-bg: oklch(0.09 0.025 260);       /* near-black with blue tint */
-  --casino-card: oklch(0.13 0.03 260);      /* card surface */
-  --casino-border: oklch(0.28 0.06 70);     /* amber border glow */
+  /* Dark Reno exclusive tokens — softened for readability */
+  --neon-gold: oklch(0.76 0.14 72);         /* warm gold, less neon-harsh */
+  --felt: oklch(0.26 0.055 155);            /* muted felt green */
+  --casino-bg: oklch(0.14 0.018 255);       /* dark slate — not pure black */
+  --casino-card: oklch(0.18 0.022 255);     /* card surface — readable lift */
+  --casino-border: oklch(0.32 0.05 70);     /* soft amber border */
 
   /* Dark Reno semantic tokens (DEFAULT — dark is the default experience) */
   --background: var(--casino-bg);
-  --foreground: oklch(0.93 0.015 80);       /* warm off-white, readable */
+  --foreground: oklch(0.88 0.012 80);       /* warm off-white, softer */
   --card: var(--casino-card);
-  --card-foreground: oklch(0.93 0.015 80);
-  --popover: oklch(0.15 0.035 260);
-  --popover-foreground: oklch(0.93 0.015 80);
+  --card-foreground: oklch(0.88 0.012 80);
+  --popover: oklch(0.20 0.025 255);
+  --popover-foreground: oklch(0.88 0.012 80);
   --primary: var(--neon-gold);
-  --primary-foreground: oklch(0.1 0.02 260);
-  --secondary: oklch(0.18 0.04 260);
-  --secondary-foreground: oklch(0.85 0.015 80);
-  --muted: oklch(0.18 0.04 260);
-  --muted-foreground: oklch(0.58 0.03 80);
-  --accent: oklch(0.22 0.06 155);           /* felt green accent */
-  --accent-foreground: oklch(0.93 0.015 80);
+  --primary-foreground: oklch(0.12 0.02 260);
+  --secondary: oklch(0.22 0.03 255);
+  --secondary-foreground: oklch(0.80 0.012 80);
+  --muted: oklch(0.22 0.03 255);
+  --muted-foreground: oklch(0.60 0.025 80);
+  --accent: oklch(0.26 0.055 155);          /* muted felt green */
+  --accent-foreground: oklch(0.88 0.012 80);
   --destructive: var(--rust);
   --destructive-foreground: var(--bone);
-  --border: oklch(0.25 0.05 70);            /* amber-tinted border */
-  --input: oklch(0.17 0.035 260);
+  --border: oklch(0.28 0.04 70);            /* soft amber border */
+  --input: oklch(0.21 0.025 255);
   --ring: var(--neon-gold);
 
   --chart-1: var(--neon-gold);
@@ -160,23 +160,23 @@
 /* Keep .dark as alias for backward compat with any existing dark class usage */
 .dark {
   --background: var(--casino-bg);
-  --foreground: oklch(0.93 0.015 80);
+  --foreground: oklch(0.88 0.012 80);
   --card: var(--casino-card);
-  --card-foreground: oklch(0.93 0.015 80);
-  --popover: oklch(0.15 0.035 260);
-  --popover-foreground: oklch(0.93 0.015 80);
+  --card-foreground: oklch(0.88 0.012 80);
+  --popover: oklch(0.20 0.025 255);
+  --popover-foreground: oklch(0.88 0.012 80);
   --primary: var(--neon-gold);
-  --primary-foreground: oklch(0.1 0.02 260);
-  --secondary: oklch(0.18 0.04 260);
-  --secondary-foreground: oklch(0.85 0.015 80);
-  --muted: oklch(0.18 0.04 260);
-  --muted-foreground: oklch(0.58 0.03 80);
-  --accent: oklch(0.22 0.06 155);
-  --accent-foreground: oklch(0.93 0.015 80);
+  --primary-foreground: oklch(0.12 0.02 260);
+  --secondary: oklch(0.22 0.03 255);
+  --secondary-foreground: oklch(0.80 0.012 80);
+  --muted: oklch(0.22 0.03 255);
+  --muted-foreground: oklch(0.60 0.025 80);
+  --accent: oklch(0.26 0.055 155);
+  --accent-foreground: oklch(0.88 0.012 80);
   --destructive: var(--rust);
   --destructive-foreground: var(--bone);
-  --border: oklch(0.25 0.05 70);
-  --input: oklch(0.17 0.035 260);
+  --border: oklch(0.28 0.04 70);
+  --input: oklch(0.21 0.025 255);
   --ring: var(--neon-gold);
   --sidebar: oklch(0.10 0.03 260);
   --sidebar-foreground: oklch(0.85 0.015 80);

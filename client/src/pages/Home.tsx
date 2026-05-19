@@ -121,25 +121,26 @@ export default function Home() {
 
             {/* Headline */}
             <h1 className="display-serif text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.05] tracking-tight text-foreground mb-6">
-              They followed every rule.
+              Washoe County's finest legal minds
               <br />
               <span
                 className="text-primary"
-                style={{ textShadow: "0 0 40px var(--neon-gold)" }}
+                style={{ textShadow: "0 0 30px oklch(0.76 0.14 72 / 0.5)" }}
               >
-                The system didn't.
+                at work. Bless their hearts.
               </span>
             </h1>
 
             {/* Sub */}
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mb-4">
-              The Reno Record is a public accountability archive documenting constitutional violations,
-              procedural failures, and institutional misconduct in Washoe County courts and agencies.
-              Every claim is source-cited. Every document is filed.
+              A public archive documenting what happens when highly credentialed legal professionals
+              — judges, prosecutors, public defenders — apply their considerable expertise to
+              a single case for 900+ days and somehow still can't manage a trial.
             </p>
 
             <p className="text-sm text-muted-foreground/70 mb-10 max-w-xl">
-              This is not a complaint. This is a record.
+              Every entry is source-cited. Every document is filed. The professionals may dispute the
+              characterization. The records do not dispute themselves.
             </p>
 
             {/* CTAs */}
@@ -219,13 +220,13 @@ export default function Home() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-primary mb-1">
-                  Case No. CR22-2227 · Washoe County District Court
+                  Case No. CR23-0657 · Second Judicial District Court, Dept. 8
                 </div>
                 <h3 className="display-serif text-xl sm:text-2xl font-bold text-foreground">
                   State of Nevada v. Cameron Church
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Pro se defendant. Documented violations spanning 2022–present.
+                  March 2023 – present. Still pending. No trial. Very sophisticated.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -242,7 +243,7 @@ export default function Home() {
           {/* Violation summary */}
           <div className="px-6 py-6 border-b border-border/60">
             <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-4">
-              Documented Constitutional Violations
+              Documented Constitutional Violations (a partial list, because apparently there's more)
             </div>
             <div className="flex flex-wrap gap-2">
               <ViolationBadge label="Faretta Violation" cite="Faretta v. California, 422 U.S. 806" />
@@ -257,9 +258,9 @@ export default function Home() {
           {/* Key facts */}
           <div className="px-6 py-6 grid sm:grid-cols-3 gap-4 border-b border-border/60">
             {[
-              { icon: Clock, label: "≈ 110 days", sub: "Pretrial custody without trial" },
-              { icon: Scale, label: "1,000+ days", sub: "Case pending without resolution" },
-              { icon: AlertTriangle, label: "0 trials", sub: "Despite timely demand" },
+              { icon: Clock, label: "≈ 110 days", sub: "Pretrial custody. No conviction required." },
+              { icon: Scale, label: "900+ days", sub: "Case pending. Experts working on it." },
+              { icon: AlertTriangle, label: "0 trials", sub: "Despite timely demand. Scheduling is hard." },
             ].map(({ icon: Icon, label, sub }) => (
               <div key={label} className="flex items-start gap-3">
                 <div className="mt-0.5 p-1.5 rounded-sm bg-primary/10 text-primary shrink-0">
@@ -277,7 +278,7 @@ export default function Home() {
           <div className="px-6 py-5 flex flex-wrap items-center justify-between gap-4 bg-card">
             <p className="text-sm text-muted-foreground max-w-md">
               Every violation listed above has a corresponding court filing, transcript, or public record.
-              The documentation is the argument.
+              The professionals involved have law degrees. The documents have dates.
             </p>
             <Link href="/the-church-record">
               <button
@@ -305,19 +306,20 @@ export default function Home() {
                 The Mission
               </div>
               <h2 className="display-serif text-2xl sm:text-3xl font-bold text-foreground mb-5">
-                Accountability through documentation.
+                Turns out, writing things down
                 <br />
-                <span className="text-muted-foreground">Not opinion. Not allegation. Evidence.</span>
+                <span className="text-muted-foreground">makes them harder to pretend didn't happen.</span>
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                The Reno Record is a civic infrastructure tool built on a simple premise: constitutional
-                violations are easier to ignore when they are not written down. When they are written down,
-                cross-referenced, and publicly accessible, the calculus changes.
+                The Reno Record operates on a radical premise: if a judge signs an order, a prosecutor
+                files a motion, or a clerk stamps a document, it happened. We just put it somewhere
+                people can read it. Apparently that's controversial.
               </p>
               <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                Every document in this archive has a source. Every violation tag requires a quote from
-                that source. No naked AI summaries. No unverified claims. The standard is simple:
-                if you can't cite it, you can't post it.
+                Every document has a source. Every violation tag requires a direct quote from that
+                source. No AI hallucinations, no anonymous tips, no vibes-based accusations.
+                The standard is: if you can't cite it, you can't post it. Unlike some court orders
+                we could name, these rules apply consistently.
               </p>
               <Link href="/submit">
                 <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-sm border border-primary/40 text-primary hover:bg-primary/10 transition-colors">
@@ -331,22 +333,22 @@ export default function Home() {
                 {
                   icon: FileText,
                   title: "Source-cited evidence",
-                  desc: "Every document has a storage key, upload date, and source quote. Violation tags require a citation.",
+                  desc: "Every document has a source, upload date, and direct quote. If it's in the record, it's citable. If it's not citable, it's not in the record.",
                 },
                 {
                   icon: Users,
-                  title: "Actor accountability",
-                  desc: "Named actors are linked to agencies, roles, and the specific documents that name them.",
+                  title: "Named actors",
+                  desc: "Judges, prosecutors, public defenders — linked by name to the specific filings, orders, and hearings where they appear. No anonymous 'the court' hand-waving.",
                 },
                 {
                   icon: TrendingUp,
                   title: "Pattern detection",
-                  desc: "Individual violations are tagged and aggregated into systemic patterns across cases and actors.",
+                  desc: "One continuance is scheduling. Five continuances across three counsel substitutions and a competency detour is a pattern. We track the difference.",
                 },
                 {
                   icon: AlertTriangle,
                   title: "Docket Goblin AI",
-                  desc: "AI-assisted document classification. Every AI suggestion is reviewed by a human before publication.",
+                  desc: "AI-assisted document classification, reviewed by a human before anything goes live. More oversight than some of the proceedings documented here.",
                 },
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="flex items-start gap-4 p-4 rounded-sm border border-border bg-background hover:border-primary/30 transition-colors">
@@ -451,12 +453,13 @@ export default function Home() {
             Contribute
           </div>
           <h2 className="display-serif text-2xl sm:text-3xl font-bold text-foreground mb-4">
-            Have a document that belongs in this record?
+            Got paperwork? So do we.
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-            Court filings, public records responses, correspondence with agencies, transcripts —
-            if it documents a pattern, it belongs here. Submissions require an account and are
-            reviewed before publication.
+            Court filings, public records responses, transcripts, minute entries, correspondence
+            with agencies — if it's stamped, signed, or docketed and it documents a pattern,
+            it belongs here. Submissions are reviewed before publication. Unlike certain orders
+            we've archived, the review process is actually completed.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <Link href="/submit">

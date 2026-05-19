@@ -1,0 +1,13 @@
+{
+  "query": "\nUPDATE timeline_events SET case_number = 'CR23-0657' WHERE case_number = 'CR22-2227';\nUPDATE stories SET case_number = 'CR23-0657' WHERE case_number = 'CR22-2227';\nUPDATE documents SET case_number = 'CR23-0657' WHERE case_number = 'CR22-2227';\nSELECT COUNT(*) as remaining_bad_refs FROM timeline_events WHERE case_number = 'CR22-2227';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nUPDATE timeline_events SET case_number = 'CR23-0657' WHERE case_number = 'CR22-2227';\nUPDATE stories SET case_number = 'CR23-0657' WHERE case_number = 'CR22-2227';\nUPDATE documents SET case_number = 'CR23-0657' WHERE case_number = 'CR22-2227';\nSELECT COUNT(*) as remaining_bad_refs FROM timeline_events WHERE case_number = 'CR22-2227';\n",
+  "rows": [
+    {
+      "remaining_bad_refs": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "remaining_bad_refs\n0\n",
+  "stderr": "",
+  "execution_time_ms": 3602
+}

@@ -225,7 +225,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
       {/* Utility bar */}
       <div className="border-b border-border/60 bg-card">
         <div className="container flex items-center justify-between py-1 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-          <span>Public Misconduct Exposure Archive · Washoe County, NV</span>
+          <span>Washoe County’s Finest · Documented For Posterity</span>
           <span className="hidden sm:inline">Patterns · Actors · Evidence</span>
         </div>
       </div>
