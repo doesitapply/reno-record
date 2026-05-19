@@ -1,0 +1,25 @@
+{
+  "query": "SELECT COUNT(*) as stories FROM stories; SELECT COUNT(*) as timeline_events FROM timeline_events; SELECT COUNT(*) as public_records_requests FROM public_records_requests;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT COUNT(*) as stories FROM stories; SELECT COUNT(*) as timeline_events FROM timeline_events; SELECT COUNT(*) as public_records_requests FROM public_records_requests;",
+  "rows": [
+    {
+      "stories": "0"
+    },
+    {
+      "stories": "timeline_events"
+    },
+    {
+      "stories": "0"
+    },
+    {
+      "stories": "public_records_requests"
+    },
+    {
+      "stories": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "stories\n0\ntimeline_events\n0\npublic_records_requests\n0\n",
+  "stderr": "",
+  "execution_time_ms": 691
+}

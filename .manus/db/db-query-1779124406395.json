@@ -1,0 +1,24 @@
+{
+  "query": "SELECT id, title, review_status, public_status, file_key FROM documents ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, title, review_status, public_status, file_key FROM documents ORDER BY id;",
+  "rows": [
+    {
+      "id": "150001",
+      "title": "Legal Memorandum: Analysis of Exhibits in State v. Cameron Doyle Church",
+      "review_status": "pending",
+      "public_status": "0",
+      "file_key": "evidence/ingest-180001-2023_all_of_it_Combined_with_Index_5cb625f8.pdf"
+    },
+    {
+      "id": "150002",
+      "title": "Legal Memorandum: Analysis of State of Nevada vs. Cameron Doyle Church (CR23-0657) Exhibits",
+      "review_status": "pending",
+      "public_status": "0",
+      "file_key": "evidence/ingest-180002-2024_state_all_of_Combined_with_Index_daa1d1fb.pdf"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\treview_status\tpublic_status\tfile_key\n150001\tLegal Memorandum: Analysis of Exhibits in State v. Cameron Doyle Church\tpending\t0\tevidence/ingest-180001-2023_all_of_it_Combined_with_Index_5cb625f8.pdf\n150002\tLegal Memorandum: Analysis of State of Nevada vs. Cameron Doyle Church (CR23-0657) Exhibits\tpending\t0\tevidence/ingest-180002-2024_state_all_of_Combined_with_Index_daa1d1fb.pdf\n",
+  "stderr": "",
+  "execution_time_ms": 594
+}

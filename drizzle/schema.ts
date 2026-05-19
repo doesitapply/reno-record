@@ -22,6 +22,18 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  // v5.0 Stripe + subscription fields
+  stripeCustomerId: varchar("stripe_customer_id", { length: 120 }),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 120 }),
+  subscriptionTier: mysqlEnum("subscription_tier", [
+    "free", "receipts", "goblin_pro", "founding", "founders_circle",
+  ]).default("free").notNull(),
+  subscriptionStatus: mysqlEnum("subscription_status", [
+    "active", "trialing", "past_due", "cancelled", "none",
+  ]).default("none").notNull(),
+  goblinCredits: int("goblin_credits").default(0).notNull(),
+  goblinUsedThisMonth: int("goblin_used_this_month").default(0).notNull(),
+  goblinFreeUsed: int("goblin_free_used").default(0).notNull(),
 });
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -609,3 +621,111 @@ export const actorTimelineLinks = mysqlTable(
 );
 export type ActorTimelineLink = typeof actorTimelineLinks.$inferSelect;
 export type InsertActorTimelineLink = typeof actorTimelineLinks.$inferInsert;
+
+/* ========== v5.0 — Stripe Subscription Columns on Users ========== */
+// NOTE: These are added via ALTER TABLE migration, not a new table.
+// The users table above is the source of truth; these columns are added below
+// and referenced here for type inference only.
+export const userSubscriptionExtension = {
+  stripeCustomerId: varchar("stripe_customer_id", { length: 120 }),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 120 }),
+  subscriptionTier: mysqlEnum("subscription_tier", [
+    "free", "receipts", "goblin_pro", "founding", "founders_circle",
+  ]).default("free").notNull(),
+  subscriptionStatus: mysqlEnum("subscription_status", [
+    "active", "trialing", "past_due", "cancelled", "none",
+  ]).default("none").notNull(),
+  goblinCredits: int("goblin_credits").default(0).notNull(),
+  goblinUsedThisMonth: int("goblin_used_this_month").default(0).notNull(),
+  goblinFreeUsed: int("goblin_free_used").default(0).notNull(),
+};
+
+/* ========== v5.0 — Contributor XP ========== */
+export const contributorXp = mysqlTable(
+  "contributor_xp",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("user_id").notNull(),
+    action: mysqlEnum("action", [
+      "document_submitted",
+      "document_verified",
+      "violation_tag_confirmed",
+      "first_on_record",
+      "pattern_unlock",
+      "daily_return",
+      "actor_linked",
+      "agency_linked",
+    ]).notNull(),
+    points: int("points").notNull(),
+    documentId: int("document_id"),
+    actorId: int("actor_id"),
+    storyId: int("story_id"),
+    metadata: json("metadata"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    userIdx: index("cxp_user_idx").on(t.userId),
+    actionIdx: index("cxp_action_idx").on(t.action),
+    createdIdx: index("cxp_created_idx").on(t.createdAt),
+  }),
+);
+export type ContributorXp = typeof contributorXp.$inferSelect;
+export type InsertContributorXp = typeof contributorXp.$inferInsert;
+
+/* ========== v5.0 — Badge Definitions ========== */
+export const badgeDefinitions = mysqlTable("badge_definitions", {
+  id: int("id").autoincrement().primaryKey(),
+  slug: varchar("slug", { length: 120 }).notNull().unique(),
+  label: varchar("label", { length: 200 }).notNull(),
+  description: text("description"),
+  icon: varchar("icon", { length: 60 }),
+  category: mysqlEnum("category", [
+    "contributor", "investigator", "pioneer", "founder", "milestone",
+  ]).default("contributor").notNull(),
+  threshold: int("threshold").default(1).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export type BadgeDefinition = typeof badgeDefinitions.$inferSelect;
+export type InsertBadgeDefinition = typeof badgeDefinitions.$inferInsert;
+
+/* ========== v5.0 — Contributor Badges (earned) ========== */
+export const contributorBadges = mysqlTable(
+  "contributor_badges",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("user_id").notNull(),
+    badgeSlug: varchar("badge_slug", { length: 120 }).notNull(),
+    earnedAt: timestamp("earned_at").defaultNow().notNull(),
+    metadata: json("metadata"),
+  },
+  (t) => ({
+    userIdx: index("cb_user_idx").on(t.userId),
+    slugIdx: index("cb_slug_idx").on(t.badgeSlug),
+    uniqueBadge: index("cb_unique_idx").on(t.userId, t.badgeSlug),
+  }),
+);
+export type ContributorBadge = typeof contributorBadges.$inferSelect;
+export type InsertContributorBadge = typeof contributorBadges.$inferInsert;
+
+/* ========== v5.0 — Stripe Credit Ledger ========== */
+export const creditLedger = mysqlTable(
+  "credit_ledger",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("user_id").notNull(),
+    delta: int("delta").notNull(), // positive = credit, negative = debit
+    reason: mysqlEnum("reason", [
+      "subscription_monthly", "credit_pack_purchase", "goblin_ingest",
+      "goblin_chat", "admin_grant", "refund",
+    ]).notNull(),
+    stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 120 }),
+    metadata: json("metadata"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    userIdx: index("cl_user_idx").on(t.userId),
+    createdIdx: index("cl_created_idx").on(t.createdAt),
+  }),
+);
+export type CreditLedger = typeof creditLedger.$inferSelect;
+export type InsertCreditLedger = typeof creditLedger.$inferInsert;

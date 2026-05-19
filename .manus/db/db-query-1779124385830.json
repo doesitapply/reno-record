@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, name, slug, agency_type, public_status FROM agencies ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, name, slug, agency_type, public_status FROM agencies ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Second Judicial District Court",
+      "slug": "second-judicial-district-court",
+      "agency_type": "court",
+      "public_status": "1"
+    },
+    {
+      "id": "2",
+      "name": "Washoe County District Attorney's Office",
+      "slug": "washoe-county-da",
+      "agency_type": "prosecutor",
+      "public_status": "1"
+    },
+    {
+      "id": "3",
+      "name": "Washoe County Sheriff's Office",
+      "slug": "washoe-county-sheriffs-office",
+      "agency_type": "law_enforcement",
+      "public_status": "1"
+    },
+    {
+      "id": "4",
+      "name": "Reno Police Department",
+      "slug": "reno-police-department",
+      "agency_type": "law_enforcement",
+      "public_status": "1"
+    },
+    {
+      "id": "5",
+      "name": "Washoe County Public Defender",
+      "slug": "washoe-county-public-defender",
+      "agency_type": "public_defender",
+      "public_status": "1"
+    },
+    {
+      "id": "6",
+      "name": "Washoe County Alternate Public Defender",
+      "slug": "washoe-county-alternate-public-defender",
+      "agency_type": "public_defender",
+      "public_status": "1"
+    },
+    {
+      "id": "7",
+      "name": "Washoe County Risk Management",
+      "slug": "washoe-county-risk-management",
+      "agency_type": "government_department",
+      "public_status": "1"
+    },
+    {
+      "id": "8",
+      "name": "City of Reno",
+      "slug": "city-of-reno",
+      "agency_type": "municipality",
+      "public_status": "1"
+    },
+    {
+      "id": "9",
+      "name": "Nevada Attorney General",
+      "slug": "nevada-attorney-general",
+      "agency_type": "state_agency",
+      "public_status": "1"
+    },
+    {
+      "id": "10",
+      "name": "Nevada Commission on Judicial Discipline",
+      "slug": "nevada-commission-on-judicial-discipline",
+      "agency_type": "oversight_body",
+      "public_status": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslug\tagency_type\tpublic_status\n1\tSecond Judicial District Court\tsecond-judicial-district-court\tcourt\t1\n2\tWashoe County District Attorney's Office\twashoe-county-da\tprosecutor\t1\n3\tWashoe County Sheriff's Office\twashoe-county-sheriffs-office\tlaw_enforcement\t1\n4\tReno Police Department\treno-police-department\tlaw_enforcement\t1\n5\tWashoe County Public Defender\twashoe-county-public-defender\tpublic_defender\t1\n6\tWashoe County Alternate Public Defender\twashoe-county-alternate-public-defender\tpublic_defender\t1\n7\tWashoe County Risk Management\twashoe-county-risk-management\tgovernment_department\t1\n8\tCity of Reno\tcity-of-reno\tmunicipality\t1\n9\tNevada Attorney General\tnevada-attorney-general\tstate_agency\t1\n10\tNevada Commission on Judicial Discipline\tnevada-commission-on-judicial-discipline\toversight_body\t1\n",
+  "stderr": "",
+  "execution_time_ms": 580
+}

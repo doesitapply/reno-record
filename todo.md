@@ -218,3 +218,67 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [x] Confirmed: Patterns dashboard 0s are correct — stories table is empty, no public submissions yet
 - [x] Confirmed: agencyRouter console errors are stale (pre-restart), server is clean
 - [x] 73/73 tests passing, 0 TS errors
+
+## v5.0 — Autonomous Pipeline, Stripe, Dark Reno, Gamification
+
+### Phase 1: Seed
+- [ ] Run seed script against live DB (actors, timeline events, PRRs, Church Record story)
+
+### Phase 2: Schema v5.0
+- [ ] Schema: contributor_xp table (userId, action, points, documentId, actorId, createdAt)
+- [ ] Schema: contributor_badges table (userId, badgeSlug, earnedAt, metadata)
+- [ ] Schema: badge_definitions table (slug, label, description, icon, threshold)
+- [ ] Schema: users table — add stripe_customer_id, stripe_subscription_id, subscription_tier, subscription_status, goblin_credits columns
+- [ ] Migration generated and applied
+
+### Phase 3: Stripe
+- [ ] webdev_add_feature stripe
+- [ ] Tier definitions: free, receipts ($9/mo), goblin_pro ($29/mo), founding ($250 one-time), founders_circle ($500 one-time)
+- [ ] Credit packs: 100 credits $5, 500 credits $20, 2500 credits $75
+- [ ] Stripe checkout flow (subscribe, one-time purchase, credit pack)
+- [ ] Webhook handler: subscription created/updated/cancelled, payment succeeded
+- [ ] Gating middleware: isReceiptsActive(), isGoblinProActive(), hasGoblinCredits()
+- [ ] Pricing page
+- [ ] Account/billing page
+
+### Phase 4: Autonomous Goblin Pipeline
+- [ ] Verifiability scorer: checks for metadata (timestamps, sender/recipient, case number, agency letterhead, file properties)
+- [ ] Auto-publish logic: admin uploads auto-publish if score >= threshold; public submissions auto-publish after 24hr window if score >= threshold
+- [ ] Low-confidence / unverifiable docs queue for manual review
+- [ ] Interactive pre-flight for public submitters: conversational Goblin interview (redaction check, PII, provenance explanation)
+- [ ] Login gate on submission — must have account
+- [ ] Free tier gets 3 Goblin uses before paywall
+- [ ] Auto-map on publish: actors, agencies, violation tags, timeline events written automatically
+
+### Phase 5: Dark Reno Mode
+- [ ] Dark Reno theme tokens: neon amber/gold on near-black, casino courtroom aesthetic
+- [ ] Theme toggle in SiteShell nav (sun/moon + "Dark Reno" label)
+- [ ] Persist preference in localStorage
+- [ ] Dark Reno specific: glowing borders, typewriter font accents, felt-green highlights, noir card shadows
+
+### Phase 6: Gamification
+- [ ] XP engine: award points on verified submission, tag confirmation, pattern unlock, daily return
+- [ ] Auditor leaderboard: ranked by XP (verified submissions, confirmed tags, first-on-record badges)
+- [ ] Record leaderboard: ranked by actor violation density (document count x violation tag count)
+- [ ] Badges: Verified Submitter, Pattern Finder, First on Record, Founding Auditor, Deep Diver
+- [ ] Pattern unlock events: when violation tag count crosses threshold, "pattern confirmed" fires publicly
+- [ ] Actor heat score: visual escalation on actor cards as evidence accumulates
+- [ ] /leaderboard page with both boards
+
+### Phase 7: Admin UI Gaps
+- [ ] Actor-agency role management panel in admin actor detail
+- [ ] Per-document violation tag management panel in admin document detail
+- [ ] removeActorAgencyRole and updateActorAgencyRole db helpers
+- [ ] actorLink.addAgencyRole, removeAgencyRole, updateAgencyRole procedures
+
+## v5.0 UX Overhaul — Dark Reno Redesign
+
+- [x] Fix TypeScript errors in routers.ts (goblinAutoPublish import, updateDocument signature)
+- [x] Dark Reno theme: dark-first CSS variables, neon-on-black casino courtroom palette, theme toggle persisted to localStorage
+- [x] Redesign landing page: single-screen gut-punch hero, scroll-into-the-record UX, Church Record as anchor proof of concept
+- [x] Collapse navigation: 3 core sections only (The Record, The Actors, The Pattern) — everything else nested inside
+- [x] SiteShell redesign: minimal dark header, no clutter, theme toggle prominent
+- [x] Test fix: renoRecord.test.ts mock updated with full IngestDraft sourceQuality fields (73/73 passing)
+- [ ] Finish autonomous Goblin pipeline wiring (verifiability score display in admin queue)
+- [ ] Stripe gating middleware applied to Goblin ingest procedure
+- [ ] Gamification: contributor XP engine, Auditor leaderboard page, Record leaderboard (actor violation density)

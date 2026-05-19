@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE users \n  ADD COLUMN stripe_customer_id varchar(120) NULL,\n  ADD COLUMN stripe_subscription_id varchar(120) NULL,\n  ADD COLUMN subscription_tier enum('free','receipts','goblin_pro','founding','founders_circle') NOT NULL DEFAULT 'free',\n  ADD COLUMN subscription_status enum('active','trialing','past_due','cancelled','none') NOT NULL DEFAULT 'none',\n  ADD COLUMN goblin_credits int NOT NULL DEFAULT 0,\n  ADD COLUMN goblin_used_this_month int NOT NULL DEFAULT 0,\n  ADD COLUMN goblin_free_used int NOT NULL DEFAULT 0;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute ALTER TABLE users \n  ADD COLUMN stripe_customer_id varchar(120) NULL,\n  ADD COLUMN stripe_subscription_id varchar(120) NULL,\n  ADD COLUMN subscription_tier enum('free','receipts','goblin_pro','founding','founders_circle') NOT NULL DEFAULT 'free',\n  ADD COLUMN subscription_status enum('active','trialing','past_due','cancelled','none') NOT NULL DEFAULT 'none',\n  ADD COLUMN goblin_credits int NOT NULL DEFAULT 0,\n  ADD COLUMN goblin_used_this_month int NOT NULL DEFAULT 0,\n  ADD COLUMN goblin_free_used int NOT NULL DEFAULT 0;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1539
+}

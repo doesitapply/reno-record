@@ -41,7 +41,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Reno Record brand */
+  /* Reno Record brand tokens */
   --color-bone: var(--bone);
   --color-ink: var(--ink);
   --color-navy: var(--navy);
@@ -49,26 +49,78 @@
   --color-amber: var(--amber);
   --color-amber-soft: var(--amber-soft);
   --color-rust: var(--rust);
+  --color-neon-gold: var(--neon-gold);
+  --color-felt: var(--felt);
+  --color-casino-bg: var(--casino-bg);
 
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Fraunces', ui-serif, Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
-/* LIGHT (editorial bone): primary public site reading mode */
+/* ============================================================
+   DARK RENO (default) — casino courtroom, 2am, neon on black
+   ============================================================ */
 :root {
-  --radius: 0.5rem;
+  --radius: 0.375rem;
 
   /* Brand tokens */
-  --bone: oklch(0.975 0.012 85);          /* warm bone paper */
-  --ink: oklch(0.18 0.025 260);            /* near-black navy ink */
-  --navy: oklch(0.28 0.07 260);            /* deep navy */
-  --navy-deep: oklch(0.18 0.06 260);       /* very deep navy */
-  --amber: oklch(0.78 0.16 70);            /* neon amber stamp */
-  --amber-soft: oklch(0.93 0.08 80);       /* soft amber wash */
-  --rust: oklch(0.52 0.16 28);             /* muted red */
+  --bone: oklch(0.975 0.012 85);
+  --ink: oklch(0.12 0.02 260);
+  --navy: oklch(0.28 0.07 260);
+  --navy-deep: oklch(0.11 0.04 260);
+  --amber: oklch(0.78 0.16 70);
+  --amber-soft: oklch(0.93 0.08 80);
+  --rust: oklch(0.52 0.16 28);
 
-  /* Semantic tokens (light) */
+  /* Dark Reno exclusive tokens */
+  --neon-gold: oklch(0.82 0.19 72);         /* hot neon gold — casino sign */
+  --felt: oklch(0.22 0.06 155);             /* casino felt green */
+  --casino-bg: oklch(0.09 0.025 260);       /* near-black with blue tint */
+  --casino-card: oklch(0.13 0.03 260);      /* card surface */
+  --casino-border: oklch(0.28 0.06 70);     /* amber border glow */
+
+  /* Dark Reno semantic tokens (DEFAULT — dark is the default experience) */
+  --background: var(--casino-bg);
+  --foreground: oklch(0.93 0.015 80);       /* warm off-white, readable */
+  --card: var(--casino-card);
+  --card-foreground: oklch(0.93 0.015 80);
+  --popover: oklch(0.15 0.035 260);
+  --popover-foreground: oklch(0.93 0.015 80);
+  --primary: var(--neon-gold);
+  --primary-foreground: oklch(0.1 0.02 260);
+  --secondary: oklch(0.18 0.04 260);
+  --secondary-foreground: oklch(0.85 0.015 80);
+  --muted: oklch(0.18 0.04 260);
+  --muted-foreground: oklch(0.58 0.03 80);
+  --accent: oklch(0.22 0.06 155);           /* felt green accent */
+  --accent-foreground: oklch(0.93 0.015 80);
+  --destructive: var(--rust);
+  --destructive-foreground: var(--bone);
+  --border: oklch(0.25 0.05 70);            /* amber-tinted border */
+  --input: oklch(0.17 0.035 260);
+  --ring: var(--neon-gold);
+
+  --chart-1: var(--neon-gold);
+  --chart-2: var(--felt);
+  --chart-3: var(--rust);
+  --chart-4: oklch(0.55 0.08 220);
+  --chart-5: oklch(0.65 0.06 60);
+
+  --sidebar: oklch(0.10 0.03 260);
+  --sidebar-foreground: oklch(0.85 0.015 80);
+  --sidebar-primary: var(--neon-gold);
+  --sidebar-primary-foreground: oklch(0.1 0.02 260);
+  --sidebar-accent: oklch(0.16 0.04 260);
+  --sidebar-accent-foreground: oklch(0.85 0.015 80);
+  --sidebar-border: oklch(0.22 0.04 260);
+  --sidebar-ring: var(--neon-gold);
+}
+
+/* ============================================================
+   LIGHT MODE — editorial bone, professional daytime reading
+   ============================================================ */
+.light {
   --background: var(--bone);
   --foreground: var(--ink);
   --card: oklch(0.99 0.005 85);
@@ -105,35 +157,35 @@
   --sidebar-ring: var(--amber);
 }
 
-/* DARK (courthouse-night): used on hero + admin */
+/* Keep .dark as alias for backward compat with any existing dark class usage */
 .dark {
-  --background: var(--navy-deep);
-  --foreground: var(--bone);
-  --card: oklch(0.22 0.05 260);
-  --card-foreground: var(--bone);
-  --popover: oklch(0.22 0.05 260);
-  --popover-foreground: var(--bone);
-  --primary: var(--amber);
-  --primary-foreground: var(--ink);
-  --secondary: oklch(0.26 0.05 260);
-  --secondary-foreground: var(--bone);
-  --muted: oklch(0.26 0.05 260);
-  --muted-foreground: oklch(0.78 0.02 80);
-  --accent: oklch(0.3 0.07 260);
-  --accent-foreground: var(--bone);
+  --background: var(--casino-bg);
+  --foreground: oklch(0.93 0.015 80);
+  --card: var(--casino-card);
+  --card-foreground: oklch(0.93 0.015 80);
+  --popover: oklch(0.15 0.035 260);
+  --popover-foreground: oklch(0.93 0.015 80);
+  --primary: var(--neon-gold);
+  --primary-foreground: oklch(0.1 0.02 260);
+  --secondary: oklch(0.18 0.04 260);
+  --secondary-foreground: oklch(0.85 0.015 80);
+  --muted: oklch(0.18 0.04 260);
+  --muted-foreground: oklch(0.58 0.03 80);
+  --accent: oklch(0.22 0.06 155);
+  --accent-foreground: oklch(0.93 0.015 80);
   --destructive: var(--rust);
   --destructive-foreground: var(--bone);
-  --border: oklch(0.35 0.04 260);
-  --input: oklch(0.3 0.04 260);
-  --ring: var(--amber);
-  --sidebar: var(--navy-deep);
-  --sidebar-foreground: var(--bone);
-  --sidebar-primary: var(--amber);
-  --sidebar-primary-foreground: var(--ink);
-  --sidebar-accent: oklch(0.26 0.05 260);
-  --sidebar-accent-foreground: var(--bone);
-  --sidebar-border: oklch(0.32 0.04 260);
-  --sidebar-ring: var(--amber);
+  --border: oklch(0.25 0.05 70);
+  --input: oklch(0.17 0.035 260);
+  --ring: var(--neon-gold);
+  --sidebar: oklch(0.10 0.03 260);
+  --sidebar-foreground: oklch(0.85 0.015 80);
+  --sidebar-primary: var(--neon-gold);
+  --sidebar-primary-foreground: oklch(0.1 0.02 260);
+  --sidebar-accent: oklch(0.16 0.04 260);
+  --sidebar-accent-foreground: oklch(0.85 0.015 80);
+  --sidebar-border: oklch(0.22 0.04 260);
+  --sidebar-ring: var(--neon-gold);
 }
 
 @layer base {
@@ -149,11 +201,23 @@
   body {
     @apply bg-background text-foreground font-sans;
     overflow-x: hidden;
+  }
+
+  /* Dark Reno body: subtle noise texture + vignette */
+  :root body {
+    background-image:
+      radial-gradient(ellipse at 50% 0%, oklch(0.22 0.06 70 / 0.08) 0%, transparent 60%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.06 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  }
+
+  /* Light mode body: paper texture */
+  .light body {
     background-image:
       radial-gradient(circle at 20% 0%, rgba(0,0,0,0.025) 0, transparent 35%),
       radial-gradient(circle at 80% 100%, rgba(0,0,0,0.025) 0, transparent 35%),
       url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.04 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
   }
+
   h1, h2, h3, h4 {
     font-family: var(--font-serif);
     font-feature-settings: "ss01", "ss02";
@@ -171,6 +235,10 @@
     @apply cursor-pointer;
   }
   ::selection {
+    background: var(--neon-gold);
+    color: oklch(0.1 0.02 260);
+  }
+  .light ::selection {
     background: var(--amber);
     color: var(--ink);
   }
@@ -186,13 +254,9 @@
     padding-left: clamp(1rem, 5vw, 1.25rem) !important;
     padding-right: clamp(1rem, 5vw, 1.25rem) !important;
   }
-  p {
-    overflow-wrap: break-word;
-  }
-  .flex {
-    min-height: 0;
-    min-width: 0;
-  }
+  p { overflow-wrap: break-word; }
+  .flex { min-height: 0; min-width: 0; }
+
   @media (min-width: 640px) {
     .container { padding-left: 1.75rem !important; padding-right: 1.75rem !important; }
   }
@@ -200,7 +264,7 @@
     .container { padding-left: 2.5rem !important; padding-right: 2.5rem !important; max-width: 1280px !important; }
   }
 
-  /* Editorial primitives */
+  /* ── Editorial primitives ── */
   .eyebrow {
     font-family: var(--font-mono);
     text-transform: uppercase;
@@ -216,9 +280,12 @@
     line-height: 1.02;
   }
   .rule-amber {
-    border-bottom: 2px solid var(--amber);
+    border-bottom: 2px solid var(--neon-gold);
     display: inline-block;
     padding-bottom: 0.25rem;
+  }
+  .light .rule-amber {
+    border-bottom-color: var(--amber);
   }
   .stamp {
     font-family: var(--font-mono);
@@ -231,36 +298,69 @@
     transform: rotate(-1.5deg);
     display: inline-block;
   }
+
+  /* ── Dark Reno exclusive components ── */
   .docket-grid-bg {
+    background-image:
+      linear-gradient(to right, oklch(0.82 0.19 72 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0.82 0.19 72 / 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .light .docket-grid-bg {
     background-image:
       linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
     background-size: 48px 48px;
   }
+
+  /* Neon glow on primary elements in dark mode */
+  .neon-glow {
+    text-shadow: 0 0 8px oklch(0.82 0.19 72 / 0.6), 0 0 24px oklch(0.82 0.19 72 / 0.3);
+  }
+  .neon-border {
+    box-shadow: 0 0 0 1px oklch(0.82 0.19 72 / 0.4), 0 0 12px oklch(0.82 0.19 72 / 0.15);
+  }
+  .light .neon-glow { text-shadow: none; }
+  .light .neon-border { box-shadow: none; }
+
+  /* Casino felt accent bar */
+  .felt-bar {
+    background: linear-gradient(90deg, oklch(0.22 0.06 155), oklch(0.28 0.08 155));
+    border-top: 1px solid oklch(0.35 0.09 155);
+  }
+
+  /* Paper card — adapts to theme */
   .paper-card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow:
+      0 1px 0 oklch(0.82 0.19 72 / 0.06),
+      0 8px 24px -16px oklch(0 0 0 / 0.5);
+  }
+  .light .paper-card {
+    box-shadow:
       0 1px 0 rgba(0,0,0,0.02),
       0 8px 24px -16px rgba(20,20,40,0.18);
   }
 
-  /* Mobile-first responsive helpers */
+  /* Actor heat score badge */
+  .heat-score-low    { color: oklch(0.65 0.04 80); }
+  .heat-score-medium { color: oklch(0.78 0.16 70); }
+  .heat-score-high   { color: oklch(0.65 0.22 30); text-shadow: 0 0 6px oklch(0.65 0.22 30 / 0.5); }
+  .heat-score-max    { color: oklch(0.55 0.25 25); text-shadow: 0 0 10px oklch(0.55 0.25 25 / 0.7); animation: pulse-heat 2s ease-in-out infinite; }
+
+  @keyframes pulse-heat {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Mobile */
   @media (max-width: 639px) {
-    /* Prevent horizontal overflow from fixed-width elements */
     .container { overflow-x: hidden; }
-    /* Hero text scale-down */
     .hero-headline { font-size: clamp(2.5rem, 10vw, 4rem); }
-    /* Ensure tab lists wrap on small screens */
-    [role="tablist"] {
-      flex-wrap: wrap;
-      height: auto;
-      gap: 0.25rem;
-    }
-    /* Inline PDF viewer full-width on mobile */
+    [role="tablist"] { flex-wrap: wrap; height: auto; gap: 0.25rem; }
     .pdf-viewer-container { min-height: 60vh; }
-    /* Admin manage forms stack on mobile */
     .admin-form-grid { grid-template-columns: 1fr !important; }
   }
 }

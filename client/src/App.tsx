@@ -21,6 +21,8 @@ import PreviewCheckPage from "./pages/PreviewCheck";
 import ProfilePage from "./pages/Profile";
 import AgenciesPage from "./pages/Agencies";
 import AgencyDetailPage from "./pages/AgencyDetail";
+import PricingPage from "./pages/Pricing";
+import BillingPage from "./pages/Billing";
 import DocketGoblinBubble from "./components/DocketGoblinBubble";
 
 function Router() {
@@ -46,6 +48,8 @@ function Router() {
       <Route path="/admin/manage" component={AdminManagePage} />
       <Route path="/admin/preview-check" component={PreviewCheckPage} />
       <Route path="/profile" component={ProfilePage} />
+      <Route path="/pricing" component={PricingPage} />
+      <Route path="/billing" component={BillingPage} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -55,7 +59,7 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
           <Router />

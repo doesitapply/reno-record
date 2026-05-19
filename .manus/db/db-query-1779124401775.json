@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as total_actors FROM actors; SELECT id, name, slug FROM actors ORDER BY id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT COUNT(*) as total_actors FROM actors; SELECT id, name, slug FROM actors ORDER BY id LIMIT 10;",
+  "rows": [
+    {
+      "total_actors": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_actors\n0\n",
+  "stderr": "",
+  "execution_time_ms": 602
+}

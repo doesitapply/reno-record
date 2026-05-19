@@ -28,6 +28,14 @@ import {
   validateUpload,
   writeAudit,
 } from "./_uploadGuard";
+import {
+  createSubscriptionCheckoutSession,
+  createCreditPackCheckoutSession,
+  getCustomerPortalUrl,
+} from "./stripe/checkout";
+import { TIERS, CREDIT_PACKS } from "./stripe/products";
+import { hasTier, freeGoblinRemaining, tierLabel } from "./stripe/gating";
+import { scoreVerifiability, AUTO_PUBLISH_THRESHOLD } from "./goblinAutoPublish";
 
 const isoDate = z
   .union([z.string(), z.date()])
@@ -1322,18 +1330,35 @@ Submitter narrative: ${s.summary ?? ""}`;
           metadata: { filename: v.filename, jobId, storyId },
         });
 
-        // 6) Find existing actor matches (proposal only — admin still approves).
+        // 6) Score verifiability and potentially auto-approve admin uploads.
+        const verifResult = scoreVerifiability(draft);
         const proposed = await db.findActorIdsByNames(draft.actorNames);
-
+        const enrichedDraft = { ...draft, _verifiability: verifResult };
         await db.updateIngestJob(jobId, {
           status: "drafted",
           documentId,
-          draftJson: draft as any,
+          draftJson: enrichedDraft as any,
           proposedActors: proposed.map((p) => p.name),
           storyId: storyId ?? null,
         });
-
-        return { jobId, documentId, draft, proposedActors: proposed };
+        // 7) Auto-approve admin uploads that score above threshold.
+        if (verifResult.verdict === "auto_publish" && verifResult.score >= AUTO_PUBLISH_THRESHOLD) {
+          await db.updateDocument(documentId, {
+            reviewStatus: "approved",
+            publicStatus: true,
+            visibility: "public_preview",
+          });
+          await writeAudit({
+            actorUserId: ctx.user.id,
+            actorRole: ctx.user.role,
+            action: "document_approved",
+            targetType: "document",
+            targetId: documentId,
+            metadata: { via: "auto_publish", verifiabilityScore: verifResult.score, jobId },
+          });
+          await db.updateIngestJob(jobId, { status: "approved" });
+        }
+        return { jobId, documentId, draft: enrichedDraft, proposedActors: proposed, verifiability: verifResult };
       } catch (e: any) {
         await db.updateIngestJob(jobId, {
           status: "failed",
@@ -2159,6 +2184,73 @@ const actorLinkRouter = router({
     }),
 });
 
+/* ========== Billing Router ========== */
+const billingRouter = router({
+  tiers: publicProcedure.query(() => TIERS),
+  creditPacks: publicProcedure.query(() => CREDIT_PACKS),
+  mySubscription: protectedProcedure.query(async ({ ctx }) => {
+    const userRow = await db.getUserById(ctx.user.id);
+    if (!userRow) throw new TRPCError({ code: "NOT_FOUND" });
+    return {
+      tier: userRow.subscriptionTier ?? "free",
+      tierLabel: tierLabel(userRow.subscriptionTier ?? "free"),
+      status: userRow.subscriptionStatus ?? "none",
+      goblinCredits: userRow.goblinCredits ?? 0,
+      goblinFreeRemaining: freeGoblinRemaining(userRow),
+      hasReceipts: hasTier(userRow, "receipts"),
+      hasGoblinPro: hasTier(userRow, "goblin_pro"),
+      stripeCustomerId: userRow.stripeCustomerId ?? null,
+    };
+  }),
+  createCheckout: protectedProcedure
+    .input(
+      z.object({
+        tierSlug: z.enum(["receipts", "goblin_pro", "founding", "founders_circle"]),
+        origin: z.string().url(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userRow = await db.getUserById(ctx.user.id);
+      if (!userRow) throw new TRPCError({ code: "NOT_FOUND" });
+      const url = await createSubscriptionCheckoutSession({
+        userId: ctx.user.id,
+        userEmail: userRow.email ?? "",
+        userName: userRow.name ?? "Anonymous",
+        tierSlug: input.tierSlug,
+        origin: input.origin,
+      });
+      return { url };
+    }),
+  createCreditPackCheckout: protectedProcedure
+    .input(
+      z.object({
+        packId: z.string(),
+        origin: z.string().url(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userRow = await db.getUserById(ctx.user.id);
+      if (!userRow) throw new TRPCError({ code: "NOT_FOUND" });
+      const url = await createCreditPackCheckoutSession({
+        userId: ctx.user.id,
+        userEmail: userRow.email ?? "",
+        userName: userRow.name ?? "Anonymous",
+        packId: input.packId,
+        origin: input.origin,
+      });
+      return { url };
+    }),
+  billingPortal: protectedProcedure
+    .input(z.object({ origin: z.string().url() }))
+    .mutation(async ({ ctx, input }) => {
+      const userRow = await db.getUserById(ctx.user.id);
+      if (!userRow?.stripeCustomerId)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "No billing account found" });
+      const url = await getCustomerPortalUrl(userRow.stripeCustomerId, input.origin);
+      return { url };
+    }),
+});
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -2184,6 +2276,7 @@ export const appRouter = router({
   agency: agencyRouter,
   violationTag: violationTagRouter,
   actorLink: actorLinkRouter,
+  billing: billingRouter,
 });
 
 export type AppRouter = typeof appRouter;

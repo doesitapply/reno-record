@@ -1,0 +1,37 @@
+{
+  "query": "SELECT COUNT(*) as violation_tags FROM violation_tags;\nSELECT COUNT(*) as actors FROM actors;\nSELECT COUNT(*) as documents FROM documents WHERE public_status = 1 AND review_status = 'approved';\nSELECT COUNT(*) as actor_agency_roles FROM actor_agency_roles;\nSELECT COUNT(*) as document_violation_tags FROM document_violation_tags;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT COUNT(*) as violation_tags FROM violation_tags;\nSELECT COUNT(*) as actors FROM actors;\nSELECT COUNT(*) as documents FROM documents WHERE public_status = 1 AND review_status = 'approved';\nSELECT COUNT(*) as actor_agency_roles FROM actor_agency_roles;\nSELECT COUNT(*) as document_violation_tags FROM document_violation_tags;",
+  "rows": [
+    {
+      "violation_tags": "15"
+    },
+    {
+      "violation_tags": "actors"
+    },
+    {
+      "violation_tags": "0"
+    },
+    {
+      "violation_tags": "documents"
+    },
+    {
+      "violation_tags": "0"
+    },
+    {
+      "violation_tags": "actor_agency_roles"
+    },
+    {
+      "violation_tags": "0"
+    },
+    {
+      "violation_tags": "document_violation_tags"
+    },
+    {
+      "violation_tags": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "violation_tags\n15\nactors\n0\ndocuments\n0\nactor_agency_roles\n0\ndocument_violation_tags\n0\n",
+  "stderr": "",
+  "execution_time_ms": 784
+}
