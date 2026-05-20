@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT 'timeline_events' as tbl, COUNT(*) as cnt FROM timeline_events WHERE is_public = 1\nUNION ALL\nSELECT 'actors', COUNT(*) FROM actors WHERE is_public = 1\nUNION ALL\nSELECT 'documents', COUNT(*) FROM documents WHERE is_public = 1\nUNION ALL\nSELECT 'stories', COUNT(*) FROM stories WHERE is_public = 1\nUNION ALL\nSELECT 'public_records_requests', COUNT(*) FROM public_records_requests\nUNION ALL\nSELECT 'documents_with_file', COUNT(*) FROM documents WHERE is_public = 1 AND file_key IS NOT NULL AND file_key != '';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT 'timeline_events' as tbl, COUNT(*) as cnt FROM timeline_events WHERE is_public = 1\nUNION ALL\nSELECT 'actors', COUNT(*) FROM actors WHERE is_public = 1\nUNION ALL\nSELECT 'documents', COUNT(*) FROM documents WHERE is_public = 1\nUNION ALL\nSELECT 'stories', COUNT(*) FROM stories WHERE is_public = 1\nUNION ALL\nSELECT 'public_records_requests', COUNT(*) FROM public_records_requests\nUNION ALL\nSELECT 'documents_with_file', COUNT(*) FROM documents WHERE is_public = 1 AND file_key IS NOT NULL AND file_key != '';\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'is_public' in 'where clause'"
+  ]
+}

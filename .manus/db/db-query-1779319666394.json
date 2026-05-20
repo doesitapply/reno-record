@@ -1,0 +1,170 @@
+{
+  "query": "SELECT id, title, source_type, document_date, public_status, review_status FROM documents ORDER BY document_date ASC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, title, source_type, document_date, public_status, review_status FROM documents ORDER BY document_date ASC;",
+  "rows": [
+    {
+      "id": "210004",
+      "title": "Hicks Emails — Exhibit Pack (Correspondence with Court/Officials)",
+      "source_type": "email",
+      "document_date": "NULL",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210014",
+      "title": "2023 Complete Case Record — All Filings (March 2023 through December 2023)",
+      "source_type": "other",
+      "document_date": "2023-03-12 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210005",
+      "title": "Case Exhibits and Legal Significance Index — State v. Church",
+      "source_type": "other",
+      "document_date": "2023-03-12 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "180001",
+      "title": "Legal Memorandum Analyzing Exhibits in State v. Church (CR23-0657)",
+      "source_type": "other",
+      "document_date": "2023-10-26 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "150001",
+      "title": "Legal Memorandum: Analysis of Exhibits in State v. Cameron Doyle Church",
+      "source_type": "other",
+      "document_date": "2023-10-26 00:00:00",
+      "public_status": "0",
+      "review_status": "rejected"
+    },
+    {
+      "id": "210015",
+      "title": "2024 State Record — All Filings (January 2024 through December 2024)",
+      "source_type": "other",
+      "document_date": "2024-01-09 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210006",
+      "title": "Transcripts Collection — Defense Meetings and Hearings (2024)",
+      "source_type": "transcript",
+      "document_date": "2024-07-12 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210007",
+      "title": "Document Pack 1 — December 2024 Filings (Pro Se Motions)",
+      "source_type": "motion",
+      "document_date": "2024-10-30 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210001",
+      "title": "December 5, 2024 Young/Faretta/Competency Hearing Transcript",
+      "source_type": "transcript",
+      "document_date": "2024-12-05 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "180002",
+      "title": "Exhibit Index and Legal Memorandum: State of Nevada v. Cameron Doyle Church (CR23-0657)",
+      "source_type": "other",
+      "document_date": "2024-12-24 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "150002",
+      "title": "Legal Memorandum: Analysis of State of Nevada vs. Cameron Doyle Church (CR23-0657) Exhibits",
+      "source_type": "other",
+      "document_date": "2024-12-24 00:00:00",
+      "public_status": "0",
+      "review_status": "pending"
+    },
+    {
+      "id": "210016",
+      "title": "State Record — January 2, 2025 through June 6, 2025",
+      "source_type": "other",
+      "document_date": "2025-01-02 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210008",
+      "title": "Document Pack 2 — January through March 2025 Filings",
+      "source_type": "motion",
+      "document_date": "2025-01-02 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210002",
+      "title": "February 21, 2025 — Call with US Marshal Supervisor (Standoff Aftermath)",
+      "source_type": "audio",
+      "document_date": "2025-02-21 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210009",
+      "title": "Document Pack 3 — April 18, 2025 Bad Faith Motions Pack",
+      "source_type": "motion",
+      "document_date": "2025-04-18 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210010",
+      "title": "Document Pack 4 — April through June 2025 (In-Custody Period)",
+      "source_type": "other",
+      "document_date": "2025-04-21 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210011",
+      "title": "Document Pack 5 — July through August 2025 (Counsel Withdrawal Period)",
+      "source_type": "court_order",
+      "document_date": "2025-07-03 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210003",
+      "title": "Cody Meredith (Pretrial Services) — Text Communication Log, July–August 2025",
+      "source_type": "other",
+      "document_date": "2025-07-31 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210012",
+      "title": "Document Pack 6 — September through November 2025",
+      "source_type": "court_order",
+      "document_date": "2025-09-22 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    },
+    {
+      "id": "210013",
+      "title": "Document Pack — September 2025 through May 16, 2026 (Most Recent Period)",
+      "source_type": "other",
+      "document_date": "2025-09-22 00:00:00",
+      "public_status": "1",
+      "review_status": "approved"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tsource_type\tdocument_date\tpublic_status\treview_status\n210004\tHicks Emails — Exhibit Pack (Correspondence with Court/Officials)\temail\tNULL\t1\tapproved\n210014\t2023 Complete Case Record — All Filings (March 2023 through December 2023)\tother\t2023-03-12 00:00:00\t1\tapproved\n210005\tCase Exhibits and Legal Significance Index — State v. Church\tother\t2023-03-12 00:00:00\t1\tapproved\n180001\tLegal Memorandum Analyzing Exhibits in State v. Church (CR23-0657)\tother\t2023-10-26 00:00:00\t1\tapproved\n150001\tLegal Memorandum: Analysis of Exhibits in State v. Cameron Doyle Church\tother\t2023-10-26 00:00:00\t0\trejected\n210015\t2024 State Record — All Filings (January 2024 through December 2024)\tother\t2024-01-09 00:00:00\t1\tapproved\n210006\tTranscripts Collection — Defense Meetings and Hearings (2024)\ttranscript\t2024-07-12 00:00:00\t1\tapproved\n210007\tDocument Pack 1 — December 2024 Filings (Pro Se Motions)\tmotion\t2024-10-30 00:00:00\t1\tapproved\n210001\tDecember 5, 2024 Young/Faretta/Competency Hearing Transcript\ttranscript\t2024-12-05 00:00:00\t1\tapproved\n180002\tExhibit Index and Legal Memorandum: State of Nevada v. Cameron Doyle Church (CR23-0657)\tother\t2024-12-24 00:00:00\t1\tapproved\n150002\tLegal Memorandum: Analysis of State of Nevada vs. Cameron Doyle Church (CR23-0657) Exhibits\tother\t2024-12-24 00:00:00\t0\tpending\n210016\tState Record — January 2, 2025 through June 6, 2025\tother\t2025-01-02 00:00:00\t1\tapproved\n210008\tDocument Pack 2 — January through March 2025 Filings\tmotion\t2025-01-02 00:00:00\t1\tapproved\n210002\tFebruary 21, 2025 — Call with US Marshal Supervisor (Standoff Aftermath)\taudio\t2025-02-21 00:00:00\t1\tapproved\n210009\tDocument Pack 3 — April 18, 2025 Bad Faith Motions Pack\tmotion\t2025-04-18 00:00:00\t1\tapproved\n210010\tDocument Pack 4 — April through June 2025 (In-Custody Period)\tother\t2025-04-21 00:00:00\t1\tapproved\n210011\tDocument Pack 5 — July through August 2025 (Counsel Withdrawal Period)\tcourt_order\t2025-07-03 00:00:00\t1\tapproved\n210003\tCody Meredith (Pretrial Services) — Text Communication Log, July–August 2025\tother\t2025-07-31 00:00:00\t1\tapproved\n210012\tDocument Pack 6 — September through November 2025\tcourt_order\t2025-09-22 00:00:00\t1\tapproved\n210013\tDocument Pack — September 2025 through May 16, 2026 (Most Recent Period)\tother\t2025-09-22 00:00:00\t1\tapproved\n",
+  "stderr": "",
+  "execution_time_ms": 598
+}

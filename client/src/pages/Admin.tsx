@@ -2038,16 +2038,16 @@ function UsersTab() {
 
 /* =============== Review Requests Tab =============== */
 function ReviewRequestsTab() {
-  const [statusFilter, setStatusFilter] = useState<string>("submitted");
-  const [targetTypeFilter, setTargetTypeFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all_statuses");
+  const [targetTypeFilter, setTargetTypeFilter] = useState<string>("all_types");
   const [resolvingId, setResolvingId] = useState<number | null>(null);
   const [resolution, setResolution] = useState<string>("keep_public");
   const [editorialNote, setEditorialNote] = useState("");
   const [correctionNote, setCorrectionNote] = useState("");
 
   const requests = trpc.reviewRequest.adminList.useQuery({
-    status: statusFilter || undefined,
-    targetType: targetTypeFilter || undefined,
+    status: statusFilter === "all_statuses" ? undefined : statusFilter,
+    targetType: targetTypeFilter === "all_types" ? undefined : targetTypeFilter,
   });
   const utils = trpc.useUtils();
   const resolve = trpc.reviewRequest.adminResolve.useMutation({
@@ -2087,7 +2087,7 @@ function ReviewRequestsTab() {
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All statuses</SelectItem>
+            <SelectItem value="all_statuses">All statuses</SelectItem>
             <SelectItem value="submitted">Submitted</SelectItem>
             <SelectItem value="under_review">Under review</SelectItem>
             <SelectItem value="approved">Approved</SelectItem>
@@ -2102,7 +2102,7 @@ function ReviewRequestsTab() {
             <SelectValue placeholder="Record type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All types</SelectItem>
+            <SelectItem value="all_types">All types</SelectItem>
             <SelectItem value="story">Story</SelectItem>
             <SelectItem value="document">Document</SelectItem>
           </SelectContent>
