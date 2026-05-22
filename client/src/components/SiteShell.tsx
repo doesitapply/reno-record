@@ -20,6 +20,7 @@ const NAV_SECTIONS = [
       { href: "/evidence", label: "Evidence Archive" },
       { href: "/timeline", label: "Timeline" },
       { href: "/the-church-record", label: "The Church Record" },
+      { href: "/cases", label: "The Cases" },
       { href: "/public-records", label: "Public Records" },
     ],
   },

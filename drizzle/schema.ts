@@ -167,6 +167,8 @@ export const documents = mysqlTable(
     /** v3.8: editorial notes visible on public page */
     editorialNote: text("editorial_note"),
     correctionNote: text("correction_note"),
+    /** v5.1: which case this document belongs to */
+    caseTag: mysqlEnum("case_tag", ["state", "federal", "both"]).default("state").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
@@ -272,6 +274,8 @@ export const publicRecordsRequests = mysqlTable("public_records_requests", {
   legalBasisForDenial: text("legal_basis_for_denial"),
   statusHistory: json("status_history").$type<PublicRecordsStatusHistoryEntry[]>(),
   linkedDocuments: json("linked_documents").$type<number[]>(),
+  /** v5.1: which case this PRR belongs to */
+  caseTag: mysqlEnum("case_tag", ["state", "federal", "both"]).default("state").notNull(),
   publicStatus: boolean("public_status").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),

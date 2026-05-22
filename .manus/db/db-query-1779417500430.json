@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE documents ADD COLUMN case_tag ENUM('state','federal','both') NOT NULL DEFAULT 'state';\nALTER TABLE public_records_requests ADD COLUMN case_tag ENUM('state','federal','both') NOT NULL DEFAULT 'state';\nUPDATE documents SET case_tag = 'state';\nUPDATE public_records_requests SET case_tag = 'state';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nALTER TABLE documents ADD COLUMN case_tag ENUM('state','federal','both') NOT NULL DEFAULT 'state';\nALTER TABLE public_records_requests ADD COLUMN case_tag ENUM('state','federal','both') NOT NULL DEFAULT 'state';\nUPDATE documents SET case_tag = 'state';\nUPDATE public_records_requests SET case_tag = 'state';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1109
+}

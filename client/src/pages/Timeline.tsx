@@ -1,7 +1,7 @@
 import { useSEO } from "@/hooks/useSEO";
 import { useState, useCallback } from "react";
 import { Link } from "wouter";
-import { FileText, ArrowRight, Copy, Check, Twitter } from "lucide-react";
+import { FileText, Copy, Check, Twitter, Scale, Landmark } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,132 +32,289 @@ function ShareBar({ url, title }: { url: string; title: string }) {
   );
 }
 
-const CATEGORIES = [
-  { value: "all", label: "All" },
-  { value: "state_case", label: "State case" },
-  { value: "federal_case", label: "Federal" },
-  { value: "custody", label: "Custody" },
+type CaseFilter = "all" | "state_case" | "federal_case";
+
+const CASE_FILTERS: { value: CaseFilter; label: string; icon: React.ReactNode; sub: string }[] = [
+  { value: "all", label: "All Events", icon: null, sub: "Both courts, unified view" },
+  { value: "state_case", label: "State Court", icon: <Scale className="h-3.5 w-3.5" />, sub: "CR23-0657 · Washoe County Dept. 8" },
+  { value: "federal_case", label: "Federal Court", icon: <Landmark className="h-3.5 w-3.5" />, sub: "3:24-cv-00579-ART-CSD · D. Nev." },
+];
+
+const SUB_CATEGORIES = [
+  { value: "all", label: "All types" },
   { value: "motion", label: "Motions" },
+  { value: "custody", label: "Custody" },
   { value: "warrant", label: "Warrants" },
   { value: "competency", label: "Competency" },
   { value: "public_records", label: "Public records" },
   { value: "communications", label: "Comms" },
-  { value: "election_accountability", label: "Election" },
   { value: "other", label: "Other" },
 ] as const;
 
+function getCaseColor(caseFilter: CaseFilter) {
+  if (caseFilter === "state_case") return "bg-amber-500";
+  if (caseFilter === "federal_case") return "bg-blue-500";
+  return "bg-[var(--amber)]";
+}
+
+function getEventCaseTag(category: string): CaseFilter | null {
+  if (category === "state_case") return "state_case";
+  if (category === "federal_case") return "federal_case";
+  return null;
+}
+
 export default function TimelinePage() {
-  useSEO({ title: "Timeline", description: "A chronological exposure map of documented events, agency responses, filings, orders, delays, records requests, and misconduct signals with source documents.", canonicalPath: "/timeline" });
-  const [cat, setCat] = useState<(typeof CATEGORIES)[number]["value"]>("all");
-  const events = trpc.timeline.listPublic.useQuery({ category: cat });
+  useSEO({
+    title: "Timeline",
+    description: "A chronological exposure map of documented events across both state and federal courts. Every entry is source-cited.",
+    canonicalPath: "/timeline",
+  });
+
+  const [caseFilter, setCaseFilter] = useState<CaseFilter>("all");
+  const [subCat, setSubCat] = useState<string>("all");
+
+  // When case filter is set, pass it as category; when sub-cat is set, use that instead
+  const queryCategory =
+    caseFilter !== "all" && subCat === "all"
+      ? caseFilter
+      : subCat !== "all"
+      ? subCat
+      : undefined;
+
+  const events = trpc.timeline.listPublic.useQuery({ category: queryCategory });
+
+  // Client-side filter: if both caseFilter and subCat are set, filter locally
+  const displayEvents = (events.data ?? []).filter((ev) => {
+    if (caseFilter !== "all" && subCat !== "all") {
+      return ev.category === caseFilter || ev.category === subCat;
+    }
+    return true;
+  });
+
+  const stateCount = (events.data ?? []).filter((e) => e.category === "state_case").length;
+  const federalCount = (events.data ?? []).filter((e) => e.category === "federal_case").length;
+  const otherCount = (events.data ?? []).filter(
+    (e) => e.category !== "state_case" && e.category !== "federal_case"
+  ).length;
 
   return (
     <SiteShell>
       <section className="container py-14 md:py-20">
-        <div className="grid lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-4">
-            <div className="eyebrow">Exposure Timeline</div>
-            <h1 className="display-serif text-5xl md:text-6xl mt-3 leading-[1.02]">
-              Receipts, in order.
-            </h1>
-            <p className="mt-5 text-foreground/80 leading-relaxed">
-              Every approved incident, filing, agency response, records request, and pattern signal with
-              its date, category, status, and links to source documents. Filter by category and trace
-              each card back to the underlying record where available.
-            </p>
-            <ShareBar url={`${window.location.origin}/timeline`} title="The Reno Record — Docket Timeline: every documented event in order" />
-            <div className="mt-7 flex flex-wrap gap-2">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c.value}
-                  onClick={() => setCat(c.value)}
-                  className={cn(
-                    "px-3 py-1.5 text-xs font-mono uppercase tracking-widest rounded-sm border transition-colors",
-                    cat === c.value
-                      ? "bg-foreground text-background border-foreground"
-                      : "bg-background text-foreground border-border hover:border-foreground",
-                  )}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Header */}
+        <div className="mb-10">
+          <div className="eyebrow">Unified Docket</div>
+          <h1 className="display-serif text-5xl md:text-6xl mt-3 leading-[1.02]">
+            Receipts, in order.
+          </h1>
+          <p className="mt-4 text-foreground/70 max-w-2xl leading-relaxed">
+            Every documented event across both courts — state and federal — in chronological order.
+            Every entry is source-cited. Filter by court or event type. The record does not dispute itself.
+          </p>
+          <ShareBar
+            url={`${window.location.origin}/timeline`}
+            title="The Reno Record — Unified Docket: every documented event across both courts"
+          />
+        </div>
 
+        {/* Case filter — primary axis */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          {CASE_FILTERS.map((cf) => (
+            <button
+              key={cf.value}
+              onClick={() => { setCaseFilter(cf.value); setSubCat("all"); }}
+              className={cn(
+                "text-left p-4 rounded-md border transition-all",
+                caseFilter === cf.value
+                  ? "border-foreground bg-foreground/5"
+                  : "border-border hover:border-foreground/40",
+              )}
+            >
+              <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-widest font-semibold">
+                {cf.icon}
+                {cf.label}
+                {cf.value === "all" && events.data && (
+                  <span className="ml-auto text-muted-foreground">{events.data.length}</span>
+                )}
+                {cf.value === "state_case" && (
+                  <span className="ml-auto text-muted-foreground">{stateCount}</span>
+                )}
+                {cf.value === "federal_case" && (
+                  <span className="ml-auto text-muted-foreground">{federalCount}</span>
+                )}
+              </div>
+              <div className="mt-1 text-[11px] text-muted-foreground">{cf.sub}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* Sub-category filter — secondary axis */}
+        {caseFilter !== "all" && (
+          <div className="flex flex-wrap gap-2 mb-8">
+            {SUB_CATEGORIES.map((sc) => (
+              <button
+                key={sc.value}
+                onClick={() => setSubCat(sc.value)}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-mono uppercase tracking-widest rounded-sm border transition-colors",
+                  subCat === sc.value
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-background text-foreground border-border hover:border-foreground",
+                )}
+              >
+                {sc.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="grid lg:grid-cols-12 gap-10">
+          {/* Timeline feed */}
           <div className="lg:col-span-8">
             <div className="relative pl-6 border-l border-border">
               {events.isLoading && (
-                <p className="text-muted-foreground">Loading docket…</p>
+                <p className="text-muted-foreground py-8">Loading docket…</p>
               )}
-              {!events.isLoading && (events.data ?? []).length === 0 && (
+              {!events.isLoading && displayEvents.length === 0 && (
                 <div className="paper-card p-8 text-muted-foreground">
                   No approved events for this filter yet.
                 </div>
               )}
-              {(events.data ?? []).map((ev) => (
-                <article key={ev.id} className="relative pl-6 pb-8 last:pb-0">
-                  <span className="absolute -left-[7px] top-2 h-3 w-3 rounded-full bg-[var(--amber)] ring-4 ring-background" />
-                  <div className="paper-card p-5">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                        {new Date(ev.eventDate).toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "short",
-                          day: "2-digit",
-                        })}
-                      </span>
-                      <Badge variant="outline" className="font-mono uppercase text-[10px]">
-                        {ev.category.replace(/_/g, " ")}
-                      </Badge>
-                      <Badge
-                        variant={ev.status === "confirmed" ? "default" : "secondary"}
-                        className="font-mono uppercase text-[10px]"
-                      >
-                        {ev.status}
-                      </Badge>
-                      {ev.caseNumber && (
-                        <Badge variant="outline" className="font-mono uppercase text-[10px]">
-                          {ev.caseNumber}
+              {displayEvents.map((ev) => {
+                const evCase = getEventCaseTag(ev.category);
+                const dotColor =
+                  evCase === "state_case"
+                    ? "bg-amber-500"
+                    : evCase === "federal_case"
+                    ? "bg-blue-500"
+                    : "bg-[var(--amber)]";
+                return (
+                  <article key={ev.id} className="relative pl-6 pb-8 last:pb-0">
+                    <span
+                      className={cn(
+                        "absolute -left-[7px] top-2 h-3 w-3 rounded-full ring-4 ring-background",
+                        dotColor,
+                      )}
+                    />
+                    <div className="paper-card p-5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                          {new Date(ev.eventDate).toLocaleDateString(undefined, {
+                            year: "numeric",
+                            month: "short",
+                            day: "2-digit",
+                          })}
+                        </span>
+                        {evCase === "state_case" && (
+                          <Badge variant="outline" className="font-mono uppercase text-[10px] border-amber-500/50 text-amber-400 gap-1">
+                            <Scale className="h-2.5 w-2.5" /> State
+                          </Badge>
+                        )}
+                        {evCase === "federal_case" && (
+                          <Badge variant="outline" className="font-mono uppercase text-[10px] border-blue-500/50 text-blue-400 gap-1">
+                            <Landmark className="h-2.5 w-2.5" /> Federal
+                          </Badge>
+                        )}
+                        <Badge
+                          variant={ev.status === "confirmed" ? "default" : "secondary"}
+                          className="font-mono uppercase text-[10px]"
+                        >
+                          {ev.status}
                         </Badge>
+                        {ev.caseNumber && (
+                          <Badge variant="outline" className="font-mono uppercase text-[10px]">
+                            {ev.caseNumber}
+                          </Badge>
+                        )}
+                      </div>
+                      <h3 className="mt-2 display-serif text-xl">{ev.title}</h3>
+                      {ev.summary && (
+                        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                          {ev.summary}
+                        </p>
+                      )}
+                      {(ev.actors ?? []).length > 0 && (
+                        <div className="mt-3 text-xs text-muted-foreground font-mono uppercase tracking-widest">
+                          Actors: {(ev.actors ?? []).join(" · ")}
+                        </div>
+                      )}
+                      {(ev.sourceDocuments ?? []).length > 0 && (
+                        <div className="mt-3 flex gap-2 flex-wrap">
+                          {(ev.sourceDocuments ?? []).map((id) => (
+                            <Link key={id} href={`/evidence/${id}`}>
+                              <Badge variant="outline" className="gap-1.5 font-mono uppercase text-[10px]">
+                                <FileText className="h-3 w-3" /> Source #{id}
+                              </Badge>
+                            </Link>
+                          ))}
+                        </div>
                       )}
                     </div>
-                    <h3 className="mt-2 display-serif text-xl">{ev.title}</h3>
-                    {ev.summary && (
-                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                        {ev.summary}
-                      </p>
-                    )}
-                    {(ev.actors ?? []).length > 0 && (
-                      <div className="mt-3 text-xs text-muted-foreground font-mono uppercase tracking-widest">
-                        Actors: {(ev.actors ?? []).join(" · ")}
-                      </div>
-                    )}
-                    {(ev.sourceDocuments ?? []).length > 0 && (
-                      <div className="mt-3 flex gap-2 flex-wrap">
-                        {(ev.sourceDocuments ?? []).map((id) => (
-                          <Link key={id} href={`/evidence/${id}`}>
-                            <Badge variant="outline" className="gap-1.5 font-mono uppercase text-[10px]">
-                              <FileText className="h-3 w-3" /> Source #{id}
-                            </Badge>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-4 space-y-5">
+            {/* Case status cards */}
+            <div className="paper-card p-5">
+              <div className="eyebrow mb-3">Case Status</div>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <Scale className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+                  <div>
+                    <div className="text-sm font-semibold">CR23-0657</div>
+                    <div className="text-xs text-muted-foreground">Washoe County District Court · Dept. 8</div>
+                    <div className="text-xs text-amber-400 mt-1 font-mono uppercase tracking-widest">Pending · No trial date</div>
                   </div>
-                </article>
-              ))}
+                </div>
+                <div className="border-t border-border" />
+                <div className="flex items-start gap-3">
+                  <Landmark className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+                  <div>
+                    <div className="text-sm font-semibold">3:24-cv-00579-ART-CSD</div>
+                    <div className="text-xs text-muted-foreground">U.S. District Court · D. Nev.</div>
+                    <div className="text-xs text-blue-400 mt-1 font-mono uppercase tracking-widest">Rule 59(e) Pending · Appellate Clock Tolled</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-10 paper-card p-6 flex items-center justify-between">
-              <div>
-                <div className="eyebrow">Add to the docket</div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Submitted dates, records, and actor references feed this archive after redaction review and approval.
-                </p>
+            {/* Event counts */}
+            {events.data && (
+              <div className="paper-card p-5">
+                <div className="eyebrow mb-3">Event Breakdown</div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">State court events</span>
+                    <span className="font-mono">{stateCount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Federal court events</span>
+                    <span className="font-mono">{federalCount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Other documented events</span>
+                    <span className="font-mono">{otherCount}</span>
+                  </div>
+                  <div className="border-t border-border pt-2 flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span className="font-mono">{events.data.length}</span>
+                  </div>
+                </div>
               </div>
+            )}
+
+            {/* Submit CTA */}
+            <div className="paper-card p-5">
+              <div className="eyebrow mb-2">Add to the docket</div>
+              <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                Submitted dates, records, and actor references feed this archive after redaction review and approval.
+              </p>
               <Link href="/submit">
-                <Button className="bg-foreground text-background gap-2">
-                  Submit Evidence <ArrowRight className="h-4 w-4" />
+                <Button size="sm" className="w-full bg-foreground text-background">
+                  Submit Evidence
                 </Button>
               </Link>
             </div>

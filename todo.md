@@ -282,3 +282,15 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [ ] Finish autonomous Goblin pipeline wiring (verifiability score display in admin queue)
 - [ ] Stripe gating middleware applied to Goblin ingest procedure
 - [ ] Gamification: contributor XP engine, Auditor leaderboard page, Record leaderboard (actor violation density)
+
+## Federal Case Integration + PWA (v5.1)
+- [ ] Add case_tag enum (state/federal/both) to documents, timeline_events, public_records_requests schema
+- [ ] Run migration SQL to add case_tag columns
+- [ ] Tag all existing state data as 'state'
+- [ ] Upload 20 federal PDFs and insert federal document records tagged 'federal'
+- [ ] Build unified Timeline page with All/State/Federal filter tabs
+- [ ] Build Cases overview page (two-card: CR23-0657 + 3:24-cv-00579)
+- [ ] Add PWA manifest + icons for phone installation (iOS + Android)
+- [ ] Fix getSiteStats in db.ts (live counts for homepage dashboard)
+- [ ] Wire live siteStats to homepage stats bar
+- [ ] Update nav to include Cases section

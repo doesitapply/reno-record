@@ -1,0 +1,17 @@
+{
+  "query": "\nUPDATE stories SET custody_days = 1150 WHERE id = 60001;\nSELECT \n  DATEDIFF(NOW(), '2023-03-12') as days_since_arrest,\n  (SELECT COUNT(*) FROM documents WHERE public_status = 1 AND review_status = 'approved') as public_docs,\n  (SELECT COUNT(*) FROM actors) as total_actors,\n  (SELECT COUNT(*) FROM timeline_events) as total_events,\n  (SELECT COUNT(*) FROM public_records_requests) as total_prrs;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nUPDATE stories SET custody_days = 1150 WHERE id = 60001;\nSELECT \n  DATEDIFF(NOW(), '2023-03-12') as days_since_arrest,\n  (SELECT COUNT(*) FROM documents WHERE public_status = 1 AND review_status = 'approved') as public_docs,\n  (SELECT COUNT(*) FROM actors) as total_actors,\n  (SELECT COUNT(*) FROM timeline_events) as total_events,\n  (SELECT COUNT(*) FROM public_records_requests) as total_prrs;\n",
+  "rows": [
+    {
+      "days_since_arrest": "1165",
+      "public_docs": "18",
+      "total_actors": "17",
+      "total_events": "48",
+      "total_prrs": "14"
+    }
+  ],
+  "messages": [],
+  "stdout": "days_since_arrest\tpublic_docs\ttotal_actors\ttotal_events\ttotal_prrs\n1165\t18\t17\t48\t14\n",
+  "stderr": "",
+  "execution_time_ms": 666
+}

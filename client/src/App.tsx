@@ -24,12 +24,14 @@ import AgencyDetailPage from "./pages/AgencyDetail";
 import PricingPage from "./pages/Pricing";
 import BillingPage from "./pages/Billing";
 import DocketGoblinBubble from "./components/DocketGoblinBubble";
+import CasesPage from "./pages/Cases";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/the-church-record" component={ChurchRecord} />
+      <Route path="/cases" component={CasesPage} />
       <Route path="/timeline" component={TimelinePage} />
       <Route path="/evidence" component={Evidence} />
       <Route path="/evidence/:id" component={EvidenceDetail} />

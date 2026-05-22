@@ -949,6 +949,7 @@ const prrRouter = router({
 /* =============== Patterns router =============== */
 const patternRouter = router({
   metrics: publicProcedure.query(async () => db.getPatternMetrics()),
+  siteStats: publicProcedure.query(async () => db.getSiteStats()),
 });
 
 /* =============== Docket Goblin (advisory only) =============== */

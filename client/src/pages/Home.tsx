@@ -76,13 +76,13 @@ export default function Home() {
     canonicalPath: "/",
   });
 
-  const { data: metrics } = trpc.patterns.metrics.useQuery();
+  const { data: siteStats } = trpc.patterns.siteStats.useQuery();
   const { data: recentDocs } = trpc.document.listPublic.useQuery({ limit: 4 } as any);
   const { data: recentTimeline } = trpc.timeline.listPublic.useQuery(undefined);
 
-  const docCount = (metrics?.submitted ?? 0) > 0 ? metrics!.submitted : "—";
-  const actorCount = "—";
-  const patternCount = (metrics?.speedyTrialIssues ?? 0) + (metrics?.farettaIssues ?? 0) + (metrics?.ignoredFilings ?? 0);
+  const docCount = siteStats?.documents ?? "—";
+  const actorCount = siteStats?.actors ?? "—";
+  const daysPretrial = siteStats?.daysSinceArrest ?? "1,100+";
 
   return (
     <SiteShell>
@@ -135,7 +135,7 @@ export default function Home() {
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mb-4">
               A public archive documenting what happens when highly credentialed legal professionals
               — judges, prosecutors, public defenders — apply their considerable expertise to
-              a single case for 900+ days and somehow still can't manage a trial.
+              a single case for 1,100+ days and somehow still can't manage a trial.
             </p>
 
             <p className="text-sm text-muted-foreground/70 mb-10 max-w-xl">
@@ -186,8 +186,8 @@ export default function Home() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatCard value={docCount} label="Documents archived" accent />
             <StatCard value={actorCount} label="Named actors" />
-            <StatCard value={patternCount > 0 ? patternCount : "—"} label="Misconduct signals" />
-            <StatCard value="110+" label="Days pretrial custody" sub="No trial. No conviction." />
+            <StatCard value={siteStats?.timelineEvents ?? "—"} label="Documented events" />
+            <StatCard value={daysPretrial} label="Days pretrial" sub="No trial. No conviction." accent />
           </div>
         </div>
       </section>

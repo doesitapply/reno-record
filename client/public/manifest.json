@@ -1,0 +1,48 @@
+{
+  "name": "The Reno Record",
+  "short_name": "Reno Record",
+  "description": "Public accountability archive. Two cases. One record. Every document sourced.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1f",
+  "theme_color": "#c9a84c",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["news", "government", "legal"],
+  "shortcuts": [
+    {
+      "name": "Timeline",
+      "short_name": "Timeline",
+      "description": "View the unified case timeline",
+      "url": "/timeline",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Evidence",
+      "short_name": "Evidence",
+      "description": "Browse case documents",
+      "url": "/evidence",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "The Cases",
+      "short_name": "Cases",
+      "description": "State and federal case overview",
+      "url": "/cases",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

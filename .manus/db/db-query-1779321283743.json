@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, case_number, date_case_started, custody_days FROM stories LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, case_number, date_case_started, custody_days FROM stories LIMIT 5;",
+  "rows": [
+    {
+      "id": "60001",
+      "case_number": "CR23-0657",
+      "date_case_started": "2023-03-12 00:00:00",
+      "custody_days": "110"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcase_number\tdate_case_started\tcustody_days\n60001\tCR23-0657\t2023-03-12 00:00:00\t110\n",
+  "stderr": "",
+  "execution_time_ms": 585
+}

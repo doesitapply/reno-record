@@ -1101,3 +1101,26 @@ export async function getAgencyDocumentCount(agencyId: number): Promise<number> 
     .where(and(eq(actorAgencyRoles.agencyId, agencyId), eq(documents.publicStatus, true)));
   return rows[0]?.cnt ?? 0;
 }
+
+/* =============== Site Stats (live dashboard counts) =============== */
+export async function getSiteStats() {
+  const ARREST_DATE = new Date('2023-03-12T00:00:00Z');
+  const empty = { documents: 0, actors: 0, timelineEvents: 0, prrs: 0, daysSinceArrest: 0, arrestDate: '2023-03-12' };
+  const db = await getDb();
+  if (!db) return empty;
+  const [docRows, actorRows, eventRows, prrRows] = await Promise.all([
+    db.select({ cnt: count() }).from(documents).where(and(eq(documents.publicStatus, true), eq(documents.reviewStatus, 'approved'))),
+    db.select({ cnt: count() }).from(actors),
+    db.select({ cnt: count() }).from(timelineEvents),
+    db.select({ cnt: count() }).from(publicRecordsRequests),
+  ]);
+  const daysSinceArrest = Math.floor((Date.now() - ARREST_DATE.getTime()) / (1000 * 60 * 60 * 24));
+  return {
+    documents: docRows[0]?.cnt ?? 0,
+    actors: actorRows[0]?.cnt ?? 0,
+    timelineEvents: eventRows[0]?.cnt ?? 0,
+    prrs: prrRows[0]?.cnt ?? 0,
+    daysSinceArrest,
+    arrestDate: '2023-03-12',
+  };
+}
