@@ -1,6 +1,8 @@
+import { Link } from "wouter";
 import { useSEO } from "@/hooks/useSEO";
 import SiteShell from "@/components/SiteShell";
 import { trpc } from "@/lib/trpc";
+import { ExternalLink } from "lucide-react";
 
 type Metric = {
   label: string;
@@ -185,14 +187,16 @@ export default function PatternsPage() {
                 </p>
                 <div className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {(d.tagCounts as Array<{ slug: string; label: string; count: number }>).map((t) => (
-                    <MetricCard
-                      key={t.slug}
-                      m={{
-                        label: t.label,
-                        value: t.count,
-                        tone: t.count > 3 ? "alarm" : t.count > 0 ? "warning" : "neutral",
-                      }}
-                    />
+                    <Link key={t.slug} href={`/patterns/tag/${t.slug}`} className="block group">
+                      <MetricCard
+                        m={{
+                          label: t.label,
+                          value: t.count,
+                          tone: t.count > 3 ? "alarm" : t.count > 0 ? "warning" : "neutral",
+                        }}
+                        clickable
+                      />
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -204,7 +208,7 @@ export default function PatternsPage() {
   );
 }
 
-function MetricCard({ m }: { m: Metric }) {
+function MetricCard({ m, clickable }: { m: Metric; clickable?: boolean }) {
   const accent =
     m.tone === "alarm"
       ? "border-l-[var(--rust)]"
@@ -212,10 +216,14 @@ function MetricCard({ m }: { m: Metric }) {
         ? "border-l-[var(--amber)]"
         : "border-l-foreground/30";
   return (
-    <div className={"paper-card p-5 border-l-4 " + accent}>
-      <div className="display-serif text-4xl">{Number(m.value).toLocaleString()}</div>
+    <div className={"paper-card p-5 border-l-4 transition-colors " + accent + (clickable ? " hover:border-amber-400/60 cursor-pointer" : "")}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="display-serif text-4xl">{Number(m.value).toLocaleString()}</div>
+        {clickable && <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-amber-400/60 transition-colors flex-shrink-0 mt-1.5" />}
+      </div>
       <div className="eyebrow !text-[0.62rem] mt-2">{m.label}</div>
       {m.hint && <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{m.hint}</p>}
+      {clickable && <p className="text-xs text-muted-foreground/50 mt-2 font-mono">View source quotes →</p>}
     </div>
   );
 }

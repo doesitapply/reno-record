@@ -295,6 +295,10 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [ ] Wire live siteStats to homepage stats bar
 - [ ] Update nav to include Cases section
 
+- [x] Violation tag cards in Evidence Signals section are clickable (link to /patterns/tag/:slug)
+- [x] ViolationTagDetail page: shows tag metadata, document count, quote count, grouped documents with source quotes and citations
+- [x] patterns.tagDetail tRPC procedure: returns tag + all public+approved document entries with source quotes
+
 ## v5.1 — Violation Tag Assignments (Completed)
 
 - [x] 136 violation tag assignments inserted into document_violation_tags across 38 documents and 14 violation tags

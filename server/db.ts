@@ -1124,3 +1124,49 @@ export async function getSiteStats() {
     arrestDate: '2023-03-12',
   };
 }
+
+/* =============== Violation Tag Detail (public — for clickable tag pages) =============== */
+export async function getViolationTagDetail(slug: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  // 1. Fetch the tag itself
+  const tagRows = await db
+    .select()
+    .from(violationTags)
+    .where(eq(violationTags.slug, slug))
+    .limit(1);
+  const tag = tagRows[0] ?? null;
+  if (!tag) return null;
+
+  // 2. Fetch all public+approved documents tagged with this violation,
+  //    joining through document_violation_tags to get the source quote per document.
+  //    A document may have multiple quotes for the same tag; we return all of them.
+  const rows = await db
+    .select({
+      dvtId: documentViolationTags.id,
+      sourceQuote: documentViolationTags.sourceQuote,
+      sourceCitation: documentViolationTags.sourceCitation,
+      confidence: documentViolationTags.confidence,
+      addedBy: documentViolationTags.addedBy,
+      docId: documents.id,
+      docTitle: documents.title,
+      docSourceType: documents.sourceType,
+      docCaseNumber: documents.caseNumber,
+      docDate: documents.documentDate,
+      docFileUrl: documents.fileUrl,
+    })
+    .from(documentViolationTags)
+    .innerJoin(violationTags, eq(documentViolationTags.violationTagId, violationTags.id))
+    .innerJoin(documents, eq(documentViolationTags.documentId, documents.id))
+    .where(
+      and(
+        eq(violationTags.slug, slug),
+        eq(documents.publicStatus, true),
+        eq(documents.reviewStatus, "approved"),
+      ),
+    )
+    .orderBy(asc(documents.documentDate), asc(documentViolationTags.id));
+
+  return { tag, entries: rows };
+}

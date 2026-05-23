@@ -950,6 +950,20 @@ const prrRouter = router({
 const patternRouter = router({
   metrics: publicProcedure.query(async () => db.getPatternMetrics()),
   siteStats: publicProcedure.query(async () => db.getSiteStats()),
+  tagDetail: publicProcedure
+    .input(z.object({ slug: z.string().min(1).max(120) }))
+    .query(async ({ input }) => {
+      const result = await db.getViolationTagDetail(input.slug);
+      if (!result) return null;
+      // Rewrite file URLs to same-origin proxy paths
+      return {
+        tag: result.tag,
+        entries: result.entries.map((e) => ({
+          ...e,
+          docFileUrl: storageProxyUrlForKey(e.docFileUrl?.replace(/^\/manus-storage\//, '')) ?? e.docFileUrl,
+        })),
+      };
+    }),
 });
 
 /* =============== Docket Goblin (advisory only) =============== */
