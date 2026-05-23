@@ -1,0 +1,40 @@
+{
+  "query": "\nSELECT vt.id, vt.slug, vt.label, vt.category\nFROM violation_tags vt\nWHERE vt.category IN ('law_enforcement','public_records','civil_rights','other','prosecutorial_conduct')\nORDER BY vt.category, vt.label;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT vt.id, vt.slug, vt.label, vt.category\nFROM violation_tags vt\nWHERE vt.category IN ('law_enforcement','public_records','civil_rights','other','prosecutorial_conduct')\nORDER BY vt.category, vt.label;\n",
+  "rows": [
+    {
+      "id": "10",
+      "slug": "prosecutorial_misconduct",
+      "label": "Prosecutorial Misconduct",
+      "category": "prosecutorial_conduct"
+    },
+    {
+      "id": "15",
+      "slug": "public_records_noncompliance",
+      "label": "Public Records Noncompliance",
+      "category": "public_records"
+    },
+    {
+      "id": "12",
+      "slug": "access_to_courts_interference",
+      "label": "Access to Courts Interference",
+      "category": "civil_rights"
+    },
+    {
+      "id": "14",
+      "slug": "elder_or_caregiver_impact",
+      "label": "Elder or Caregiver Impact",
+      "category": "civil_rights"
+    },
+    {
+      "id": "6",
+      "slug": "retaliation_first_amendment",
+      "label": "First Amendment Retaliation",
+      "category": "civil_rights"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tslug\tlabel\tcategory\n10\tprosecutorial_misconduct\tProsecutorial Misconduct\tprosecutorial_conduct\n15\tpublic_records_noncompliance\tPublic Records Noncompliance\tpublic_records\n12\taccess_to_courts_interference\tAccess to Courts Interference\tcivil_rights\n14\telder_or_caregiver_impact\tElder or Caregiver Impact\tcivil_rights\n6\tretaliation_first_amendment\tFirst Amendment Retaliation\tcivil_rights\n",
+  "stderr": "",
+  "execution_time_ms": 726
+}

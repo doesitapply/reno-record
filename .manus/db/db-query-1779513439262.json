@@ -1,0 +1,290 @@
+{
+  "query": "\nSELECT id, title, source_type, case_tag, actor_names, case_number\nFROM documents\nWHERE public_status = 1 AND id > 210003\nORDER BY id ASC;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT id, title, source_type, case_tag, actor_names, case_number\nFROM documents\nWHERE public_status = 1 AND id > 210003\nORDER BY id ASC;\n",
+  "rows": [
+    {
+      "id": "210004",
+      "title": "Hicks Emails — Exhibit Pack (Correspondence with Court/Officials)",
+      "source_type": "email",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Hicks (Court/County Official)",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210005",
+      "title": "Case Exhibits and Legal Significance Index — State v. Church",
+      "source_type": "other",
+      "case_tag": "state",
+      "actor_names": "Cameron Church",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210006",
+      "title": "Transcripts Collection — Defense Meetings and Hearings (2024)",
+      "source_type": "transcript",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Galen Carrico",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210007",
+      "title": "Document Pack 1 — December 2024 Filings (Pro Se Motions)",
+      "source_type": "motion",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Judge Barry Breslow",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210008",
+      "title": "Document Pack 2 — January through March 2025 Filings",
+      "source_type": "motion",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Judge Barry Breslow, Aziz Merchant",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210009",
+      "title": "Document Pack 3 — April 18, 2025 Bad Faith Motions Pack",
+      "source_type": "motion",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Judge Barry Breslow, Aziz Merchant",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210010",
+      "title": "Document Pack 4 — April through June 2025 (In-Custody Period)",
+      "source_type": "other",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Judge Barry Breslow",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210011",
+      "title": "Document Pack 5 — July through August 2025 (Counsel Withdrawal Period)",
+      "source_type": "court_order",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Judge Barry Breslow, Aziz Merchant, Galen Carrico",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210012",
+      "title": "Document Pack 6 — September through November 2025",
+      "source_type": "court_order",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Judge Barry Breslow",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210013",
+      "title": "Document Pack — September 2025 through May 16, 2026 (Most Recent Period)",
+      "source_type": "other",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Judge Barry Breslow, Aziz Merchant",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210014",
+      "title": "2023 Complete Case Record — All Filings (March 2023 through December 2023)",
+      "source_type": "other",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Judge Barry Breslow, Aziz Merchant",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210015",
+      "title": "2024 State Record — All Filings (January 2024 through December 2024)",
+      "source_type": "other",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Judge Barry Breslow, Aziz Merchant, Galen Carrico",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "210016",
+      "title": "State Record — January 2, 2025 through June 6, 2025",
+      "source_type": "other",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Judge Barry Breslow, Aziz Merchant",
+      "case_number": "CR23-0657"
+    },
+    {
+      "id": "240001",
+      "title": "ECF 45 — Judicial Notice of Evidentiary Packs; Equal Treatment; Bad Faith Record",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240002",
+      "title": "ECF 45-1 — Evidentiary Pack: Main Point (259 pages)",
+      "source_type": "other",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240003",
+      "title": "ECF 45-2 — Evidentiary Pack: Main Hits (139 pages)",
+      "source_type": "other",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240004",
+      "title": "ECF 45-3 — Declaration in Support of ECF 45",
+      "source_type": "other",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240005",
+      "title": "ECF 46 — Plaintiff Reply",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240006",
+      "title": "ECF 47 — County Defendants Opposition to Sanctions Motion (ECF 43)",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Washoe County (Defendant)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240007",
+      "title": "ECF 48 — Reply in Support of Motion for Sanctions and Corrective Orders (ECF 43)",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240008",
+      "title": "ECF 48-1 — December 5, 2024 State Court Hearing Transcript (Exhibit)",
+      "source_type": "transcript",
+      "case_tag": "both",
+      "actor_names": "Judge Breslow; Cameron Church; Aziz Merchant",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240009",
+      "title": "ECF 49 — Order Dismissing Case Without Prejudice (Rooker-Feldman)",
+      "source_type": "court_order",
+      "case_tag": "federal",
+      "actor_names": "Judge Anne R. Traum",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240010",
+      "title": "ECF 50 — Plaintiff Motion to Alter or Amend Judgment (Rule 59(e))",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240011",
+      "title": "ECF 51 — Plaintiff Standalone Memorandum of Structural Injury",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240012",
+      "title": "ECF 52 — Defendants Opposition to Standalone Memorandum (ECF 51)",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Washoe County (Defendant)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240013",
+      "title": "ECF 53 — Defendants Opposition to Motion to Alter or Amend (ECF 50)",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Washoe County (Defendant)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240014",
+      "title": "ECF 54 — Plaintiff Reply to Defendants Oppositions (ECF 52 and 53)",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240015",
+      "title": "ECF 55 — Plaintiff Supplemental Memorandum",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240016",
+      "title": "ECF 56 — Plaintiff Notice of Readiness for Prompt Disposition of Post-Judgment Motions",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240017",
+      "title": "ECF 57 — Plaintiff Motion for Immediate Disposition of Pending Post-Judgment Motions",
+      "source_type": "motion",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240018",
+      "title": "ECF 57-1 — Exhibit to Motion for Immediate Disposition (ECF 57)",
+      "source_type": "other",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240019",
+      "title": "ECF 57-2 — Exhibit to Motion for Immediate Disposition (ECF 57)",
+      "source_type": "other",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff)",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "240020",
+      "title": "Federal Case Pack — Church v. Breslow et al. (Dec 13, 2025 Compilation)",
+      "source_type": "other",
+      "case_tag": "federal",
+      "actor_names": "Cameron Church (Plaintiff); Judge Anne R. Traum; Washoe County",
+      "case_number": "3:24-cv-00579-ART-CSD"
+    },
+    {
+      "id": "270001",
+      "title": "Email: 'Your Circus of Retaliation: A Brief Retrospective'",
+      "source_type": "email",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Aziz Merchant, Galen Carrico",
+      "case_number": "NULL"
+    },
+    {
+      "id": "270002",
+      "title": "Demand for Immediate Settlement and Notice of Potential Federal Civil Rights and RICO Litigation (Church v. Washoe County DA)",
+      "source_type": "email",
+      "case_tag": "state",
+      "actor_names": "Cameron Church, Marilyn Church, Christopher J. Hicks, Kendall Holcomb, Aziz Merchant, Barry L. Breslow, Washoe County District Attorney's Office, Reno Police Department, Washoe County Sheriff’s Office, Nevada Attorney General’s Office, U.S. Department of Justice – Civil Rights Division, U.S. Attorney’s Office – District of Nevada",
+      "case_number": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tsource_type\tcase_tag\tactor_names\tcase_number\n210004\tHicks Emails — Exhibit Pack (Correspondence with Court/Officials)\temail\tstate\tCameron Church, Hicks (Court/County Official)\tCR23-0657\n210005\tCase Exhibits and Legal Significance Index — State v. Church\tother\tstate\tCameron Church\tCR23-0657\n210006\tTranscripts Collection — Defense Meetings and Hearings (2024)\ttranscript\tstate\tCameron Church, Galen Carrico\tCR23-0657\n210007\tDocument Pack 1 — December 2024 Filings (Pro Se Motions)\tmotion\tstate\tCameron Church, Judge Barry Breslow\tCR23-0657\n210008\tDocument Pack 2 — January through March 2025 Filings\tmotion\tstate\tCameron Church, Judge Barry Breslow, Aziz Merchant\tCR23-0657\n210009\tDocument Pack 3 — April 18, 2025 Bad Faith Motions Pack\tmotion\tstate\tCameron Church, Judge Barry Breslow, Aziz Merchant\tCR23-0657\n210010\tDocument Pack 4 — April through June 2025 (In-Custody Period)\tother\tstate\tCameron Church, Judge Barry Breslow\tCR23-0657\n210011\tDocument Pack 5 — July through August 2025 (Counsel Withdrawal Period)\tcourt_order\tstate\tCameron Church, Judge Barry Breslow, Aziz Merchant, Galen Carrico\tCR23-0657\n210012\tDocument Pack 6 — September through November 2025\tcourt_order\tstate\tCameron Church, Judge Barry Breslow\tCR23-0657\n210013\tDocument Pack — September 2025 through May 16, 2026 (Most Recent Period)\tother\tstate\tCameron Church, Judge Barry Breslow, Aziz Merchant\tCR23-0657\n210014\t2023 Complete Case Record — All Filings (March 2023 through December 2023)\tother\tstate\tCameron Church, Judge Barry Breslow, Aziz Merchant\tCR23-0657\n210015\t2024 State Record — All Filings (January 2024 through December 2024)\tother\tstate\tCameron Church, Judge Barry Breslow, Aziz Merchant, Galen Carrico\tCR23-0657\n210016\tState Record — January 2, 2025 through June 6, 2025\tother\tstate\tCameron Church, Judge Barry Breslow, Aziz Merchant\tCR23-0657\n240001\tECF 45 — Judicial Notice of Evidentiary Packs; Equal Treatment; Bad Faith Record\tmotion\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240002\tECF 45-1 — Evidentiary Pack: Main Point (259 pages)\tother\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240003\tECF 45-2 — Evidentiary Pack: Main Hits (139 pages)\tother\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240004\tECF 45-3 — Declaration in Support of ECF 45\tother\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240005\tECF 46 — Plaintiff Reply\tmotion\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240006\tECF 47 — County Defendants Opposition to Sanctions Motion (ECF 43)\tmotion\tfederal\tWashoe County (Defendant)\t3:24-cv-00579-ART-CSD\n240007\tECF 48 — Reply in Support of Motion for Sanctions and Corrective Orders (ECF 43)\tmotion\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240008\tECF 48-1 — December 5, 2024 State Court Hearing Transcript (Exhibit)\ttranscript\tboth\tJudge Breslow; Cameron Church; Aziz Merchant\t3:24-cv-00579-ART-CSD\n240009\tECF 49 — Order Dismissing Case Without Prejudice (Rooker-Feldman)\tcourt_order\tfederal\tJudge Anne R. Traum\t3:24-cv-00579-ART-CSD\n240010\tECF 50 — Plaintiff Motion to Alter or Amend Judgment (Rule 59(e))\tmotion\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240011\tECF 51 — Plaintiff Standalone Memorandum of Structural Injury\tmotion\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240012\tECF 52 — Defendants Opposition to Standalone Memorandum (ECF 51)\tmotion\tfederal\tWashoe County (Defendant)\t3:24-cv-00579-ART-CSD\n240013\tECF 53 — Defendants Opposition to Motion to Alter or Amend (ECF 50)\tmotion\tfederal\tWashoe County (Defendant)\t3:24-cv-00579-ART-CSD\n240014\tECF 54 — Plaintiff Reply to Defendants Oppositions (ECF 52 and 53)\tmotion\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240015\tECF 55 — Plaintiff Supplemental Memorandum\tmotion\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240016\tECF 56 — Plaintiff Notice of Readiness for Prompt Disposition of Post-Judgment Motions\tmotion\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240017\tECF 57 — Plaintiff Motion for Immediate Disposition of Pending Post-Judgment Motions\tmotion\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240018\tECF 57-1 — Exhibit to Motion for Immediate Disposition (ECF 57)\tother\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240019\tECF 57-2 — Exhibit to Motion for Immediate Disposition (ECF 57)\tother\tfederal\tCameron Church (Plaintiff)\t3:24-cv-00579-ART-CSD\n240020\tFederal Case Pack — Church v. Breslow et al. (Dec 13, 2025 Compilation)\tother\tfederal\tCameron Church (Plaintiff); Judge Anne R. Traum; Washoe County\t3:24-cv-00579-ART-CSD\n270001\tEmail: 'Your Circus of Retaliation: A Brief Retrospective'\temail\tstate\tCameron Church, Aziz Merchant, Galen Carrico\tNULL\n270002\tDemand for Immediate Settlement and Notice of Potential Federal Civil Rights and RICO Litigation (Church v. Washoe County DA)\temail\tstate\tCameron Church, Marilyn Church, Christopher J. Hicks, Kendall Holcomb, Aziz Merchant, Barry L. Breslow, Washoe County District Attorney's Office, Reno Police Department, Washoe County Sheriff’s Office, Nevada Attorney General’s Office, U.S. Department of Justice – Civil Rights Division, U.S. Attorney’s Office – District of Nevada\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 568
+}

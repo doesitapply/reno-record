@@ -1,0 +1,75 @@
+{
+  "query": "SELECT vt.slug, vt.label, COUNT(dvt.id) as doc_count \nFROM document_violation_tags dvt\nJOIN violation_tags vt ON dvt.violation_tag_id = vt.id\nGROUP BY vt.id, vt.slug, vt.label\nORDER BY doc_count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT vt.slug, vt.label, COUNT(dvt.id) as doc_count \nFROM document_violation_tags dvt\nJOIN violation_tags vt ON dvt.violation_tag_id = vt.id\nGROUP BY vt.id, vt.slug, vt.label\nORDER BY doc_count DESC;",
+  "rows": [
+    {
+      "slug": "due_process_defect",
+      "label": "Due Process Defect",
+      "doc_count": "33"
+    },
+    {
+      "slug": "speedy_trial_delay",
+      "label": "Speedy Trial / Delay",
+      "doc_count": "25"
+    },
+    {
+      "slug": "faretta_self_representation",
+      "label": "Faretta / Self-Representation Rights",
+      "doc_count": "23"
+    },
+    {
+      "slug": "access_to_courts_interference",
+      "label": "Access to Courts Interference",
+      "doc_count": "19"
+    },
+    {
+      "slug": "judicial_disqualification_bias",
+      "label": "Judicial Disqualification / Bias",
+      "doc_count": "8"
+    },
+    {
+      "slug": "prosecutorial_misconduct",
+      "label": "Prosecutorial Misconduct",
+      "doc_count": "8"
+    },
+    {
+      "slug": "warrant_or_bail_defect",
+      "label": "Warrant or Bail Defect",
+      "doc_count": "8"
+    },
+    {
+      "slug": "competency_proceeding_abuse",
+      "label": "Competency Proceeding Abuse",
+      "doc_count": "7"
+    },
+    {
+      "slug": "record_integrity_issue",
+      "label": "Record Integrity Issue",
+      "doc_count": "2"
+    },
+    {
+      "slug": "retaliation_first_amendment",
+      "label": "First Amendment Retaliation",
+      "doc_count": "1"
+    },
+    {
+      "slug": "fourth_amendment_search_seizure",
+      "label": "Fourth Amendment / Search and Seizure",
+      "doc_count": "1"
+    },
+    {
+      "slug": "public_records_noncompliance",
+      "label": "Public Records Noncompliance",
+      "doc_count": "1"
+    },
+    {
+      "slug": "elder_or_caregiver_impact",
+      "label": "Elder or Caregiver Impact",
+      "doc_count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "slug\tlabel\tdoc_count\ndue_process_defect\tDue Process Defect\t33\nspeedy_trial_delay\tSpeedy Trial / Delay\t25\nfaretta_self_representation\tFaretta / Self-Representation Rights\t23\naccess_to_courts_interference\tAccess to Courts Interference\t19\njudicial_disqualification_bias\tJudicial Disqualification / Bias\t8\nprosecutorial_misconduct\tProsecutorial Misconduct\t8\nwarrant_or_bail_defect\tWarrant or Bail Defect\t8\ncompetency_proceeding_abuse\tCompetency Proceeding Abuse\t7\nrecord_integrity_issue\tRecord Integrity Issue\t2\nretaliation_first_amendment\tFirst Amendment Retaliation\t1\nfourth_amendment_search_seizure\tFourth Amendment / Search and Seizure\t1\npublic_records_noncompliance\tPublic Records Noncompliance\t1\nelder_or_caregiver_impact\tElder or Caregiver Impact\t1\n",
+  "stderr": "",
+  "execution_time_ms": 676
+}

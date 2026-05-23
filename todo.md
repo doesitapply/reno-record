@@ -180,7 +180,7 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [x] Schema: actor_agency_roles table (actorId, agencyId, title, startDate, endDate, isCurrent, notes)
 - [x] Schema: actor_document_links table (actorId, documentId, role, confidence, extractedFrom)
 - [x] Schema: actor_timeline_links tablele (actorId, timelineEventId, role)
-- [ ] Schema: document_violation_tags table (documentId, violationTagId, sourceQuote, sourceCitation, confidence, addedBy, addedAt)
+- [x] Schema: document_violation_tags table (documentId, violationTagId, sourceQuote, sourceCitation, confidence, addedBy, addedAt)
 - [x] Schema: update actors table — add primaryAgencyId FK, remove freetext agencyName (keep for migration compat)
 - [x] Migration generated and applied
 - [x] Seed: 10 Washoe County agencies with correct agency_type and jurisdiction fields
@@ -294,3 +294,10 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [ ] Fix getSiteStats in db.ts (live counts for homepage dashboard)
 - [ ] Wire live siteStats to homepage stats bar
 - [ ] Update nav to include Cases section
+
+## v5.1 — Violation Tag Assignments (Completed)
+
+- [x] 136 violation tag assignments inserted into document_violation_tags across 38 documents and 14 violation tags
+- [x] Tag breakdown: due_process_defect (33), speedy_trial_delay (25), faretta_self_representation (23), access_to_courts_interference (19), prosecutorial_misconduct (8), judicial_disqualification_bias (8), warrant_or_bail_defect (8), competency_proceeding_abuse (7), record_integrity_issue (2), retaliation_first_amendment (1), fourth_amendment_search_seizure (1), public_records_noncompliance (1), elder_or_caregiver_impact (1)
+- [x] All assignments sourced with source_quote and source_citation, added_by=goblin
+- [x] Checkpoint saved

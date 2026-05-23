@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as total FROM document_violation_tags;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT COUNT(*) as total FROM document_violation_tags;",
+  "rows": [
+    {
+      "total": "137"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n137\n",
+  "stderr": "",
+  "execution_time_ms": 567
+}

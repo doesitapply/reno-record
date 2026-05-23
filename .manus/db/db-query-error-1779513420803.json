@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT d.id, d.title, d.doc_type, d.case_tag, d.filed_by, d.case_number, d.description\nFROM documents d\nWHERE d.is_public = 1\nORDER BY d.filed_date ASC;\n\nSELECT id, slug, label, category FROM violation_tags ORDER BY category, label;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT d.id, d.title, d.doc_type, d.case_tag, d.filed_by, d.case_number, d.description\nFROM documents d\nWHERE d.is_public = 1\nORDER BY d.filed_date ASC;\n\nSELECT id, slug, label, category FROM violation_tags ORDER BY category, label;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'd.filed_date' in 'order clause'"
+  ]
+}

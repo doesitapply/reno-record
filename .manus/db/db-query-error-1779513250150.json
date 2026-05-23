@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT vt.id, vt.name, vt.description, vt.severity, vt.legal_basis, vt.created_at,\n  COUNT(dvt.document_id) as doc_count\nFROM violation_tags vt\nLEFT JOIN document_violation_tags dvt ON vt.id = dvt.violation_tag_id\nGROUP BY vt.id, vt.name, vt.description, vt.severity, vt.legal_basis, vt.created_at\nORDER BY vt.severity DESC, vt.name;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT vt.id, vt.name, vt.description, vt.severity, vt.legal_basis, vt.created_at,\n  COUNT(dvt.document_id) as doc_count\nFROM violation_tags vt\nLEFT JOIN document_violation_tags dvt ON vt.id = dvt.violation_tag_id\nGROUP BY vt.id, vt.name, vt.description, vt.severity, vt.legal_basis, vt.created_at\nORDER BY vt.severity DESC, vt.name;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'vt.name' in 'group statement'"
+  ]
+}

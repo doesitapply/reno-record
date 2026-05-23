@@ -1,0 +1,162 @@
+{
+  "query": "SELECT id, title FROM documents WHERE id IN (180001,180002,210001,210002,210003,210004,210005,210006,210007,210008,210009,210010,210011,210012,210013,210014,210015,210016,240001,240002,240003,240004,240005,240006,240007,240008,240009,240010,240011,240012,240013,240014,240015,240016,240017,240018,240019,240020) ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, title FROM documents WHERE id IN (180001,180002,210001,210002,210003,210004,210005,210006,210007,210008,210009,210010,210011,210012,210013,210014,210015,210016,240001,240002,240003,240004,240005,240006,240007,240008,240009,240010,240011,240012,240013,240014,240015,240016,240017,240018,240019,240020) ORDER BY id;",
+  "rows": [
+    {
+      "id": "180001",
+      "title": "Legal Memorandum Analyzing Exhibits in State v. Church (CR23-0657)"
+    },
+    {
+      "id": "180002",
+      "title": "Exhibit Index and Legal Memorandum: State of Nevada v. Cameron Doyle Church (CR23-0657)"
+    },
+    {
+      "id": "210001",
+      "title": "December 5, 2024 Young/Faretta/Competency Hearing Transcript"
+    },
+    {
+      "id": "210002",
+      "title": "February 21, 2025 — Call with US Marshal Supervisor (Standoff Aftermath)"
+    },
+    {
+      "id": "210003",
+      "title": "Cody Meredith (Pretrial Services) — Text Communication Log, July–August 2025"
+    },
+    {
+      "id": "210004",
+      "title": "Hicks Emails — Exhibit Pack (Correspondence with Court/Officials)"
+    },
+    {
+      "id": "210005",
+      "title": "Case Exhibits and Legal Significance Index — State v. Church"
+    },
+    {
+      "id": "210006",
+      "title": "Transcripts Collection — Defense Meetings and Hearings (2024)"
+    },
+    {
+      "id": "210007",
+      "title": "Document Pack 1 — December 2024 Filings (Pro Se Motions)"
+    },
+    {
+      "id": "210008",
+      "title": "Document Pack 2 — January through March 2025 Filings"
+    },
+    {
+      "id": "210009",
+      "title": "Document Pack 3 — April 18, 2025 Bad Faith Motions Pack"
+    },
+    {
+      "id": "210010",
+      "title": "Document Pack 4 — April through June 2025 (In-Custody Period)"
+    },
+    {
+      "id": "210011",
+      "title": "Document Pack 5 — July through August 2025 (Counsel Withdrawal Period)"
+    },
+    {
+      "id": "210012",
+      "title": "Document Pack 6 — September through November 2025"
+    },
+    {
+      "id": "210013",
+      "title": "Document Pack — September 2025 through May 16, 2026 (Most Recent Period)"
+    },
+    {
+      "id": "210014",
+      "title": "2023 Complete Case Record — All Filings (March 2023 through December 2023)"
+    },
+    {
+      "id": "210015",
+      "title": "2024 State Record — All Filings (January 2024 through December 2024)"
+    },
+    {
+      "id": "210016",
+      "title": "State Record — January 2, 2025 through June 6, 2025"
+    },
+    {
+      "id": "240001",
+      "title": "ECF 45 — Judicial Notice of Evidentiary Packs; Equal Treatment; Bad Faith Record"
+    },
+    {
+      "id": "240002",
+      "title": "ECF 45-1 — Evidentiary Pack: Main Point (259 pages)"
+    },
+    {
+      "id": "240003",
+      "title": "ECF 45-2 — Evidentiary Pack: Main Hits (139 pages)"
+    },
+    {
+      "id": "240004",
+      "title": "ECF 45-3 — Declaration in Support of ECF 45"
+    },
+    {
+      "id": "240005",
+      "title": "ECF 46 — Plaintiff Reply"
+    },
+    {
+      "id": "240006",
+      "title": "ECF 47 — County Defendants Opposition to Sanctions Motion (ECF 43)"
+    },
+    {
+      "id": "240007",
+      "title": "ECF 48 — Reply in Support of Motion for Sanctions and Corrective Orders (ECF 43)"
+    },
+    {
+      "id": "240008",
+      "title": "ECF 48-1 — December 5, 2024 State Court Hearing Transcript (Exhibit)"
+    },
+    {
+      "id": "240009",
+      "title": "ECF 49 — Order Dismissing Case Without Prejudice (Rooker-Feldman)"
+    },
+    {
+      "id": "240010",
+      "title": "ECF 50 — Plaintiff Motion to Alter or Amend Judgment (Rule 59(e))"
+    },
+    {
+      "id": "240011",
+      "title": "ECF 51 — Plaintiff Standalone Memorandum of Structural Injury"
+    },
+    {
+      "id": "240012",
+      "title": "ECF 52 — Defendants Opposition to Standalone Memorandum (ECF 51)"
+    },
+    {
+      "id": "240013",
+      "title": "ECF 53 — Defendants Opposition to Motion to Alter or Amend (ECF 50)"
+    },
+    {
+      "id": "240014",
+      "title": "ECF 54 — Plaintiff Reply to Defendants Oppositions (ECF 52 and 53)"
+    },
+    {
+      "id": "240015",
+      "title": "ECF 55 — Plaintiff Supplemental Memorandum"
+    },
+    {
+      "id": "240016",
+      "title": "ECF 56 — Plaintiff Notice of Readiness for Prompt Disposition of Post-Judgment Motions"
+    },
+    {
+      "id": "240017",
+      "title": "ECF 57 — Plaintiff Motion for Immediate Disposition of Pending Post-Judgment Motions"
+    },
+    {
+      "id": "240018",
+      "title": "ECF 57-1 — Exhibit to Motion for Immediate Disposition (ECF 57)"
+    },
+    {
+      "id": "240019",
+      "title": "ECF 57-2 — Exhibit to Motion for Immediate Disposition (ECF 57)"
+    },
+    {
+      "id": "240020",
+      "title": "Federal Case Pack — Church v. Breslow et al. (Dec 13, 2025 Compilation)"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\n180001\tLegal Memorandum Analyzing Exhibits in State v. Church (CR23-0657)\n180002\tExhibit Index and Legal Memorandum: State of Nevada v. Cameron Doyle Church (CR23-0657)\n210001\tDecember 5, 2024 Young/Faretta/Competency Hearing Transcript\n210002\tFebruary 21, 2025 — Call with US Marshal Supervisor (Standoff Aftermath)\n210003\tCody Meredith (Pretrial Services) — Text Communication Log, July–August 2025\n210004\tHicks Emails — Exhibit Pack (Correspondence with Court/Officials)\n210005\tCase Exhibits and Legal Significance Index — State v. Church\n210006\tTranscripts Collection — Defense Meetings and Hearings (2024)\n210007\tDocument Pack 1 — December 2024 Filings (Pro Se Motions)\n210008\tDocument Pack 2 — January through March 2025 Filings\n210009\tDocument Pack 3 — April 18, 2025 Bad Faith Motions Pack\n210010\tDocument Pack 4 — April through June 2025 (In-Custody Period)\n210011\tDocument Pack 5 — July through August 2025 (Counsel Withdrawal Period)\n210012\tDocument Pack 6 — September through November 2025\n210013\tDocument Pack — September 2025 through May 16, 2026 (Most Recent Period)\n210014\t2023 Complete Case Record — All Filings (March 2023 through December 2023)\n210015\t2024 State Record — All Filings (January 2024 through December 2024)\n210016\tState Record — January 2, 2025 through June 6, 2025\n240001\tECF 45 — Judicial Notice of Evidentiary Packs; Equal Treatment; Bad Faith Record\n240002\tECF 45-1 — Evidentiary Pack: Main Point (259 pages)\n240003\tECF 45-2 — Evidentiary Pack: Main Hits (139 pages)\n240004\tECF 45-3 — Declaration in Support of ECF 45\n240005\tECF 46 — Plaintiff Reply\n240006\tECF 47 — County Defendants Opposition to Sanctions Motion (ECF 43)\n240007\tECF 48 — Reply in Support of Motion for Sanctions and Corrective Orders (ECF 43)\n240008\tECF 48-1 — December 5, 2024 State Court Hearing Transcript (Exhibit)\n240009\tECF 49 — Order Dismissing Case Without Prejudice (Rooker-Feldman)\n240010\tECF 50 — Plaintiff Motion to Alter or Amend Judgment (Rule 59(e))\n240011\tECF 51 — Plaintiff Standalone Memorandum of Structural Injury\n240012\tECF 52 — Defendants Opposition to Standalone Memorandum (ECF 51)\n240013\tECF 53 — Defendants Opposition to Motion to Alter or Amend (ECF 50)\n240014\tECF 54 — Plaintiff Reply to Defendants Oppositions (ECF 52 and 53)\n240015\tECF 55 — Plaintiff Supplemental Memorandum\n240016\tECF 56 — Plaintiff Notice of Readiness for Prompt Disposition of Post-Judgment Motions\n240017\tECF 57 — Plaintiff Motion for Immediate Disposition of Pending Post-Judgment Motions\n240018\tECF 57-1 — Exhibit to Motion for Immediate Disposition (ECF 57)\n240019\tECF 57-2 — Exhibit to Motion for Immediate Disposition (ECF 57)\n240020\tFederal Case Pack — Church v. Breslow et al. (Dec 13, 2025 Compilation)\n",
+  "stderr": "",
+  "execution_time_ms": 573
+}

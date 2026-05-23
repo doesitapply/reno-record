@@ -1,0 +1,138 @@
+{
+  "query": "DESCRIBE violation_tags; DESCRIBE document_violation_tags;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute DESCRIBE violation_tags; DESCRIBE document_violation_tags;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "slug",
+      "Type": "varchar(120)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "label",
+      "Type": "varchar(200)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "category",
+      "Type": "enum('constitutional','procedural','discovery','judicial_conduct','prosecutorial_conduct','law_enforcement','public_records','civil_rights','other')",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "other",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "Field",
+      "Type": "Type",
+      "Null": "Null",
+      "Key": "Key",
+      "Default": "Default",
+      "Extra": "Extra"
+    },
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "document_id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "violation_tag_id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "source_quote",
+      "Type": "text",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "source_citation",
+      "Type": "varchar(300)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "confidence",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "100",
+      "Extra": ""
+    },
+    {
+      "Field": "added_by",
+      "Type": "enum('human','goblin')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "human",
+      "Extra": ""
+    },
+    {
+      "Field": "added_by_user_id",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nslug\tvarchar(120)\tNO\tUNI\tNULL\t\nlabel\tvarchar(200)\tNO\t\tNULL\t\ndescription\ttext\tYES\t\tNULL\t\ncategory\tenum('constitutional','procedural','discovery','judicial_conduct','prosecutorial_conduct','law_enforcement','public_records','civil_rights','other')\tNO\tMUL\tother\t\ncreated_at\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nField\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\ndocument_id\tint\tNO\tMUL\tNULL\t\nviolation_tag_id\tint\tNO\tMUL\tNULL\t\nsource_quote\ttext\tNO\t\tNULL\t\nsource_citation\tvarchar(300)\tYES\t\tNULL\t\nconfidence\tint\tNO\t\t100\t\nadded_by\tenum('human','goblin')\tNO\t\thuman\t\nadded_by_user_id\tint\tYES\t\tNULL\t\ncreated_at\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\n",
+  "stderr": "",
+  "execution_time_ms": 753
+}
