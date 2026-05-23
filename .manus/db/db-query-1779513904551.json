@@ -1,0 +1,190 @@
+{
+  "query": "SELECT id, title, category, event_date FROM timeline_events WHERE category IN ('state_case', 'federal_case', 'motion', 'competency', 'warrant', 'custody') ORDER BY event_date LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, title, category, event_date FROM timeline_events WHERE category IN ('state_case', 'federal_case', 'motion', 'competency', 'warrant', 'custody') ORDER BY event_date LIMIT 30;",
+  "rows": [
+    {
+      "id": "150001",
+      "title": "Declaration of probable cause and arrest",
+      "category": "state_case",
+      "event_date": "2023-03-13 00:00:00"
+    },
+    {
+      "id": "150002",
+      "title": "Early case assignment request filed",
+      "category": "state_case",
+      "event_date": "2023-03-18 00:00:00"
+    },
+    {
+      "id": "150003",
+      "title": "Original criminal complaint filed (Reno Justice Court)",
+      "category": "state_case",
+      "event_date": "2023-03-21 00:00:00"
+    },
+    {
+      "id": "150004",
+      "title": "Amended complaint, preliminary-hearing waiver, and bindover",
+      "category": "state_case",
+      "event_date": "2023-08-19 00:00:00"
+    },
+    {
+      "id": "150005",
+      "title": "Pretrial services court note — release condition issues",
+      "category": "state_case",
+      "event_date": "2023-09-02 00:00:00"
+    },
+    {
+      "id": "150006",
+      "title": "District Court Information filed; second preliminary-examination waiver",
+      "category": "state_case",
+      "event_date": "2023-09-09 00:00:00"
+    },
+    {
+      "id": "150007",
+      "title": "Arraignment — not guilty plea; 60-day trial rule waived",
+      "category": "state_case",
+      "event_date": "2023-09-13 00:00:00"
+    },
+    {
+      "id": "150008",
+      "title": "Own-recognizance release revoked",
+      "category": "custody",
+      "event_date": "2023-10-10 00:00:00"
+    },
+    {
+      "id": "150009",
+      "title": "Substitution of counsel — Sydney Hutt replaces Cooper Brinson",
+      "category": "state_case",
+      "event_date": "2024-01-18 00:00:00"
+    },
+    {
+      "id": "150010",
+      "title": "Trial continued — stand-in counsel requests vacation of trial date",
+      "category": "state_case",
+      "event_date": "2024-04-24 00:00:00"
+    },
+    {
+      "id": "150011",
+      "title": "Pro se motion to dismiss and request for new counsel filed",
+      "category": "motion",
+      "event_date": "2024-05-09 00:00:00"
+    },
+    {
+      "id": "150012",
+      "title": "Order striking defendant's pro se motion to dismiss",
+      "category": "state_case",
+      "event_date": "2024-05-10 00:00:00"
+    },
+    {
+      "id": "150013",
+      "title": "Sydney Hutt requests Young hearing",
+      "category": "motion",
+      "event_date": "2024-05-17 00:00:00"
+    },
+    {
+      "id": "150014",
+      "title": "Young hearing — APD relieved; conflict counsel referral ordered",
+      "category": "state_case",
+      "event_date": "2024-05-31 00:00:00"
+    },
+    {
+      "id": "150015",
+      "title": "Galen Carrico appointed as conflict counsel",
+      "category": "state_case",
+      "event_date": "2024-06-04 00:00:00"
+    },
+    {
+      "id": "150016",
+      "title": "Jury trial set for March 24, 2025",
+      "category": "state_case",
+      "event_date": "2024-07-11 00:00:00"
+    },
+    {
+      "id": "150017",
+      "title": "Second Young motion filed by Carrico",
+      "category": "motion",
+      "event_date": "2024-09-12 00:00:00"
+    },
+    {
+      "id": "150018",
+      "title": "Order granting motion to strike pro se sanctions filing",
+      "category": "state_case",
+      "event_date": "2024-10-29 00:00:00"
+    },
+    {
+      "id": "150019",
+      "title": "Pro se motion for leave to file pro se motions",
+      "category": "motion",
+      "event_date": "2024-10-31 00:00:00"
+    },
+    {
+      "id": "150020",
+      "title": "Pro se motion to dismiss indictment with prejudice",
+      "category": "motion",
+      "event_date": "2024-11-27 00:00:00"
+    },
+    {
+      "id": "150021",
+      "title": "Pro se sanctions motion against Chief DDA Mary Kandaras",
+      "category": "motion",
+      "event_date": "2024-11-30 00:00:00"
+    },
+    {
+      "id": "150022",
+      "title": "Order striking defendant's late-November pro se filings",
+      "category": "state_case",
+      "event_date": "2024-12-04 00:00:00"
+    },
+    {
+      "id": "150023",
+      "title": "Young hearing — competency evaluation ordered; proceedings stayed",
+      "category": "competency",
+      "event_date": "2024-12-06 00:00:00"
+    },
+    {
+      "id": "150024",
+      "title": "Competency order entered nunc pro tunc to December 5",
+      "category": "competency",
+      "event_date": "2024-12-10 00:00:00"
+    },
+    {
+      "id": "150025",
+      "title": "Order to show cause — competency evaluation compliance",
+      "category": "state_case",
+      "event_date": "2024-12-17 00:00:00"
+    },
+    {
+      "id": "150026",
+      "title": "OSC hearing — pretrial release revoked; no-bail bench warrant issued",
+      "category": "warrant",
+      "event_date": "2024-12-18 00:00:00"
+    },
+    {
+      "id": "150027",
+      "title": "Bench warrant and extradition order materials",
+      "category": "warrant",
+      "event_date": "2024-12-20 00:00:00"
+    },
+    {
+      "id": "180001",
+      "title": "Federal Civil Rights Complaint Filed (ECF 5)",
+      "category": "federal_case",
+      "event_date": "2025-01-06 00:00:00"
+    },
+    {
+      "id": "180002",
+      "title": "Emergency Motion for Temporary Restraining Order Filed (ECF 9)",
+      "category": "federal_case",
+      "event_date": "2025-01-06 00:00:00"
+    },
+    {
+      "id": "150028",
+      "title": "State files motion for contempt over pro se filings",
+      "category": "motion",
+      "event_date": "2025-01-07 00:00:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tcategory\tevent_date\n150001\tDeclaration of probable cause and arrest\tstate_case\t2023-03-13 00:00:00\n150002\tEarly case assignment request filed\tstate_case\t2023-03-18 00:00:00\n150003\tOriginal criminal complaint filed (Reno Justice Court)\tstate_case\t2023-03-21 00:00:00\n150004\tAmended complaint, preliminary-hearing waiver, and bindover\tstate_case\t2023-08-19 00:00:00\n150005\tPretrial services court note — release condition issues\tstate_case\t2023-09-02 00:00:00\n150006\tDistrict Court Information filed; second preliminary-examination waiver\tstate_case\t2023-09-09 00:00:00\n150007\tArraignment — not guilty plea; 60-day trial rule waived\tstate_case\t2023-09-13 00:00:00\n150008\tOwn-recognizance release revoked\tcustody\t2023-10-10 00:00:00\n150009\tSubstitution of counsel — Sydney Hutt replaces Cooper Brinson\tstate_case\t2024-01-18 00:00:00\n150010\tTrial continued — stand-in counsel requests vacation of trial date\tstate_case\t2024-04-24 00:00:00\n150011\tPro se motion to dismiss and request for new counsel filed\tmotion\t2024-05-09 00:00:00\n150012\tOrder striking defendant's pro se motion to dismiss\tstate_case\t2024-05-10 00:00:00\n150013\tSydney Hutt requests Young hearing\tmotion\t2024-05-17 00:00:00\n150014\tYoung hearing — APD relieved; conflict counsel referral ordered\tstate_case\t2024-05-31 00:00:00\n150015\tGalen Carrico appointed as conflict counsel\tstate_case\t2024-06-04 00:00:00\n150016\tJury trial set for March 24, 2025\tstate_case\t2024-07-11 00:00:00\n150017\tSecond Young motion filed by Carrico\tmotion\t2024-09-12 00:00:00\n150018\tOrder granting motion to strike pro se sanctions filing\tstate_case\t2024-10-29 00:00:00\n150019\tPro se motion for leave to file pro se motions\tmotion\t2024-10-31 00:00:00\n150020\tPro se motion to dismiss indictment with prejudice\tmotion\t2024-11-27 00:00:00\n150021\tPro se sanctions motion against Chief DDA Mary Kandaras\tmotion\t2024-11-30 00:00:00\n150022\tOrder striking defendant's late-November pro se filings\tstate_case\t2024-12-04 00:00:00\n150023\tYoung hearing — competency evaluation ordered; proceedings stayed\tcompetency\t2024-12-06 00:00:00\n150024\tCompetency order entered nunc pro tunc to December 5\tcompetency\t2024-12-10 00:00:00\n150025\tOrder to show cause — competency evaluation compliance\tstate_case\t2024-12-17 00:00:00\n150026\tOSC hearing — pretrial release revoked; no-bail bench warrant issued\twarrant\t2024-12-18 00:00:00\n150027\tBench warrant and extradition order materials\twarrant\t2024-12-20 00:00:00\n180001\tFederal Civil Rights Complaint Filed (ECF 5)\tfederal_case\t2025-01-06 00:00:00\n180002\tEmergency Motion for Temporary Restraining Order Filed (ECF 9)\tfederal_case\t2025-01-06 00:00:00\n150028\tState files motion for contempt over pro se filings\tmotion\t2025-01-07 00:00:00\n",
+  "stderr": "",
+  "execution_time_ms": 592
+}

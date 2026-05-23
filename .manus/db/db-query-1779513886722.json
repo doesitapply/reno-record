@@ -1,0 +1,95 @@
+{
+  "query": "SELECT id, name, role FROM actors ORDER BY id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, name, role FROM actors ORDER BY id LIMIT 20;",
+  "rows": [
+    {
+      "id": "90001",
+      "name": "Barry L. Breslow",
+      "role": "District Judge, Department 8"
+    },
+    {
+      "id": "90002",
+      "name": "Aziz Merchant",
+      "role": "Deputy District Attorney"
+    },
+    {
+      "id": "90003",
+      "name": "Christopher J. Hicks",
+      "role": "District Attorney"
+    },
+    {
+      "id": "90004",
+      "name": "Dianne S. Drinkwater",
+      "role": "Deputy District Attorney"
+    },
+    {
+      "id": "90005",
+      "name": "Mary Kandaras",
+      "role": "Chief Deputy District Attorney"
+    },
+    {
+      "id": "90006",
+      "name": "Nicole Hicks",
+      "role": "Deputy District Attorney"
+    },
+    {
+      "id": "90007",
+      "name": "Amos Stege",
+      "role": "Deputy District Attorney"
+    },
+    {
+      "id": "90008",
+      "name": "Cooper Brinson",
+      "role": "Defense Counsel (Public Defender)"
+    },
+    {
+      "id": "90009",
+      "name": "Sydney Hutt",
+      "role": "Defense Counsel (APD)"
+    },
+    {
+      "id": "90010",
+      "name": "Gianna Verness",
+      "role": "Defense Counsel (APD)"
+    },
+    {
+      "id": "90011",
+      "name": "Galen Carrico",
+      "role": "Conflict Defense Counsel (Appointed)"
+    },
+    {
+      "id": "90012",
+      "name": "Samuel Figueroa",
+      "role": "Defense Counsel"
+    },
+    {
+      "id": "90013",
+      "name": "Joel Merchant",
+      "role": "Defense Counsel"
+    },
+    {
+      "id": "90014",
+      "name": "Cody Meredith",
+      "role": "Pretrial Services Officer"
+    },
+    {
+      "id": "90015",
+      "name": "Lindsay Coyle",
+      "role": "Forensic Evaluator"
+    },
+    {
+      "id": "90016",
+      "name": "Rachael Pinkerman",
+      "role": "Forensic Evaluator"
+    },
+    {
+      "id": "90017",
+      "name": "Lisa Foerster",
+      "role": "forensic-evaluator"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\n90001\tBarry L. Breslow\tDistrict Judge, Department 8\n90002\tAziz Merchant\tDeputy District Attorney\n90003\tChristopher J. Hicks\tDistrict Attorney\n90004\tDianne S. Drinkwater\tDeputy District Attorney\n90005\tMary Kandaras\tChief Deputy District Attorney\n90006\tNicole Hicks\tDeputy District Attorney\n90007\tAmos Stege\tDeputy District Attorney\n90008\tCooper Brinson\tDefense Counsel (Public Defender)\n90009\tSydney Hutt\tDefense Counsel (APD)\n90010\tGianna Verness\tDefense Counsel (APD)\n90011\tGalen Carrico\tConflict Defense Counsel (Appointed)\n90012\tSamuel Figueroa\tDefense Counsel\n90013\tJoel Merchant\tDefense Counsel\n90014\tCody Meredith\tPretrial Services Officer\n90015\tLindsay Coyle\tForensic Evaluator\n90016\tRachael Pinkerman\tForensic Evaluator\n90017\tLisa Foerster\tforensic-evaluator\n",
+  "stderr": "",
+  "execution_time_ms": 559
+}

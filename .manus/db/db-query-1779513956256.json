@@ -1,0 +1,52 @@
+{
+  "query": "SELECT COUNT(*) as doc_links FROM actor_document_links;\nSELECT COUNT(*) as timeline_links FROM actor_timeline_links;\nSELECT a.name, COUNT(adl.id) as doc_count FROM actors a LEFT JOIN actor_document_links adl ON a.id = adl.actor_id GROUP BY a.id, a.name ORDER BY doc_count DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT COUNT(*) as doc_links FROM actor_document_links;\nSELECT COUNT(*) as timeline_links FROM actor_timeline_links;\nSELECT a.name, COUNT(adl.id) as doc_count FROM actors a LEFT JOIN actor_document_links adl ON a.id = adl.actor_id GROUP BY a.id, a.name ORDER BY doc_count DESC LIMIT 10;",
+  "rows": [
+    {
+      "doc_links": "30"
+    },
+    {
+      "doc_links": "timeline_links"
+    },
+    {
+      "doc_links": "57"
+    },
+    {
+      "doc_links": "name\tdoc_count"
+    },
+    {
+      "doc_links": "Barry L. Breslow\t9"
+    },
+    {
+      "doc_links": "Aziz Merchant\t6"
+    },
+    {
+      "doc_links": "Christopher J. Hicks\t3"
+    },
+    {
+      "doc_links": "Samuel Figueroa\t2"
+    },
+    {
+      "doc_links": "Galen Carrico\t2"
+    },
+    {
+      "doc_links": "Joel Merchant\t2"
+    },
+    {
+      "doc_links": "Sydney Hutt\t2"
+    },
+    {
+      "doc_links": "Rachael Pinkerman\t1"
+    },
+    {
+      "doc_links": "Cody Meredith\t1"
+    },
+    {
+      "doc_links": "Lindsay Coyle\t1"
+    }
+  ],
+  "messages": [],
+  "stdout": "doc_links\n30\ntimeline_links\n57\nname\tdoc_count\nBarry L. Breslow\t9\nAziz Merchant\t6\nChristopher J. Hicks\t3\nSamuel Figueroa\t2\nGalen Carrico\t2\nJoel Merchant\t2\nSydney Hutt\t2\nRachael Pinkerman\t1\nCody Meredith\t1\nLindsay Coyle\t1\n",
+  "stderr": "",
+  "execution_time_ms": 686
+}

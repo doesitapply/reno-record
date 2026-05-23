@@ -1,0 +1,37 @@
+{
+  "query": "SELECT category, COUNT(*) as count FROM timeline_events GROUP BY category ORDER BY count DESC;\nSELECT COUNT(*) as federal_count FROM timeline_events WHERE category = 'federal_case';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT category, COUNT(*) as count FROM timeline_events GROUP BY category ORDER BY count DESC;\nSELECT COUNT(*) as federal_count FROM timeline_events WHERE category = 'federal_case';",
+  "rows": [
+    {
+      "category": "federal_case",
+      "count": "27"
+    },
+    {
+      "category": "state_case",
+      "count": "21"
+    },
+    {
+      "category": "motion",
+      "count": "12"
+    },
+    {
+      "category": "competency",
+      "count": "9"
+    },
+    {
+      "category": "warrant",
+      "count": "4"
+    },
+    {
+      "category": "custody",
+      "count": "2"
+    }
+  ],
+  "messages": [
+    "federal_count",
+    "27"
+  ],
+  "stdout": "category\tcount\nfederal_case\t27\nstate_case\t21\nmotion\t12\ncompetency\t9\nwarrant\t4\ncustody\t2\nfederal_count\n27\n",
+  "stderr": "",
+  "execution_time_ms": 634
+}

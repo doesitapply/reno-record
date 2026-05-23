@@ -1,0 +1,235 @@
+{
+  "query": "SELECT id, title, category FROM timeline_events ORDER BY event_date LIMIT 75 OFFSET 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, title, category FROM timeline_events ORDER BY event_date LIMIT 75 OFFSET 30;",
+  "rows": [
+    {
+      "id": "180003",
+      "title": "Court Grants E-Filing Privileges (ECF 11)",
+      "category": "federal_case"
+    },
+    {
+      "id": "150029",
+      "title": "Trial and pretrial motions hearing vacated pending competency",
+      "category": "state_case"
+    },
+    {
+      "id": "180004",
+      "title": "Court Issues Notice Regarding Intent (ECF 12)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180005",
+      "title": "Federal Court Issues Order After State Court Arrest (ECF 13)",
+      "category": "federal_case"
+    },
+    {
+      "id": "150030",
+      "title": "State moves for no-bail hold",
+      "category": "custody"
+    },
+    {
+      "id": "150031",
+      "title": "Warrant service",
+      "category": "warrant"
+    },
+    {
+      "id": "150032",
+      "title": "Competency court order — transfer to Department 7",
+      "category": "competency"
+    },
+    {
+      "id": "150033",
+      "title": "First competency report — Lindsay Coyle",
+      "category": "competency"
+    },
+    {
+      "id": "180006",
+      "title": "Washoe County Defendants File Motion to Dismiss (ECF 14)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180008",
+      "title": "Civil Standing Order Issued (ECF 16)",
+      "category": "federal_case"
+    },
+    {
+      "id": "150034",
+      "title": "Second competency report — Dr. Rachael Pinkerman",
+      "category": "competency"
+    },
+    {
+      "id": "180007",
+      "title": "Minute Order Issued in Chambers (ECF 15)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180009",
+      "title": "Order Setting Case Schedule Issued (ECF 17)",
+      "category": "federal_case"
+    },
+    {
+      "id": "150035",
+      "title": "Parties stipulate to third competency evaluation",
+      "category": "competency"
+    },
+    {
+      "id": "150036",
+      "title": "Defense counsel Samuel Figueroa moves to withdraw",
+      "category": "motion"
+    },
+    {
+      "id": "180010",
+      "title": "Court Issues Notice of Intent to Dismiss (ECF 18)",
+      "category": "federal_case"
+    },
+    {
+      "id": "150037",
+      "title": "Court orders third competency evaluation",
+      "category": "competency"
+    },
+    {
+      "id": "150038",
+      "title": "Third competency report — Lisa Foerster",
+      "category": "competency"
+    },
+    {
+      "id": "150039",
+      "title": "Competency court remand — defendant found competent",
+      "category": "competency"
+    },
+    {
+      "id": "150040",
+      "title": "Substitution of attorney — Joel Merchant enters as counsel",
+      "category": "state_case"
+    },
+    {
+      "id": "180014",
+      "title": "Plaintiff Files Notice to the Court (ECF 22)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180013",
+      "title": "Motion for Laptop Access Filed (ECF 21)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180011",
+      "title": "Plaintiff Files Habeas Corpus Motion (ECF 19)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180012",
+      "title": "Motion for Emergency Release Filed (ECF 20)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180015",
+      "title": "Case Management Report Filed (ECF 23)",
+      "category": "federal_case"
+    },
+    {
+      "id": "150041",
+      "title": "Status hearing — supervised bail reinstated; pro se restrictions continued",
+      "category": "state_case"
+    },
+    {
+      "id": "180016",
+      "title": "Defendants File Motion to Stay Discovery (ECF 31)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180017",
+      "title": "Updated Civil Standing Order Issued (ECF 32)",
+      "category": "federal_case"
+    },
+    {
+      "id": "150042",
+      "title": "Petition for writ of mandamus — recusal of Judge Breslow sought",
+      "category": "motion"
+    },
+    {
+      "id": "150043",
+      "title": "Order striking writ — defendant represented by counsel",
+      "category": "state_case"
+    },
+    {
+      "id": "180020",
+      "title": "Plaintiff Files Statement on Retaliation and Bad Faith (ECF 35)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180018",
+      "title": "Plaintiff Files Emergency Motion for Federal Oversight (ECF 33)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180019",
+      "title": "Plaintiff Files Opposition to Motion to Dismiss (ECF 34)",
+      "category": "federal_case"
+    },
+    {
+      "id": "150044",
+      "title": "Figueroa withdrawal granted; no-bail warrant issued; Faretta conditioned on arrest",
+      "category": "warrant"
+    },
+    {
+      "id": "180021",
+      "title": "Plaintiff Files Comprehensive Evidentiary Pack (ECF 37)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180022",
+      "title": "Notice of Appearance Filed (ECF 41)",
+      "category": "federal_case"
+    },
+    {
+      "id": "150045",
+      "title": "State files notice of bail-condition violation",
+      "category": "state_case"
+    },
+    {
+      "id": "150046",
+      "title": "Defendant files notice of constitutional violations — 900+ days of delay alleged",
+      "category": "motion"
+    },
+    {
+      "id": "150047",
+      "title": "Renewed motion for criminal referral of DDA Aziz Merchant",
+      "category": "motion"
+    },
+    {
+      "id": "150048",
+      "title": "Motion to dismiss for structural constitutional violations; warrants quashed; written findings demanded",
+      "category": "motion"
+    },
+    {
+      "id": "180023",
+      "title": "Defendants File Response to Evidentiary Submission (ECF 44)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180025",
+      "title": "Plaintiff Files Reply Brief (ECF 46)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180024",
+      "title": "Plaintiff Files Judicial Notice of Evidentiary Packs (ECF 45)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180026",
+      "title": "Plaintiff Files Reply to County Defendants Opposition (ECF 47)",
+      "category": "federal_case"
+    },
+    {
+      "id": "180027",
+      "title": "Federal Case Dismissed Without Prejudice — Rule 59(e) Pending (ECF 49)",
+      "category": "federal_case"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tcategory\n180003\tCourt Grants E-Filing Privileges (ECF 11)\tfederal_case\n150029\tTrial and pretrial motions hearing vacated pending competency\tstate_case\n180004\tCourt Issues Notice Regarding Intent (ECF 12)\tfederal_case\n180005\tFederal Court Issues Order After State Court Arrest (ECF 13)\tfederal_case\n150030\tState moves for no-bail hold\tcustody\n150031\tWarrant service\twarrant\n150032\tCompetency court order — transfer to Department 7\tcompetency\n150033\tFirst competency report — Lindsay Coyle\tcompetency\n180006\tWashoe County Defendants File Motion to Dismiss (ECF 14)\tfederal_case\n180008\tCivil Standing Order Issued (ECF 16)\tfederal_case\n150034\tSecond competency report — Dr. Rachael Pinkerman\tcompetency\n180007\tMinute Order Issued in Chambers (ECF 15)\tfederal_case\n180009\tOrder Setting Case Schedule Issued (ECF 17)\tfederal_case\n150035\tParties stipulate to third competency evaluation\tcompetency\n150036\tDefense counsel Samuel Figueroa moves to withdraw\tmotion\n180010\tCourt Issues Notice of Intent to Dismiss (ECF 18)\tfederal_case\n150037\tCourt orders third competency evaluation\tcompetency\n150038\tThird competency report — Lisa Foerster\tcompetency\n150039\tCompetency court remand — defendant found competent\tcompetency\n150040\tSubstitution of attorney — Joel Merchant enters as counsel\tstate_case\n180014\tPlaintiff Files Notice to the Court (ECF 22)\tfederal_case\n180013\tMotion for Laptop Access Filed (ECF 21)\tfederal_case\n180011\tPlaintiff Files Habeas Corpus Motion (ECF 19)\tfederal_case\n180012\tMotion for Emergency Release Filed (ECF 20)\tfederal_case\n180015\tCase Management Report Filed (ECF 23)\tfederal_case\n150041\tStatus hearing — supervised bail reinstated; pro se restrictions continued\tstate_case\n180016\tDefendants File Motion to Stay Discovery (ECF 31)\tfederal_case\n180017\tUpdated Civil Standing Order Issued (ECF 32)\tfederal_case\n150042\tPetition for writ of mandamus — recusal of Judge Breslow sought\tmotion\n150043\tOrder striking writ — defendant represented by counsel\tstate_case\n180020\tPlaintiff Files Statement on Retaliation and Bad Faith (ECF 35)\tfederal_case\n180018\tPlaintiff Files Emergency Motion for Federal Oversight (ECF 33)\tfederal_case\n180019\tPlaintiff Files Opposition to Motion to Dismiss (ECF 34)\tfederal_case\n150044\tFigueroa withdrawal granted; no-bail warrant issued; Faretta conditioned on arrest\twarrant\n180021\tPlaintiff Files Comprehensive Evidentiary Pack (ECF 37)\tfederal_case\n180022\tNotice of Appearance Filed (ECF 41)\tfederal_case\n150045\tState files notice of bail-condition violation\tstate_case\n150046\tDefendant files notice of constitutional violations — 900+ days of delay alleged\tmotion\n150047\tRenewed motion for criminal referral of DDA Aziz Merchant\tmotion\n150048\tMotion to dismiss for structural constitutional violations; warrants quashed; written findings demanded\tmotion\n180023\tDefendants File Response to Evidentiary Submission (ECF 44)\tfederal_case\n180025\tPlaintiff Files Reply Brief (ECF 46)\tfederal_case\n180024\tPlaintiff Files Judicial Notice of Evidentiary Packs (ECF 45)\tfederal_case\n180026\tPlaintiff Files Reply to County Defendants Opposition (ECF 47)\tfederal_case\n180027\tFederal Case Dismissed Without Prejudice — Rule 59(e) Pending (ECF 49)\tfederal_case\n",
+  "stderr": "",
+  "execution_time_ms": 582
+}

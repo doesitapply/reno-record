@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as doc_links FROM actor_document_links;\nSELECT COUNT(*) as timeline_links FROM actor_timeline_links;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT COUNT(*) as doc_links FROM actor_document_links;\nSELECT COUNT(*) as timeline_links FROM actor_timeline_links;",
+  "rows": [
+    {
+      "doc_links": "0"
+    },
+    {
+      "doc_links": "timeline_links"
+    },
+    {
+      "doc_links": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "doc_links\n0\ntimeline_links\n0\n",
+  "stderr": "",
+  "execution_time_ms": 635
+}

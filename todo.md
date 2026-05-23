@@ -120,8 +120,8 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 
 ## v3.7 — Share-Ready Public Record Layer
 
-- [ ] Server: document.publicById — returns only public+approved docs, null otherwise (no metadata leakage)
-- [ ] Server: document.relatedEvents — returns public timeline events referencing the document
+- [x] Server: document.publicById — returns only public+approved docs, null otherwise (no metadata leakage)
+- [x] Server: document.relatedEvents — returns public timeline events referencing the document
 - [ ] /evidence/[id] standalone page: PDF viewer, title, date, source type, case, actors (linked), timeline events (linked), summary, SEO/OG/Twitter, 404 on private
 - [ ] Church Record: Share button + Copy link + pre-composed X post text
 - [ ] Timeline: Share button + Copy link + pre-composed X post text

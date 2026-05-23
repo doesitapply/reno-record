@@ -1,0 +1,40 @@
+{
+  "query": "SELECT category, public_status, COUNT(*) as count FROM timeline_events GROUP BY category, public_status ORDER BY category, public_status;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT category, public_status, COUNT(*) as count FROM timeline_events GROUP BY category, public_status ORDER BY category, public_status;",
+  "rows": [
+    {
+      "category": "state_case",
+      "public_status": "1",
+      "count": "21"
+    },
+    {
+      "category": "federal_case",
+      "public_status": "1",
+      "count": "27"
+    },
+    {
+      "category": "custody",
+      "public_status": "1",
+      "count": "2"
+    },
+    {
+      "category": "motion",
+      "public_status": "1",
+      "count": "12"
+    },
+    {
+      "category": "warrant",
+      "public_status": "1",
+      "count": "4"
+    },
+    {
+      "category": "competency",
+      "public_status": "1",
+      "count": "9"
+    }
+  ],
+  "messages": [],
+  "stdout": "category\tpublic_status\tcount\nstate_case\t1\t21\nfederal_case\t1\t27\ncustody\t1\t2\nmotion\t1\t12\nwarrant\t1\t4\ncompetency\t1\t9\n",
+  "stderr": "",
+  "execution_time_ms": 581
+}
