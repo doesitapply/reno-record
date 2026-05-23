@@ -1,0 +1,94 @@
+{
+  "query": "SELECT 'users' t, COUNT(*) n FROM users\nUNION ALL SELECT 'stories', COUNT(*) FROM stories\nUNION ALL SELECT 'documents_total', COUNT(*) FROM documents\nUNION ALL SELECT 'documents_public', COUNT(*) FROM documents WHERE public_status=true\nUNION ALL SELECT 'documents_state', COUNT(*) FROM documents WHERE case_tag='state'\nUNION ALL SELECT 'documents_federal', COUNT(*) FROM documents WHERE case_tag='federal'\nUNION ALL SELECT 'documents_untagged', COUNT(*) FROM documents WHERE case_tag IS NULL\nUNION ALL SELECT 'timeline_events', COUNT(*) FROM timeline_events\nUNION ALL SELECT 'actors', COUNT(*) FROM actors\nUNION ALL SELECT 'prrs', COUNT(*) FROM public_records_requests\nUNION ALL SELECT 'agencies', COUNT(*) FROM agencies\nUNION ALL SELECT 'violation_tags', COUNT(*) FROM violation_tags\nUNION ALL SELECT 'ingest_jobs', COUNT(*) FROM ingest_jobs\nUNION ALL SELECT 'audit_log', COUNT(*) FROM audit_log\nUNION ALL SELECT 'review_requests', COUNT(*) FROM review_requests\nUNION ALL SELECT 'contributor_xp', COUNT(*) FROM contributor_xp\nUNION ALL SELECT 'badge_definitions', COUNT(*) FROM badge_definitions\nUNION ALL SELECT 'credit_ledger', COUNT(*) FROM credit_ledger\nUNION ALL SELECT 'actor_doc_links', COUNT(*) FROM actor_document_links\nUNION ALL SELECT 'actor_timeline_links', COUNT(*) FROM actor_timeline_links\nUNION ALL SELECT 'doc_violation_tags', COUNT(*) FROM document_violation_tags;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT 'users' t, COUNT(*) n FROM users\nUNION ALL SELECT 'stories', COUNT(*) FROM stories\nUNION ALL SELECT 'documents_total', COUNT(*) FROM documents\nUNION ALL SELECT 'documents_public', COUNT(*) FROM documents WHERE public_status=true\nUNION ALL SELECT 'documents_state', COUNT(*) FROM documents WHERE case_tag='state'\nUNION ALL SELECT 'documents_federal', COUNT(*) FROM documents WHERE case_tag='federal'\nUNION ALL SELECT 'documents_untagged', COUNT(*) FROM documents WHERE case_tag IS NULL\nUNION ALL SELECT 'timeline_events', COUNT(*) FROM timeline_events\nUNION ALL SELECT 'actors', COUNT(*) FROM actors\nUNION ALL SELECT 'prrs', COUNT(*) FROM public_records_requests\nUNION ALL SELECT 'agencies', COUNT(*) FROM agencies\nUNION ALL SELECT 'violation_tags', COUNT(*) FROM violation_tags\nUNION ALL SELECT 'ingest_jobs', COUNT(*) FROM ingest_jobs\nUNION ALL SELECT 'audit_log', COUNT(*) FROM audit_log\nUNION ALL SELECT 'review_requests', COUNT(*) FROM review_requests\nUNION ALL SELECT 'contributor_xp', COUNT(*) FROM contributor_xp\nUNION ALL SELECT 'badge_definitions', COUNT(*) FROM badge_definitions\nUNION ALL SELECT 'credit_ledger', COUNT(*) FROM credit_ledger\nUNION ALL SELECT 'actor_doc_links', COUNT(*) FROM actor_document_links\nUNION ALL SELECT 'actor_timeline_links', COUNT(*) FROM actor_timeline_links\nUNION ALL SELECT 'doc_violation_tags', COUNT(*) FROM document_violation_tags;",
+  "rows": [
+    {
+      "t": "users",
+      "n": "2"
+    },
+    {
+      "t": "documents_public",
+      "n": "40"
+    },
+    {
+      "t": "documents_total",
+      "n": "42"
+    },
+    {
+      "t": "stories",
+      "n": "1"
+    },
+    {
+      "t": "documents_untagged",
+      "n": "0"
+    },
+    {
+      "t": "documents_state",
+      "n": "22"
+    },
+    {
+      "t": "actors",
+      "n": "17"
+    },
+    {
+      "t": "prrs",
+      "n": "14"
+    },
+    {
+      "t": "agencies",
+      "n": "10"
+    },
+    {
+      "t": "documents_federal",
+      "n": "19"
+    },
+    {
+      "t": "timeline_events",
+      "n": "48"
+    },
+    {
+      "t": "violation_tags",
+      "n": "15"
+    },
+    {
+      "t": "audit_log",
+      "n": "28"
+    },
+    {
+      "t": "ingest_jobs",
+      "n": "9"
+    },
+    {
+      "t": "review_requests",
+      "n": "0"
+    },
+    {
+      "t": "contributor_xp",
+      "n": "0"
+    },
+    {
+      "t": "badge_definitions",
+      "n": "0"
+    },
+    {
+      "t": "credit_ledger",
+      "n": "0"
+    },
+    {
+      "t": "actor_doc_links",
+      "n": "0"
+    },
+    {
+      "t": "actor_timeline_links",
+      "n": "0"
+    },
+    {
+      "t": "doc_violation_tags",
+      "n": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "t\tn\nusers\t2\ndocuments_public\t40\ndocuments_total\t42\nstories\t1\ndocuments_untagged\t0\ndocuments_state\t22\nactors\t17\nprrs\t14\nagencies\t10\ndocuments_federal\t19\ntimeline_events\t48\nviolation_tags\t15\naudit_log\t28\ningest_jobs\t9\nreview_requests\t0\ncontributor_xp\t0\nbadge_definitions\t0\ncredit_ledger\t0\nactor_doc_links\t0\nactor_timeline_links\t0\ndoc_violation_tags\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1336
+}

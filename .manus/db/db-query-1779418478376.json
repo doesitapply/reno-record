@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, event_date, title FROM timeline_events ORDER BY event_date ASC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, event_date, title FROM timeline_events ORDER BY event_date ASC LIMIT 10;",
+  "rows": [
+    {
+      "id": "150001",
+      "event_date": "2023-03-13 00:00:00",
+      "title": "Declaration of probable cause and arrest"
+    },
+    {
+      "id": "150002",
+      "event_date": "2023-03-18 00:00:00",
+      "title": "Early case assignment request filed"
+    },
+    {
+      "id": "150003",
+      "event_date": "2023-03-21 00:00:00",
+      "title": "Original criminal complaint filed (Reno Justice Court)"
+    },
+    {
+      "id": "150004",
+      "event_date": "2023-08-19 00:00:00",
+      "title": "Amended complaint, preliminary-hearing waiver, and bindover"
+    },
+    {
+      "id": "150005",
+      "event_date": "2023-09-02 00:00:00",
+      "title": "Pretrial services court note — release condition issues"
+    },
+    {
+      "id": "150006",
+      "event_date": "2023-09-09 00:00:00",
+      "title": "District Court Information filed; second preliminary-examination waiver"
+    },
+    {
+      "id": "150007",
+      "event_date": "2023-09-13 00:00:00",
+      "title": "Arraignment — not guilty plea; 60-day trial rule waived"
+    },
+    {
+      "id": "150008",
+      "event_date": "2023-10-10 00:00:00",
+      "title": "Own-recognizance release revoked"
+    },
+    {
+      "id": "150009",
+      "event_date": "2024-01-18 00:00:00",
+      "title": "Substitution of counsel — Sydney Hutt replaces Cooper Brinson"
+    },
+    {
+      "id": "150010",
+      "event_date": "2024-04-24 00:00:00",
+      "title": "Trial continued — stand-in counsel requests vacation of trial date"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tevent_date\ttitle\n150001\t2023-03-13 00:00:00\tDeclaration of probable cause and arrest\n150002\t2023-03-18 00:00:00\tEarly case assignment request filed\n150003\t2023-03-21 00:00:00\tOriginal criminal complaint filed (Reno Justice Court)\n150004\t2023-08-19 00:00:00\tAmended complaint, preliminary-hearing waiver, and bindover\n150005\t2023-09-02 00:00:00\tPretrial services court note — release condition issues\n150006\t2023-09-09 00:00:00\tDistrict Court Information filed; second preliminary-examination waiver\n150007\t2023-09-13 00:00:00\tArraignment — not guilty plea; 60-day trial rule waived\n150008\t2023-10-10 00:00:00\tOwn-recognizance release revoked\n150009\t2024-01-18 00:00:00\tSubstitution of counsel — Sydney Hutt replaces Cooper Brinson\n150010\t2024-04-24 00:00:00\tTrial continued — stand-in counsel requests vacation of trial date\n",
+  "stderr": "",
+  "execution_time_ms": 592
+}

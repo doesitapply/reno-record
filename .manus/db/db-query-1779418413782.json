@@ -1,0 +1,298 @@
+{
+  "query": "SELECT id, event_date, title, summary FROM timeline_events ORDER BY event_date ASC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT id, event_date, title, summary FROM timeline_events ORDER BY event_date ASC;",
+  "rows": [
+    {
+      "id": "150001",
+      "event_date": "2023-03-12 00:00:00",
+      "title": "Declaration of probable cause and arrest",
+      "summary": "Washoe County Sheriff's Office probable-cause materials identify Cameron Doyle Church as arrestee. Charges: Grand Larceny of a Motor Vehicle and failure-to-register. Confirmed by Master Evidence Index and local 03-12-23 probable-cause PDF."
+    },
+    {
+      "id": "150002",
+      "event_date": "2023-03-17 00:00:00",
+      "title": "Early case assignment request filed",
+      "summary": "Washoe County District Attorney's office filed early case request and department assignment document for State v. Church. Confirmed by local 03-17-23 PDF and Master Evidence Index."
+    },
+    {
+      "id": "150003",
+      "event_date": "2023-03-20 00:00:00",
+      "title": "Original criminal complaint filed (Reno Justice Court)",
+      "summary": "Reno Justice Court complaint charged Grand Larceny of a Motor Vehicle. DDA Dianne S. Drinkwater identified on complaint per Master Evidence Index."
+    },
+    {
+      "id": "150004",
+      "event_date": "2023-08-18 00:00:00",
+      "title": "Amended complaint, preliminary-hearing waiver, and bindover",
+      "summary": "First amended complaint added Unlawful Taking of a Motor Vehicle. Waiver of preliminary examination entered. Bindover/Justice Court materials transferred matter to district court."
+    },
+    {
+      "id": "150005",
+      "event_date": "2023-09-01 00:00:00",
+      "title": "Pretrial services court note — release condition issues",
+      "summary": "Pretrial court note documented release-condition issues and a failure-to-appear warrant per Case Exhibits spreadsheet and local 09-01-23 court-note files."
+    },
+    {
+      "id": "150006",
+      "event_date": "2023-09-08 00:00:00",
+      "title": "District Court Information filed; second preliminary-examination waiver",
+      "summary": "State filed District Court Information in CR23-0657. Second preliminary-examination waiver appears in record set."
+    },
+    {
+      "id": "150007",
+      "event_date": "2023-09-12 00:00:00",
+      "title": "Arraignment — not guilty plea; 60-day trial rule waived",
+      "summary": "Case exhibit data states Cameron Church pleaded not guilty, waived the 60-day trial rule, and had Cooper Brinson as appointed counsel."
+    },
+    {
+      "id": "150008",
+      "event_date": "2023-10-09 00:00:00",
+      "title": "Own-recognizance release revoked",
+      "summary": "Order Revoking Own Recognizance entered. Pretrial Services recommendation modified supervision after new arrest on October 8, 2023."
+    },
+    {
+      "id": "150009",
+      "event_date": "2024-01-17 00:00:00",
+      "title": "Substitution of counsel — Sydney Hutt replaces Cooper Brinson",
+      "summary": "Sydney Hutt replaced Cooper Brinson as defense counsel within the Alternate Public Defender's Office."
+    },
+    {
+      "id": "150010",
+      "event_date": "2024-04-23 00:00:00",
+      "title": "Trial continued — stand-in counsel requests vacation of trial date",
+      "summary": "Court minutes summarized in exhibit spreadsheet state stand-in counsel moved to vacate trial date due to lead counsel's emergency leave."
+    },
+    {
+      "id": "150011",
+      "event_date": "2024-05-08 00:00:00",
+      "title": "Pro se motion to dismiss and request for new counsel filed",
+      "summary": "Cameron Church filed pro se motion alleging ineffective assistance, lack of victim, and issues with a Young hearing request."
+    },
+    {
+      "id": "150012",
+      "event_date": "2024-05-09 00:00:00",
+      "title": "Order striking defendant's pro se motion to dismiss",
+      "summary": "Judge Barry L. Breslow struck defendant's pro se motion because Church was represented by counsel. Issue: hybrid representation / Faretta / access to courts."
+    },
+    {
+      "id": "150013",
+      "event_date": "2024-05-16 00:00:00",
+      "title": "Sydney Hutt requests Young hearing",
+      "summary": "Sydney Hutt filed request for a Young hearing, formalizing claimed breakdown in attorney-client relationship."
+    },
+    {
+      "id": "150014",
+      "event_date": "2024-05-30 00:00:00",
+      "title": "Young hearing — APD relieved; conflict counsel referral ordered",
+      "summary": "Young-hearing minutes/summary state APD office was relieved due to conflict and matter was referred for conflict-counsel appointment."
+    },
+    {
+      "id": "150015",
+      "event_date": "2024-06-03 00:00:00",
+      "title": "Galen Carrico appointed as conflict counsel",
+      "summary": "Recommendation and order appointing counsel identifies Galen Carrico as appointed conflict counsel in CR23-0657."
+    },
+    {
+      "id": "150016",
+      "event_date": "2024-07-10 00:00:00",
+      "title": "Jury trial set for March 24, 2025",
+      "summary": "Application for setting placed jury trial on March 24, 2025 and pretrial motions hearing on February 13, 2025."
+    },
+    {
+      "id": "150017",
+      "event_date": "2024-09-11 00:00:00",
+      "title": "Second Young motion filed by Carrico",
+      "summary": "Galen Carrico filed second Young motion citing breakdown in communication. Defendant materials allege counsel disregarded instructions."
+    },
+    {
+      "id": "150018",
+      "event_date": "2024-10-28 00:00:00",
+      "title": "Order granting motion to strike pro se sanctions filing",
+      "summary": "Court struck the sanctions motion and response under hybrid-representation rules."
+    },
+    {
+      "id": "150019",
+      "event_date": "2024-10-30 00:00:00",
+      "title": "Pro se motion for leave to file pro se motions",
+      "summary": "Church filed pro se motion seeking leave to file pro se motions because of alleged counsel ineffectiveness and obstruction."
+    },
+    {
+      "id": "150020",
+      "event_date": "2024-11-26 00:00:00",
+      "title": "Pro se motion to dismiss indictment with prejudice",
+      "summary": "Church filed motion alleging systemic constitutional violations, prosecutorial misconduct, and collusion. Issue flags: speedy trial, IAC, prosecutorial misconduct (allegations in filing)."
+    },
+    {
+      "id": "150021",
+      "event_date": "2024-11-29 00:00:00",
+      "title": "Pro se sanctions motion against Chief DDA Mary Kandaras",
+      "summary": "Church filed pro se sanctions motion alleging Chief DDA Kandaras intimidated him to cease direct communication. Allegations in filing."
+    },
+    {
+      "id": "150022",
+      "event_date": "2024-12-03 00:00:00",
+      "title": "Order striking defendant's late-November pro se filings",
+      "summary": "Judge Breslow struck late-November pro se filings because defendant was represented by counsel."
+    },
+    {
+      "id": "150023",
+      "event_date": "2024-12-05 00:00:00",
+      "title": "Young hearing — competency evaluation ordered; proceedings stayed",
+      "summary": "Transcript/minutes identify Judge Breslow, DDA Aziz Merchant, Galen Carrico, and Cameron Church. Court ordered competency evaluation, stayed proceedings, and restricted pro se filings."
+    },
+    {
+      "id": "150024",
+      "event_date": "2024-12-09 00:00:00",
+      "title": "Competency order entered nunc pro tunc to December 5",
+      "summary": "Competency order entered nunc pro tunc to December 5. Church filed pro se mandamus petition challenging Judge Breslow and DA's office."
+    },
+    {
+      "id": "150025",
+      "event_date": "2024-12-16 00:00:00",
+      "title": "Order to show cause — competency evaluation compliance",
+      "summary": "Court issued order to show cause for alleged non-compliance with competency evaluation and threatened bail/release consequences."
+    },
+    {
+      "id": "150026",
+      "event_date": "2024-12-17 00:00:00",
+      "title": "OSC hearing — pretrial release revoked; no-bail bench warrant issued",
+      "summary": "Minutes state pretrial release was revoked and no-bail bench warrant issued for failure to appear."
+    },
+    {
+      "id": "150027",
+      "event_date": "2024-12-19 00:00:00",
+      "title": "Bench warrant and extradition order materials",
+      "summary": "Record set includes bench warrant/no-bail hold and extradition order materials dated December 19, 2024."
+    },
+    {
+      "id": "150028",
+      "event_date": "2025-01-06 00:00:00",
+      "title": "State files motion for contempt over pro se filings",
+      "summary": "State filed motion for contempt seeking jail time for pro se filings. Exhibit spreadsheet also links this date to initiation of 42 U.S.C. Section 1983 federal action."
+    },
+    {
+      "id": "150029",
+      "event_date": "2025-01-22 00:00:00",
+      "title": "Trial and pretrial motions hearing vacated pending competency",
+      "summary": "Order vacated March 2025 trial and pretrial motions hearing pending competency proceedings."
+    },
+    {
+      "id": "150030",
+      "event_date": "2025-04-18 00:00:00",
+      "title": "State moves for no-bail hold",
+      "summary": "State moved for no-bail hold citing harassment patterns and noncompliance with orders per exhibit spreadsheet. State allegations."
+    },
+    {
+      "id": "150031",
+      "event_date": "2025-04-23 00:00:00",
+      "title": "Warrant service",
+      "summary": "Warrant-service document dated April 23, 2025 in record set."
+    },
+    {
+      "id": "150032",
+      "event_date": "2025-04-25 00:00:00",
+      "title": "Competency court order — transfer to Department 7",
+      "summary": "Nunc pro tunc/order-for-competency record transferred case to Department 7 / competency court."
+    },
+    {
+      "id": "150033",
+      "event_date": "2025-05-23 00:00:00",
+      "title": "First competency report — Lindsay Coyle",
+      "summary": "Forensic competency report by Lindsay Coyle filed in CR23-0657. Contains medical/mental-health information; redaction required before public posting."
+    },
+    {
+      "id": "150034",
+      "event_date": "2025-05-28 00:00:00",
+      "title": "Second competency report — Dr. Rachael Pinkerman",
+      "summary": "Confidential competency evaluation by Dr. Rachael Pinkerman. Exhibit index states evaluator found competency under Dusky standard and noted refusal to participate due to retaliation. Redaction required."
+    },
+    {
+      "id": "150035",
+      "event_date": "2025-06-05 00:00:00",
+      "title": "Parties stipulate to third competency evaluation",
+      "summary": "Parties stipulated to third competency evaluation due to conflicting opinions from first two evaluators."
+    },
+    {
+      "id": "150036",
+      "event_date": "2025-06-06 00:00:00",
+      "title": "Defense counsel Samuel Figueroa moves to withdraw",
+      "summary": "Samuel Figueroa moved to withdraw citing relationship breakdown and defendant's desire for self-representation or motions counsel considered repugnant."
+    },
+    {
+      "id": "150037",
+      "event_date": "2025-06-09 00:00:00",
+      "title": "Court orders third competency evaluation",
+      "summary": "Court ordered third competency evaluation."
+    },
+    {
+      "id": "150038",
+      "event_date": "2025-06-26 00:00:00",
+      "title": "Third competency report — Lisa Foerster",
+      "summary": "Forensic report by Lisa Foerster. Exhibit index states report found competence and described sophisticated understanding of legal process. Redaction required."
+    },
+    {
+      "id": "150039",
+      "event_date": "2025-07-01 00:00:00",
+      "title": "Competency court remand — defendant found competent",
+      "summary": "Record set includes proposed/order materials finding competence and remanding case from competency court."
+    },
+    {
+      "id": "150040",
+      "event_date": "2025-07-03 00:00:00",
+      "title": "Substitution of attorney — Joel Merchant enters as counsel",
+      "summary": "Substitution of attorney relieved prior counsel and substituted Joel Merchant as counsel of record per exhibit spreadsheet."
+    },
+    {
+      "id": "150041",
+      "event_date": "2025-07-30 00:00:00",
+      "title": "Status hearing — supervised bail reinstated; pro se restrictions continued",
+      "summary": "Minutes report supervised bail at $25,000, continued restrictions on pro se filings, and no-contact directions involving DA's office."
+    },
+    {
+      "id": "150042",
+      "event_date": "2025-08-06 00:00:00",
+      "title": "Petition for writ of mandamus — recusal of Judge Breslow sought",
+      "summary": "Church filed petition for writ of mandamus seeking recusal of Judge Breslow and venue transfer."
+    },
+    {
+      "id": "150043",
+      "event_date": "2025-08-07 00:00:00",
+      "title": "Order striking writ — defendant represented by counsel",
+      "summary": "Court struck writ because defendant was represented by counsel."
+    },
+    {
+      "id": "150044",
+      "event_date": "2025-08-21 00:00:00",
+      "title": "Figueroa withdrawal granted; no-bail warrant issued; Faretta conditioned on arrest",
+      "summary": "Minutes state Figueroa withdrawal was granted, no-bail warrant issued for failure to appear, and Faretta hearing was conditioned on arrest."
+    },
+    {
+      "id": "150045",
+      "event_date": "2025-09-26 00:00:00",
+      "title": "State files notice of bail-condition violation",
+      "summary": "DDA Stege filed notice alleging email to DDA Merchant regarding a medical emergency constituted a threat. State allegation."
+    },
+    {
+      "id": "150046",
+      "event_date": "2025-10-02 00:00:00",
+      "title": "Defendant files notice of constitutional violations — 900+ days of delay alleged",
+      "summary": "Church filed notice/demand for clarification charting 900+ days of delay and claimed hearing defects. Allegations in filing."
+    },
+    {
+      "id": "150047",
+      "event_date": "2025-10-23 00:00:00",
+      "title": "Renewed motion for criminal referral of DDA Aziz Merchant",
+      "summary": "Church filed renewed referral motion alleging fraud on the court regarding amended complaints and GPS tracker representations. Allegations in filing."
+    },
+    {
+      "id": "150048",
+      "event_date": "2025-11-26 00:00:00",
+      "title": "Motion to dismiss for structural constitutional violations; warrants quashed; written findings demanded",
+      "summary": "Church filed motion and declaration seeking dismissal, warrant quashal, and written constitutional findings. Challenges nunc pro tunc alterations and competency-stay issues. Allegations in filing."
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tevent_date\ttitle\tsummary\n150001\t2023-03-12 00:00:00\tDeclaration of probable cause and arrest\tWashoe County Sheriff's Office probable-cause materials identify Cameron Doyle Church as arrestee. Charges: Grand Larceny of a Motor Vehicle and failure-to-register. Confirmed by Master Evidence Index and local 03-12-23 probable-cause PDF.\n150002\t2023-03-17 00:00:00\tEarly case assignment request filed\tWashoe County District Attorney's office filed early case request and department assignment document for State v. Church. Confirmed by local 03-17-23 PDF and Master Evidence Index.\n150003\t2023-03-20 00:00:00\tOriginal criminal complaint filed (Reno Justice Court)\tReno Justice Court complaint charged Grand Larceny of a Motor Vehicle. DDA Dianne S. Drinkwater identified on complaint per Master Evidence Index.\n150004\t2023-08-18 00:00:00\tAmended complaint, preliminary-hearing waiver, and bindover\tFirst amended complaint added Unlawful Taking of a Motor Vehicle. Waiver of preliminary examination entered. Bindover/Justice Court materials transferred matter to district court.\n150005\t2023-09-01 00:00:00\tPretrial services court note — release condition issues\tPretrial court note documented release-condition issues and a failure-to-appear warrant per Case Exhibits spreadsheet and local 09-01-23 court-note files.\n150006\t2023-09-08 00:00:00\tDistrict Court Information filed; second preliminary-examination waiver\tState filed District Court Information in CR23-0657. Second preliminary-examination waiver appears in record set.\n150007\t2023-09-12 00:00:00\tArraignment — not guilty plea; 60-day trial rule waived\tCase exhibit data states Cameron Church pleaded not guilty, waived the 60-day trial rule, and had Cooper Brinson as appointed counsel.\n150008\t2023-10-09 00:00:00\tOwn-recognizance release revoked\tOrder Revoking Own Recognizance entered. Pretrial Services recommendation modified supervision after new arrest on October 8, 2023.\n150009\t2024-01-17 00:00:00\tSubstitution of counsel — Sydney Hutt replaces Cooper Brinson\tSydney Hutt replaced Cooper Brinson as defense counsel within the Alternate Public Defender's Office.\n150010\t2024-04-23 00:00:00\tTrial continued — stand-in counsel requests vacation of trial date\tCourt minutes summarized in exhibit spreadsheet state stand-in counsel moved to vacate trial date due to lead counsel's emergency leave.\n150011\t2024-05-08 00:00:00\tPro se motion to dismiss and request for new counsel filed\tCameron Church filed pro se motion alleging ineffective assistance, lack of victim, and issues with a Young hearing request.\n150012\t2024-05-09 00:00:00\tOrder striking defendant's pro se motion to dismiss\tJudge Barry L. Breslow struck defendant's pro se motion because Church was represented by counsel. Issue: hybrid representation / Faretta / access to courts.\n150013\t2024-05-16 00:00:00\tSydney Hutt requests Young hearing\tSydney Hutt filed request for a Young hearing, formalizing claimed breakdown in attorney-client relationship.\n150014\t2024-05-30 00:00:00\tYoung hearing — APD relieved; conflict counsel referral ordered\tYoung-hearing minutes/summary state APD office was relieved due to conflict and matter was referred for conflict-counsel appointment.\n150015\t2024-06-03 00:00:00\tGalen Carrico appointed as conflict counsel\tRecommendation and order appointing counsel identifies Galen Carrico as appointed conflict counsel in CR23-0657.\n150016\t2024-07-10 00:00:00\tJury trial set for March 24, 2025\tApplication for setting placed jury trial on March 24, 2025 and pretrial motions hearing on February 13, 2025.\n150017\t2024-09-11 00:00:00\tSecond Young motion filed by Carrico\tGalen Carrico filed second Young motion citing breakdown in communication. Defendant materials allege counsel disregarded instructions.\n150018\t2024-10-28 00:00:00\tOrder granting motion to strike pro se sanctions filing\tCourt struck the sanctions motion and response under hybrid-representation rules.\n150019\t2024-10-30 00:00:00\tPro se motion for leave to file pro se motions\tChurch filed pro se motion seeking leave to file pro se motions because of alleged counsel ineffectiveness and obstruction.\n150020\t2024-11-26 00:00:00\tPro se motion to dismiss indictment with prejudice\tChurch filed motion alleging systemic constitutional violations, prosecutorial misconduct, and collusion. Issue flags: speedy trial, IAC, prosecutorial misconduct (allegations in filing).\n150021\t2024-11-29 00:00:00\tPro se sanctions motion against Chief DDA Mary Kandaras\tChurch filed pro se sanctions motion alleging Chief DDA Kandaras intimidated him to cease direct communication. Allegations in filing.\n150022\t2024-12-03 00:00:00\tOrder striking defendant's late-November pro se filings\tJudge Breslow struck late-November pro se filings because defendant was represented by counsel.\n150023\t2024-12-05 00:00:00\tYoung hearing — competency evaluation ordered; proceedings stayed\tTranscript/minutes identify Judge Breslow, DDA Aziz Merchant, Galen Carrico, and Cameron Church. Court ordered competency evaluation, stayed proceedings, and restricted pro se filings.\n150024\t2024-12-09 00:00:00\tCompetency order entered nunc pro tunc to December 5\tCompetency order entered nunc pro tunc to December 5. Church filed pro se mandamus petition challenging Judge Breslow and DA's office.\n150025\t2024-12-16 00:00:00\tOrder to show cause — competency evaluation compliance\tCourt issued order to show cause for alleged non-compliance with competency evaluation and threatened bail/release consequences.\n150026\t2024-12-17 00:00:00\tOSC hearing — pretrial release revoked; no-bail bench warrant issued\tMinutes state pretrial release was revoked and no-bail bench warrant issued for failure to appear.\n150027\t2024-12-19 00:00:00\tBench warrant and extradition order materials\tRecord set includes bench warrant/no-bail hold and extradition order materials dated December 19, 2024.\n150028\t2025-01-06 00:00:00\tState files motion for contempt over pro se filings\tState filed motion for contempt seeking jail time for pro se filings. Exhibit spreadsheet also links this date to initiation of 42 U.S.C. Section 1983 federal action.\n150029\t2025-01-22 00:00:00\tTrial and pretrial motions hearing vacated pending competency\tOrder vacated March 2025 trial and pretrial motions hearing pending competency proceedings.\n150030\t2025-04-18 00:00:00\tState moves for no-bail hold\tState moved for no-bail hold citing harassment patterns and noncompliance with orders per exhibit spreadsheet. State allegations.\n150031\t2025-04-23 00:00:00\tWarrant service\tWarrant-service document dated April 23, 2025 in record set.\n150032\t2025-04-25 00:00:00\tCompetency court order — transfer to Department 7\tNunc pro tunc/order-for-competency record transferred case to Department 7 / competency court.\n150033\t2025-05-23 00:00:00\tFirst competency report — Lindsay Coyle\tForensic competency report by Lindsay Coyle filed in CR23-0657. Contains medical/mental-health information; redaction required before public posting.\n150034\t2025-05-28 00:00:00\tSecond competency report — Dr. Rachael Pinkerman\tConfidential competency evaluation by Dr. Rachael Pinkerman. Exhibit index states evaluator found competency under Dusky standard and noted refusal to participate due to retaliation. Redaction required.\n150035\t2025-06-05 00:00:00\tParties stipulate to third competency evaluation\tParties stipulated to third competency evaluation due to conflicting opinions from first two evaluators.\n150036\t2025-06-06 00:00:00\tDefense counsel Samuel Figueroa moves to withdraw\tSamuel Figueroa moved to withdraw citing relationship breakdown and defendant's desire for self-representation or motions counsel considered repugnant.\n150037\t2025-06-09 00:00:00\tCourt orders third competency evaluation\tCourt ordered third competency evaluation.\n150038\t2025-06-26 00:00:00\tThird competency report — Lisa Foerster\tForensic report by Lisa Foerster. Exhibit index states report found competence and described sophisticated understanding of legal process. Redaction required.\n150039\t2025-07-01 00:00:00\tCompetency court remand — defendant found competent\tRecord set includes proposed/order materials finding competence and remanding case from competency court.\n150040\t2025-07-03 00:00:00\tSubstitution of attorney — Joel Merchant enters as counsel\tSubstitution of attorney relieved prior counsel and substituted Joel Merchant as counsel of record per exhibit spreadsheet.\n150041\t2025-07-30 00:00:00\tStatus hearing — supervised bail reinstated; pro se restrictions continued\tMinutes report supervised bail at $25,000, continued restrictions on pro se filings, and no-contact directions involving DA's office.\n150042\t2025-08-06 00:00:00\tPetition for writ of mandamus — recusal of Judge Breslow sought\tChurch filed petition for writ of mandamus seeking recusal of Judge Breslow and venue transfer.\n150043\t2025-08-07 00:00:00\tOrder striking writ — defendant represented by counsel\tCourt struck writ because defendant was represented by counsel.\n150044\t2025-08-21 00:00:00\tFigueroa withdrawal granted; no-bail warrant issued; Faretta conditioned on arrest\tMinutes state Figueroa withdrawal was granted, no-bail warrant issued for failure to appear, and Faretta hearing was conditioned on arrest.\n150045\t2025-09-26 00:00:00\tState files notice of bail-condition violation\tDDA Stege filed notice alleging email to DDA Merchant regarding a medical emergency constituted a threat. State allegation.\n150046\t2025-10-02 00:00:00\tDefendant files notice of constitutional violations — 900+ days of delay alleged\tChurch filed notice/demand for clarification charting 900+ days of delay and claimed hearing defects. Allegations in filing.\n150047\t2025-10-23 00:00:00\tRenewed motion for criminal referral of DDA Aziz Merchant\tChurch filed renewed referral motion alleging fraud on the court regarding amended complaints and GPS tracker representations. Allegations in filing.\n150048\t2025-11-26 00:00:00\tMotion to dismiss for structural constitutional violations; warrants quashed; written findings demanded\tChurch filed motion and declaration seeking dismissal, warrant quashal, and written constitutional findings. Challenges nunc pro tunc alterations and competency-stay issues. Allegations in filing.\n",
+  "stderr": "",
+  "execution_time_ms": 575
+}

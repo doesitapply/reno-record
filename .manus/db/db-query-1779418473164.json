@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE timeline_events SET event_date = DATE_ADD(event_date, INTERVAL 1 DAY);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute UPDATE timeline_events SET event_date = DATE_ADD(event_date, INTERVAL 1 DAY);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 601
+}

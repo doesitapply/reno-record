@@ -1,0 +1,122 @@
+{
+  "query": "DESCRIBE timeline_events;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute DESCRIBE timeline_events;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "event_date",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "title",
+      "Type": "varchar(300)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "summary",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "case_number",
+      "Type": "varchar(120)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "story_id",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "category",
+      "Type": "enum('state_case','federal_case','custody','motion','warrant','competency','public_records','communications','election_accountability','other')",
+      "Null": "NO",
+      "Key": "MUL",
+      "Default": "other",
+      "Extra": ""
+    },
+    {
+      "Field": "issue_tags",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "actors",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "enum('confirmed','alleged','needs_review')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "needs_review",
+      "Extra": ""
+    },
+    {
+      "Field": "source_documents",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "public_status",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updated_at",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nevent_date\ttimestamp\tNO\tMUL\tNULL\t\ntitle\tvarchar(300)\tNO\t\tNULL\t\nsummary\ttext\tYES\t\tNULL\t\ncase_number\tvarchar(120)\tYES\t\tNULL\t\nstory_id\tint\tYES\t\tNULL\t\ncategory\tenum('state_case','federal_case','custody','motion','warrant','competency','public_records','communications','election_accountability','other')\tNO\tMUL\tother\t\nissue_tags\tjson\tYES\t\tNULL\t\nactors\tjson\tYES\t\tNULL\t\nstatus\tenum('confirmed','alleged','needs_review')\tNO\t\tneeds_review\t\nsource_documents\tjson\tYES\t\tNULL\t\npublic_status\ttinyint(1)\tNO\t\t0\t\ncreated_at\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdated_at\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\n",
+  "stderr": "",
+  "execution_time_ms": 594
+}

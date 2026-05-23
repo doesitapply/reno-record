@@ -1,0 +1,74 @@
+{
+  "query": "\nSELECT 'users' as tbl, COUNT(*) as cnt FROM users\nUNION ALL SELECT 'stories', COUNT(*) FROM stories\nUNION ALL SELECT 'documents_total', COUNT(*) FROM documents\nUNION ALL SELECT 'documents_public', COUNT(*) FROM documents WHERE public_status = true\nUNION ALL SELECT 'documents_state', COUNT(*) FROM documents WHERE case_tag = 'state'\nUNION ALL SELECT 'documents_federal', COUNT(*) FROM documents WHERE case_tag = 'federal'\nUNION ALL SELECT 'timeline_events', COUNT(*) FROM timeline_events\nUNION ALL SELECT 'actors', COUNT(*) FROM actors\nUNION ALL SELECT 'prrs', COUNT(*) FROM public_records_requests\nUNION ALL SELECT 'agencies', COUNT(*) FROM agencies\nUNION ALL SELECT 'violation_tags', COUNT(*) FROM violation_tags\nUNION ALL SELECT 'ingest_jobs', COUNT(*) FROM ingest_jobs\nUNION ALL SELECT 'audit_log', COUNT(*) FROM audit_log\nUNION ALL SELECT 'review_requests', COUNT(*) FROM review_requests\nUNION ALL SELECT 'contributor_xp', COUNT(*) FROM contributor_xp\nUNION ALL SELECT 'badge_definitions', COUNT(*) FROM badge_definitions;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute \nSELECT 'users' as tbl, COUNT(*) as cnt FROM users\nUNION ALL SELECT 'stories', COUNT(*) FROM stories\nUNION ALL SELECT 'documents_total', COUNT(*) FROM documents\nUNION ALL SELECT 'documents_public', COUNT(*) FROM documents WHERE public_status = true\nUNION ALL SELECT 'documents_state', COUNT(*) FROM documents WHERE case_tag = 'state'\nUNION ALL SELECT 'documents_federal', COUNT(*) FROM documents WHERE case_tag = 'federal'\nUNION ALL SELECT 'timeline_events', COUNT(*) FROM timeline_events\nUNION ALL SELECT 'actors', COUNT(*) FROM actors\nUNION ALL SELECT 'prrs', COUNT(*) FROM public_records_requests\nUNION ALL SELECT 'agencies', COUNT(*) FROM agencies\nUNION ALL SELECT 'violation_tags', COUNT(*) FROM violation_tags\nUNION ALL SELECT 'ingest_jobs', COUNT(*) FROM ingest_jobs\nUNION ALL SELECT 'audit_log', COUNT(*) FROM audit_log\nUNION ALL SELECT 'review_requests', COUNT(*) FROM review_requests\nUNION ALL SELECT 'contributor_xp', COUNT(*) FROM contributor_xp\nUNION ALL SELECT 'badge_definitions', COUNT(*) FROM badge_definitions;\n",
+  "rows": [
+    {
+      "tbl": "users",
+      "cnt": "2"
+    },
+    {
+      "tbl": "stories",
+      "cnt": "1"
+    },
+    {
+      "tbl": "documents_public",
+      "cnt": "38"
+    },
+    {
+      "tbl": "documents_state",
+      "cnt": "20"
+    },
+    {
+      "tbl": "documents_total",
+      "cnt": "40"
+    },
+    {
+      "tbl": "actors",
+      "cnt": "17"
+    },
+    {
+      "tbl": "timeline_events",
+      "cnt": "48"
+    },
+    {
+      "tbl": "documents_federal",
+      "cnt": "19"
+    },
+    {
+      "tbl": "prrs",
+      "cnt": "14"
+    },
+    {
+      "tbl": "agencies",
+      "cnt": "10"
+    },
+    {
+      "tbl": "violation_tags",
+      "cnt": "15"
+    },
+    {
+      "tbl": "audit_log",
+      "cnt": "21"
+    },
+    {
+      "tbl": "ingest_jobs",
+      "cnt": "7"
+    },
+    {
+      "tbl": "review_requests",
+      "cnt": "0"
+    },
+    {
+      "tbl": "contributor_xp",
+      "cnt": "0"
+    },
+    {
+      "tbl": "badge_definitions",
+      "cnt": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tcnt\nusers\t2\nstories\t1\ndocuments_public\t38\ndocuments_state\t20\ndocuments_total\t40\nactors\t17\ntimeline_events\t48\ndocuments_federal\t19\nprrs\t14\nagencies\t10\nviolation_tags\t15\naudit_log\t21\ningest_jobs\t7\nreview_requests\t0\ncontributor_xp\t0\nbadge_definitions\t0\n",
+  "stderr": "",
+  "execution_time_ms": 567
+}
