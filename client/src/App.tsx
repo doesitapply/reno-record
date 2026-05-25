@@ -26,6 +26,7 @@ import BillingPage from "./pages/Billing";
 import DocketGoblinBubble from "./components/DocketGoblinBubble";
 import CasesPage from "./pages/Cases";
 import ViolationTagDetailPage from "./pages/ViolationTagDetail";
+import CaseIntelligencePage from "./pages/CaseIntelligence";
 
 function Router() {
   return (
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/election" component={ElectionPage} />
       <Route path="/patterns" component={PatternsPage} />
       <Route path="/patterns/tag/:slug" component={ViolationTagDetailPage} />
+      <Route path="/case-intelligence" component={CaseIntelligencePage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/admin/story/:id" component={AdminPage} />

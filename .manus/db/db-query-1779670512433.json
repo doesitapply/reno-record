@@ -1,0 +1,46 @@
+{
+  "query": "SELECT category, COUNT(*) as count, MIN(event_date) as first_event, MAX(event_date) as last_event FROM timeline_events WHERE public_status = 1 GROUP BY category ORDER BY count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT category, COUNT(*) as count, MIN(event_date) as first_event, MAX(event_date) as last_event FROM timeline_events WHERE public_status = 1 GROUP BY category ORDER BY count DESC;",
+  "rows": [
+    {
+      "category": "federal_case",
+      "count": "27",
+      "first_event": "2025-01-06 00:00:00",
+      "last_event": "2025-12-13 00:00:00"
+    },
+    {
+      "category": "state_case",
+      "count": "21",
+      "first_event": "2023-03-13 00:00:00",
+      "last_event": "2025-09-27 00:00:00"
+    },
+    {
+      "category": "motion",
+      "count": "12",
+      "first_event": "2024-05-09 00:00:00",
+      "last_event": "2025-11-27 00:00:00"
+    },
+    {
+      "category": "competency",
+      "count": "9",
+      "first_event": "2024-12-06 00:00:00",
+      "last_event": "2025-07-02 00:00:00"
+    },
+    {
+      "category": "warrant",
+      "count": "4",
+      "first_event": "2024-12-18 00:00:00",
+      "last_event": "2025-08-22 00:00:00"
+    },
+    {
+      "category": "custody",
+      "count": "2",
+      "first_event": "2023-10-10 00:00:00",
+      "last_event": "2025-04-19 00:00:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "category\tcount\tfirst_event\tlast_event\nfederal_case\t27\t2025-01-06 00:00:00\t2025-12-13 00:00:00\nstate_case\t21\t2023-03-13 00:00:00\t2025-09-27 00:00:00\nmotion\t12\t2024-05-09 00:00:00\t2025-11-27 00:00:00\ncompetency\t9\t2024-12-06 00:00:00\t2025-07-02 00:00:00\nwarrant\t4\t2024-12-18 00:00:00\t2025-08-22 00:00:00\ncustody\t2\t2023-10-10 00:00:00\t2025-04-19 00:00:00\n",
+  "stderr": "",
+  "execution_time_ms": 570
+}

@@ -1,0 +1,115 @@
+{
+  "query": "SELECT vt.slug, vt.label, vt.description, vt.category, COUNT(dvt.id) as doc_count FROM violation_tags vt LEFT JOIN document_violation_tags dvt ON vt.id = dvt.violation_tag_id GROUP BY vt.id ORDER BY doc_count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT vt.slug, vt.label, vt.description, vt.category, COUNT(dvt.id) as doc_count FROM violation_tags vt LEFT JOIN document_violation_tags dvt ON vt.id = dvt.violation_tag_id GROUP BY vt.id ORDER BY doc_count DESC;",
+  "rows": [
+    {
+      "slug": "due_process_defect",
+      "label": "Due Process Defect",
+      "description": "Procedural or substantive due process violations under the Fifth or Fourteenth Amendment, including lack of notice, denial of opportunity to be heard, or fundamentally unfair proceedings.",
+      "category": "constitutional",
+      "doc_count": "33"
+    },
+    {
+      "slug": "speedy_trial_delay",
+      "label": "Speedy Trial / Delay",
+      "description": "Violations of the Sixth Amendment right to a speedy trial, including unexplained continuances, strategic delays, or failure to bring a defendant to trial within statutory timeframes. Barker v. Wingo, 407 U.S. 514 (1972).",
+      "category": "constitutional",
+      "doc_count": "25"
+    },
+    {
+      "slug": "faretta_self_representation",
+      "label": "Faretta / Self-Representation Rights",
+      "description": "Issues related to a defendant's Sixth Amendment right to self-representation, including denial of Faretta hearings, inadequate colloquy, or coerced waiver of counsel. Faretta v. California, 422 U.S. 806 (1975).",
+      "category": "constitutional",
+      "doc_count": "23"
+    },
+    {
+      "slug": "access_to_courts_interference",
+      "label": "Access to Courts Interference",
+      "description": "Actions that obstruct a party's meaningful access to the courts, including denial of filing rights, interference with legal mail, restriction of self-represented litigant access, or retaliation for filing.",
+      "category": "civil_rights",
+      "doc_count": "19"
+    },
+    {
+      "slug": "warrant_or_bail_defect",
+      "label": "Warrant or Bail Defect",
+      "description": "Defects in arrest warrants, search warrants, or bail determinations, including lack of probable cause, overbreadth, or excessive bail in violation of the Eighth Amendment.",
+      "category": "constitutional",
+      "doc_count": "8"
+    },
+    {
+      "slug": "prosecutorial_misconduct",
+      "label": "Prosecutorial Misconduct",
+      "description": "Improper conduct by a prosecutor including misrepresentation to the court, vouching for witnesses, improper argument, selective prosecution, or abuse of charging discretion.",
+      "category": "prosecutorial_conduct",
+      "doc_count": "8"
+    },
+    {
+      "slug": "judicial_disqualification_bias",
+      "label": "Judicial Disqualification / Bias",
+      "description": "Issues involving a judge's failure to recuse when required, appearance of partiality, ex parte communications, or conduct indicating bias against a party or class of litigants.",
+      "category": "judicial_conduct",
+      "doc_count": "8"
+    },
+    {
+      "slug": "competency_proceeding_abuse",
+      "label": "Competency Proceeding Abuse",
+      "description": "Misuse of competency evaluation or restoration proceedings, including using competency as a delay tactic, failure to follow Drope/Pate standards, or improper commitment without adequate basis.",
+      "category": "procedural",
+      "doc_count": "7"
+    },
+    {
+      "slug": "record_integrity_issue",
+      "label": "Record Integrity Issue",
+      "description": "Concerns about the accuracy, completeness, or authenticity of the official court record, including missing transcripts, altered docket entries, or discrepancies between filed and recorded documents.",
+      "category": "procedural",
+      "doc_count": "2"
+    },
+    {
+      "slug": "retaliation_first_amendment",
+      "label": "First Amendment Retaliation",
+      "description": "Adverse government action taken in response to protected speech, petition, or association, including retaliatory prosecution, enhanced charges, or procedural retaliation for exercising legal rights.",
+      "category": "civil_rights",
+      "doc_count": "1"
+    },
+    {
+      "slug": "elder_or_caregiver_impact",
+      "label": "Elder or Caregiver Impact",
+      "description": "Cases where the defendant or affected party is an elder, caregiver, or person with a dependent, and where prosecution or institutional action has disproportionate collateral impact on vulnerable third parties.",
+      "category": "civil_rights",
+      "doc_count": "1"
+    },
+    {
+      "slug": "public_records_noncompliance",
+      "label": "Public Records Noncompliance",
+      "description": "Failure to comply with public records request obligations, including untimely responses, improper denials, withholding of non-exempt records, or failure to maintain required records.",
+      "category": "public_records",
+      "doc_count": "1"
+    },
+    {
+      "slug": "fourth_amendment_search_seizure",
+      "label": "Fourth Amendment / Search and Seizure",
+      "description": "Unlawful searches, seizures, or surveillance without valid warrant or recognized exception, including fruit of the poisonous tree issues and suppression hearing defects.",
+      "category": "constitutional",
+      "doc_count": "1"
+    },
+    {
+      "slug": "brady_discovery_issue",
+      "label": "Brady / Discovery Issue",
+      "description": "Failure to disclose exculpatory or impeachment evidence as required by Brady v. Maryland, 373 U.S. 83 (1963), Giglio v. United States, 405 U.S. 150 (1972), or applicable state discovery rules.",
+      "category": "discovery",
+      "doc_count": "0"
+    },
+    {
+      "slug": "nunc_pro_tunc_concern",
+      "label": "Nunc Pro Tunc Concern",
+      "description": "Retroactive court orders or entries used to alter the record in ways that affect substantive rights, particularly where the retroactive entry is not supported by the original record.",
+      "category": "judicial_conduct",
+      "doc_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "slug\tlabel\tdescription\tcategory\tdoc_count\ndue_process_defect\tDue Process Defect\tProcedural or substantive due process violations under the Fifth or Fourteenth Amendment, including lack of notice, denial of opportunity to be heard, or fundamentally unfair proceedings.\tconstitutional\t33\nspeedy_trial_delay\tSpeedy Trial / Delay\tViolations of the Sixth Amendment right to a speedy trial, including unexplained continuances, strategic delays, or failure to bring a defendant to trial within statutory timeframes. Barker v. Wingo, 407 U.S. 514 (1972).\tconstitutional\t25\nfaretta_self_representation\tFaretta / Self-Representation Rights\tIssues related to a defendant's Sixth Amendment right to self-representation, including denial of Faretta hearings, inadequate colloquy, or coerced waiver of counsel. Faretta v. California, 422 U.S. 806 (1975).\tconstitutional\t23\naccess_to_courts_interference\tAccess to Courts Interference\tActions that obstruct a party's meaningful access to the courts, including denial of filing rights, interference with legal mail, restriction of self-represented litigant access, or retaliation for filing.\tcivil_rights\t19\nwarrant_or_bail_defect\tWarrant or Bail Defect\tDefects in arrest warrants, search warrants, or bail determinations, including lack of probable cause, overbreadth, or excessive bail in violation of the Eighth Amendment.\tconstitutional\t8\nprosecutorial_misconduct\tProsecutorial Misconduct\tImproper conduct by a prosecutor including misrepresentation to the court, vouching for witnesses, improper argument, selective prosecution, or abuse of charging discretion.\tprosecutorial_conduct\t8\njudicial_disqualification_bias\tJudicial Disqualification / Bias\tIssues involving a judge's failure to recuse when required, appearance of partiality, ex parte communications, or conduct indicating bias against a party or class of litigants.\tjudicial_conduct\t8\ncompetency_proceeding_abuse\tCompetency Proceeding Abuse\tMisuse of competency evaluation or restoration proceedings, including using competency as a delay tactic, failure to follow Drope/Pate standards, or improper commitment without adequate basis.\tprocedural\t7\nrecord_integrity_issue\tRecord Integrity Issue\tConcerns about the accuracy, completeness, or authenticity of the official court record, including missing transcripts, altered docket entries, or discrepancies between filed and recorded documents.\tprocedural\t2\nretaliation_first_amendment\tFirst Amendment Retaliation\tAdverse government action taken in response to protected speech, petition, or association, including retaliatory prosecution, enhanced charges, or procedural retaliation for exercising legal rights.\tcivil_rights\t1\nelder_or_caregiver_impact\tElder or Caregiver Impact\tCases where the defendant or affected party is an elder, caregiver, or person with a dependent, and where prosecution or institutional action has disproportionate collateral impact on vulnerable third parties.\tcivil_rights\t1\npublic_records_noncompliance\tPublic Records Noncompliance\tFailure to comply with public records request obligations, including untimely responses, improper denials, withholding of non-exempt records, or failure to maintain required records.\tpublic_records\t1\nfourth_amendment_search_seizure\tFourth Amendment / Search and Seizure\tUnlawful searches, seizures, or surveillance without valid warrant or recognized exception, including fruit of the poisonous tree issues and suppression hearing defects.\tconstitutional\t1\nbrady_discovery_issue\tBrady / Discovery Issue\tFailure to disclose exculpatory or impeachment evidence as required by Brady v. Maryland, 373 U.S. 83 (1963), Giglio v. United States, 405 U.S. 150 (1972), or applicable state discovery rules.\tdiscovery\t0\nnunc_pro_tunc_concern\tNunc Pro Tunc Concern\tRetroactive court orders or entries used to alter the record in ways that affect substantive rights, particularly where the retroactive entry is not supported by the original record.\tjudicial_conduct\t0\n",
+  "stderr": "",
+  "execution_time_ms": 588
+}

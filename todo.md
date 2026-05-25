@@ -305,3 +305,14 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [x] Tag breakdown: due_process_defect (33), speedy_trial_delay (25), faretta_self_representation (23), access_to_courts_interference (19), prosecutorial_misconduct (8), judicial_disqualification_bias (8), warrant_or_bail_defect (8), competency_proceeding_abuse (7), record_integrity_issue (2), retaliation_first_amendment (1), fourth_amendment_search_seizure (1), public_records_noncompliance (1), elder_or_caregiver_impact (1)
 - [x] All assignments sourced with source_quote and source_citation, added_by=goblin
 - [x] Checkpoint saved
+
+## v5.4 — Case Intelligence Dashboard
+
+- [x] /case-intelligence route added to App.tsx and nav
+- [x] Plain English tab: full narrative of what happened, written for a layperson
+- [x] Technical Summary tab: case metadata, procedural sequence with violation flags, archive stats
+- [x] Violations tab: all 10 violation types with expand/collapse, plain English + legal basis + immunity analysis + tier classification
+- [x] Immunity Map tab: per-actor immunity analysis + full summary table with bypass status
+- [x] Tier 1/2/3 classification: Tier 1 = move now (speedy trial, Faretta, no-bail warrant), Tier 2 = federal/parallel, Tier 3 = appellate/supporting
+- [x] All violation cards link to /patterns/tag/:slug for source documents
+- [x] Added to "The Pattern" nav dropdown

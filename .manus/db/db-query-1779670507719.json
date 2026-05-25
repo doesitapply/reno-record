@@ -1,0 +1,112 @@
+{
+  "query": "SELECT name, role, agency, bio FROM actors ORDER BY role, name LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2N1WTErRdSjheBh.e46440e12186 --database 3yhU3DrKzf8Z5BNtvxatFF --execute SELECT name, role, agency, bio FROM actors ORDER BY role, name LIMIT 20;",
+  "rows": [
+    {
+      "name": "Mary Kandaras",
+      "role": "Chief Deputy District Attorney",
+      "agency": "Washoe County District Attorney's Office",
+      "bio": "Named in defendant's November 29, 2024 pro se sanctions motion alleging intimidation to cease direct communication."
+    },
+    {
+      "name": "Galen Carrico",
+      "role": "Conflict Defense Counsel (Appointed)",
+      "agency": "Appointed Conflict Counsel",
+      "bio": "Appointed June 3, 2024 after APD conflict finding. Appeared at December 5, 2024 Young hearing. Filed second Young motion September 2024."
+    },
+    {
+      "name": "Joel Merchant",
+      "role": "Defense Counsel",
+      "agency": "Defense Counsel",
+      "bio": "Named in July 2025 substitution of attorney as counsel of record."
+    },
+    {
+      "name": "Samuel Figueroa",
+      "role": "Defense Counsel",
+      "agency": "Defense Counsel",
+      "bio": "Substituted in 2025. Moved to withdraw June 6, 2025 citing relationship breakdown and defendant's desire for self-representation. Withdrawal granted August 21, 2025."
+    },
+    {
+      "name": "Gianna Verness",
+      "role": "Defense Counsel (APD)",
+      "agency": "Washoe County Alternate Public Defender",
+      "bio": "Named in Young-hearing and APD-conflict materials in 2024."
+    },
+    {
+      "name": "Sydney Hutt",
+      "role": "Defense Counsel (APD)",
+      "agency": "Washoe County Alternate Public Defender",
+      "bio": "Substituted in January 2024. Requested Young hearing May 16, 2024. APD office relieved at May 30, 2024 Young hearing."
+    },
+    {
+      "name": "Cooper Brinson",
+      "role": "Defense Counsel (Public Defender)",
+      "agency": "Washoe County Public Defender / Alternate Public Defender",
+      "bio": "Initial appointed counsel in CR23-0657. Associated with preliminary-hearing waiver. Arraignment minutes identify him as appointed counsel."
+    },
+    {
+      "name": "Amos Stege",
+      "role": "Deputy District Attorney",
+      "agency": "Washoe County District Attorney's Office",
+      "bio": "Filed September 26, 2025 notice of bail-condition violation alleging defendant email to Merchant constituted a threat."
+    },
+    {
+      "name": "Aziz Merchant",
+      "role": "Deputy District Attorney",
+      "agency": "Washoe County District Attorney's Office",
+      "bio": "Lead prosecutor in CR23-0657. Appeared at December 5, 2024 Young hearing. Filed or associated with multiple State motions including contempt motion (Jan 2025)."
+    },
+    {
+      "name": "Dianne S. Drinkwater",
+      "role": "Deputy District Attorney",
+      "agency": "Washoe County District Attorney's Office",
+      "bio": "Identified by Master Evidence Index as DDA on original Reno Justice Court criminal complaint (March 2023)."
+    },
+    {
+      "name": "Nicole Hicks",
+      "role": "Deputy District Attorney",
+      "agency": "Washoe County District Attorney's Office",
+      "bio": "Appears in 2025 prosecutor substitution materials in CR23-0657."
+    },
+    {
+      "name": "Christopher J. Hicks",
+      "role": "District Attorney",
+      "agency": "Washoe County District Attorney's Office",
+      "bio": "Elected DA. Named on early case assignment and discovery filings in CR23-0657."
+    },
+    {
+      "name": "Barry L. Breslow",
+      "role": "District Judge, Department 8",
+      "agency": "Second Judicial District Court, Washoe County",
+      "bio": "Presiding judge in CR23-0657. Associated with orders striking pro se filings, Young hearings, competency orders, OSC proceedings, and no-bail warrant issuance."
+    },
+    {
+      "name": "Lindsay Coyle",
+      "role": "Forensic Evaluator",
+      "agency": "Competency Evaluation Provider",
+      "bio": "Authored May 23, 2025 competency report in CR23-0657. Report contains sensitive medical/mental-health information."
+    },
+    {
+      "name": "Rachael Pinkerman",
+      "role": "Forensic Evaluator",
+      "agency": "Competency Evaluation Provider",
+      "bio": "Authored May 28, 2025 competency report. Exhibit index states evaluator found competency under Dusky and noted refusal to participate due to retaliation."
+    },
+    {
+      "name": "Lisa Foerster",
+      "role": "forensic-evaluator",
+      "agency": "Competency Evaluation Provider",
+      "bio": "Authored June 26, 2025 competency report. Exhibit index states report found competence and described sophisticated understanding of legal process."
+    },
+    {
+      "name": "Cody Meredith",
+      "role": "Pretrial Services Officer",
+      "agency": "Washoe County Pretrial Services",
+      "bio": "Named in court notes and OSC/pretrial filings in CR23-0657."
+    }
+  ],
+  "messages": [],
+  "stdout": "name\trole\tagency\tbio\nMary Kandaras\tChief Deputy District Attorney\tWashoe County District Attorney's Office\tNamed in defendant's November 29, 2024 pro se sanctions motion alleging intimidation to cease direct communication.\nGalen Carrico\tConflict Defense Counsel (Appointed)\tAppointed Conflict Counsel\tAppointed June 3, 2024 after APD conflict finding. Appeared at December 5, 2024 Young hearing. Filed second Young motion September 2024.\nJoel Merchant\tDefense Counsel\tDefense Counsel\tNamed in July 2025 substitution of attorney as counsel of record.\nSamuel Figueroa\tDefense Counsel\tDefense Counsel\tSubstituted in 2025. Moved to withdraw June 6, 2025 citing relationship breakdown and defendant's desire for self-representation. Withdrawal granted August 21, 2025.\nGianna Verness\tDefense Counsel (APD)\tWashoe County Alternate Public Defender\tNamed in Young-hearing and APD-conflict materials in 2024.\nSydney Hutt\tDefense Counsel (APD)\tWashoe County Alternate Public Defender\tSubstituted in January 2024. Requested Young hearing May 16, 2024. APD office relieved at May 30, 2024 Young hearing.\nCooper Brinson\tDefense Counsel (Public Defender)\tWashoe County Public Defender / Alternate Public Defender\tInitial appointed counsel in CR23-0657. Associated with preliminary-hearing waiver. Arraignment minutes identify him as appointed counsel.\nAmos Stege\tDeputy District Attorney\tWashoe County District Attorney's Office\tFiled September 26, 2025 notice of bail-condition violation alleging defendant email to Merchant constituted a threat.\nAziz Merchant\tDeputy District Attorney\tWashoe County District Attorney's Office\tLead prosecutor in CR23-0657. Appeared at December 5, 2024 Young hearing. Filed or associated with multiple State motions including contempt motion (Jan 2025).\nDianne S. Drinkwater\tDeputy District Attorney\tWashoe County District Attorney's Office\tIdentified by Master Evidence Index as DDA on original Reno Justice Court criminal complaint (March 2023).\nNicole Hicks\tDeputy District Attorney\tWashoe County District Attorney's Office\tAppears in 2025 prosecutor substitution materials in CR23-0657.\nChristopher J. Hicks\tDistrict Attorney\tWashoe County District Attorney's Office\tElected DA. Named on early case assignment and discovery filings in CR23-0657.\nBarry L. Breslow\tDistrict Judge, Department 8\tSecond Judicial District Court, Washoe County\tPresiding judge in CR23-0657. Associated with orders striking pro se filings, Young hearings, competency orders, OSC proceedings, and no-bail warrant issuance.\nLindsay Coyle\tForensic Evaluator\tCompetency Evaluation Provider\tAuthored May 23, 2025 competency report in CR23-0657. Report contains sensitive medical/mental-health information.\nRachael Pinkerman\tForensic Evaluator\tCompetency Evaluation Provider\tAuthored May 28, 2025 competency report. Exhibit index states evaluator found competency under Dusky and noted refusal to participate due to retaliation.\nLisa Foerster\tforensic-evaluator\tCompetency Evaluation Provider\tAuthored June 26, 2025 competency report. Exhibit index states report found competence and described sophisticated understanding of legal process.\nCody Meredith\tPretrial Services Officer\tWashoe County Pretrial Services\tNamed in court notes and OSC/pretrial filings in CR23-0657.\n",
+  "stderr": "",
+  "execution_time_ms": 582
+}
