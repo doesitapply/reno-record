@@ -15,10 +15,14 @@ import {
   Database,
   ChevronRight,
   ExternalLink,
+  Trophy,
+  TrendingUp,
+  BookOpen,
+  Gavel,
 } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { trpc } from "@/lib/trpc";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 /* ─── Utility ─────────────────────────────────────────────────── */
@@ -55,25 +59,33 @@ const ACTION_ICONS: Record<string, React.ElementType> = {
   inline_edit: Activity,
 };
 
-/* ─── Gauge component ─────────────────────────────────────────── */
+/* ─── Clickable Gauge ─────────────────────────────────────────── */
 function Gauge({
   value,
   max,
   label,
+  sublabel,
   color = "amber",
+  href,
+  tooltip,
 }: {
   value: number;
   max: number;
   label: string;
-  color?: "amber" | "sky" | "green" | "red" | "violet";
+  sublabel?: string;
+  color?: "amber" | "sky" | "green" | "red" | "violet" | "orange";
+  href: string;
+  tooltip?: string;
 }) {
+  const [hovered, setHovered] = useState(false);
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   const colors = {
-    amber: { stroke: "#f59e0b", glow: "rgba(245,158,11,0.3)" },
-    sky: { stroke: "#38bdf8", glow: "rgba(56,189,248,0.3)" },
-    green: { stroke: "#4ade80", glow: "rgba(74,222,128,0.3)" },
-    red: { stroke: "#f87171", glow: "rgba(248,113,113,0.3)" },
-    violet: { stroke: "#a78bfa", glow: "rgba(167,139,250,0.3)" },
+    amber:  { stroke: "#f59e0b", glow: "rgba(245,158,11,0.4)",  bg: "hover:bg-amber-950/30",  border: "hover:border-amber-700/50",  text: "text-amber-400" },
+    sky:    { stroke: "#38bdf8", glow: "rgba(56,189,248,0.4)",   bg: "hover:bg-sky-950/30",    border: "hover:border-sky-700/50",    text: "text-sky-400" },
+    green:  { stroke: "#4ade80", glow: "rgba(74,222,128,0.4)",   bg: "hover:bg-green-950/30",  border: "hover:border-green-700/50",  text: "text-green-400" },
+    red:    { stroke: "#f87171", glow: "rgba(248,113,113,0.4)",  bg: "hover:bg-red-950/30",    border: "hover:border-red-700/50",    text: "text-red-400" },
+    violet: { stroke: "#a78bfa", glow: "rgba(167,139,250,0.4)",  bg: "hover:bg-violet-950/30", border: "hover:border-violet-700/50", text: "text-violet-400" },
+    orange: { stroke: "#fb923c", glow: "rgba(251,146,60,0.4)",   bg: "hover:bg-orange-950/30", border: "hover:border-orange-700/50", text: "text-orange-400" },
   };
   const c = colors[color];
   const r = 38;
@@ -81,32 +93,54 @@ function Gauge({
   const dash = (pct / 100) * circ;
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative w-24 h-24">
-        <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-          <circle cx="50" cy="50" r={r} fill="none" stroke="#292524" strokeWidth="8" />
-          <circle
-            cx="50"
-            cy="50"
-            r={r}
-            fill="none"
-            stroke={c.stroke}
-            strokeWidth="8"
-            strokeDasharray={`${dash} ${circ}`}
-            strokeLinecap="round"
-            style={{ filter: `drop-shadow(0 0 6px ${c.glow})` }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-xl font-black tabular-nums" style={{ color: c.stroke }}>
-            {value}
-          </span>
+    <Link href={href}>
+      <div
+        className={cn(
+          "relative flex flex-col items-center gap-2 p-3 rounded-lg border border-stone-800/60 cursor-pointer transition-all duration-200 group",
+          c.bg, c.border,
+          hovered && "scale-[1.03] shadow-lg"
+        )}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        title={tooltip}
+      >
+        <div className={cn(
+          "absolute top-2 right-2 transition-opacity duration-200",
+          hovered ? "opacity-100" : "opacity-0"
+        )}>
+          <ArrowRight className={cn("w-3 h-3", c.text)} />
+        </div>
+        <div className="relative w-24 h-24">
+          <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+            <circle cx="50" cy="50" r={r} fill="none" stroke="#292524" strokeWidth="8" />
+            <circle
+              cx="50" cy="50" r={r}
+              fill="none"
+              stroke={c.stroke}
+              strokeWidth="8"
+              strokeDasharray={`${dash} ${circ}`}
+              strokeLinecap="round"
+              style={{ filter: `drop-shadow(0 0 ${hovered ? "10px" : "6px"} ${c.glow})`, transition: "filter 0.2s" }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className={cn("text-2xl font-black font-mono tabular-nums", c.text)}>
+              {value.toLocaleString()}
+            </span>
+          </div>
+        </div>
+        <div className="text-center">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-stone-400 group-hover:text-stone-200 transition-colors leading-tight">
+            {label}
+          </p>
+          {sublabel && (
+            <p className="text-[9px] font-mono text-stone-600 group-hover:text-stone-500 transition-colors mt-0.5">
+              {sublabel}
+            </p>
+          )}
         </div>
       </div>
-      <div className="text-center">
-        <p className="text-xs font-mono uppercase tracking-widest text-stone-400">{label}</p>
-      </div>
-    </div>
+    </Link>
   );
 }
 
@@ -236,14 +270,66 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Gauge strip */}
-            <div className="mt-10 grid grid-cols-2 md:grid-cols-5 gap-3">
-              <Gauge value={daysSince} max={Math.max(daysSince * 1.5, 100)} label="Days in System" color="red" />
-              <Gauge value={docCount} max={Math.max(docCount * 1.5, 10)} label="Public Documents" color="amber" />
-              <Gauge value={eventCount} max={Math.max(eventCount * 1.5, 10)} label="Timeline Events" color="sky" />
-              <Gauge value={actorCount} max={Math.max(actorCount * 1.5, 10)} label="Named Actors" color="violet" />
-              <Gauge value={prrCount} max={Math.max(prrCount * 1.5, 5)} label="Records Requests" color="green" />
+            {/* Gauge strip — all clickable */}
+            <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+              <Gauge
+                value={daysSince}
+                max={Math.max(daysSince * 1.5, 100)}
+                label="Days in System"
+                sublabel="Since arrest"
+                color="red"
+                href="/the-church-record"
+                tooltip="View the Church Record — full case overview and procedural history"
+              />
+              <Gauge
+                value={docCount}
+                max={Math.max(docCount * 1.5, 10)}
+                label="Evidence Files"
+                sublabel="AI-tagged docs"
+                color="amber"
+                href="/evidence"
+                tooltip="Browse the Evidence Archive — all ingested and tagged documents"
+              />
+              <Gauge
+                value={eventCount}
+                max={Math.max(eventCount * 1.5, 10)}
+                label="Timeline Events"
+                sublabel="State + federal"
+                color="sky"
+                href="/timeline"
+                tooltip="View the full case timeline — state and federal events"
+              />
+              <Gauge
+                value={actorCount}
+                max={Math.max(actorCount * 1.5, 10)}
+                label="Named Actors"
+                sublabel="On record"
+                color="violet"
+                href="/actors"
+                tooltip="Actor dossiers — judges, prosecutors, attorneys, officials"
+              />
+              <Gauge
+                value={prrCount}
+                max={Math.max(prrCount * 1.5, 5)}
+                label="Records Requests"
+                sublabel="NPRA filings"
+                color="green"
+                href="/public-records"
+                tooltip="Public records requests — filed, pending, and fulfilled"
+              />
+              <Gauge
+                value={(pm?.tagCounts ?? []).reduce((a: number, t: any) => a + (t.count ?? 0), 0)}
+                max={Math.max((pm?.tagCounts ?? []).reduce((a: number, t: any) => a + (t.count ?? 0), 0) * 1.5, 10)}
+                label="Violation Signals"
+                sublabel={`${pm?.tagCounts?.length ?? 0} tag types`}
+                color="orange"
+                href="/patterns"
+                tooltip="Pattern dashboard — all violation tag counts and evidence signals"
+              />
             </div>
+            <p className="mt-2 text-[10px] font-mono text-stone-700 text-center">
+              ↑ Click any gauge to navigate to that section
+            </p>
           </div>
         </section>
 

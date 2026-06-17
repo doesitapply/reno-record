@@ -15,33 +15,32 @@ import { useTheme } from "@/contexts/ThemeContext";
 const NAV_SECTIONS = [
   {
     label: "The Record",
-    href: "/evidence",
+    href: "/the-church-record",
     children: [
-      { href: "/evidence", label: "Evidence Archive" },
-      { href: "/timeline", label: "Timeline" },
-      { href: "/the-church-record", label: "The Church Record" },
-      { href: "/cases", label: "The Cases" },
-      { href: "/public-records", label: "Public Records" },
+      { href: "/the-church-record", label: "The Church Record", sub: "Start here — full case overview" },
+      { href: "/cases", label: "The Cases", sub: "CR23-0657 · 3:24-cv-00579" },
+      { href: "/timeline", label: "Timeline", sub: "75 documented events, state + federal" },
+      { href: "/evidence", label: "Evidence Archive", sub: "AI-ingested, violation-tagged docs" },
+      { href: "/public-records", label: "Records Requests", sub: "NPRA filings and responses" },
     ],
   },
   {
     label: "The Actors",
     href: "/actors",
     children: [
-      { href: "/actors", label: "Actor Dossiers" },
-      { href: "/agencies", label: "Agencies" },
+      { href: "/actors", label: "Actor Dossiers", sub: "17 named individuals on record" },
+      { href: "/agencies", label: "Agencies", sub: "Washoe County, DA, courts, PD" },
+      { href: "/leaderboard", label: "Accountability Index", sub: "Actor heat scores and rankings" },
     ],
   },
   {
     label: "The Pattern",
     href: "/patterns",
     children: [
-      { href: "/patterns", label: "Pattern Dashboard" },
-      { href: "/case-intelligence", label: "Case Intelligence" },
-      { href: "/judicial-pattern", label: "Judicial Pattern Audit" },
-      { href: "/request-audit", label: "Request a Case Audit" },
-      { href: "/leaderboard", label: "Accountability Index" },
-      { href: "/election", label: "Accountability" },
+      { href: "/patterns", label: "Pattern Dashboard", sub: "137 violation signals across 14 tag types" },
+      { href: "/case-intelligence", label: "Case Intelligence", sub: "Plain English + violations + immunity map" },
+      { href: "/judicial-pattern", label: "Judicial Pattern Audit", sub: "Comparative corpus — Breslow docket" },
+      { href: "/request-audit", label: "Request a Case Audit", sub: "Have this system analyze your case" },
     ],
   },
 ];
@@ -125,20 +124,23 @@ function NavSection({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-1 w-52 bg-popover border border-border rounded-sm shadow-lg z-50 py-1">
+        <div className="absolute left-0 top-full mt-1 w-64 bg-popover border border-border rounded-sm shadow-lg z-50 py-1">
           {section.children.map(child => (
             <Link
               key={child.href}
               href={child.href}
               onClick={() => setOpen(false)}
               className={cn(
-                "block px-3 py-2 text-sm transition-colors",
+                "block px-3 py-2.5 transition-colors",
                 location.startsWith(child.href)
                   ? "text-primary bg-primary/10"
                   : "text-popover-foreground hover:bg-secondary hover:text-foreground",
               )}
             >
-              {child.label}
+              <div className="text-sm font-medium">{child.label}</div>
+              {(child as any).sub && (
+                <div className="text-[10px] font-mono text-muted-foreground mt-0.5 leading-tight">{(child as any).sub}</div>
+              )}
             </Link>
           ))}
         </div>
