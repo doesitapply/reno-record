@@ -372,20 +372,27 @@ export default function Home() {
                 </Link>
               </div>
               <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
-                {[
-                  { label: "Faretta Violations", value: pm?.farettaIssues ?? 0, cite: "Faretta v. California", color: "border-red-800/50 bg-red-950/20 text-red-300" },
-                  { label: "Speedy Trial Issues", value: pm?.speedyTrialIssues ?? 0, cite: "6th Amendment", color: "border-amber-800/50 bg-amber-950/20 text-amber-300" },
-                  { label: "Discovery Gaps", value: pm?.discoveryIssues ?? 0, cite: "Brady / Giglio", color: "border-orange-800/50 bg-orange-950/20 text-orange-300" },
-                  { label: "Custody Warrant Flags", value: pm?.noBailWarrant ?? 0, cite: "4th Amendment", color: "border-sky-800/50 bg-sky-950/20 text-sky-300" },
-                  { label: "Ignored Filings", value: pm?.ignoredFilings ?? 0, cite: "Due Process", color: "border-violet-800/50 bg-violet-950/20 text-violet-300" },
-                  { label: "Competency Conflicts", value: pm?.competencyAfterAssertion ?? 0, cite: "Pate v. Robinson", color: "border-rose-800/50 bg-rose-950/20 text-rose-300" },
-                ].map((sig) => (
-                  <div key={sig.label} className={cn("rounded border p-3", sig.color)}>
-                    <p className="text-2xl font-black tabular-nums mb-1">{sig.value}</p>
-                    <p className="text-xs font-mono leading-tight">{sig.label}</p>
-                    <p className="text-[10px] opacity-60 mt-1">{sig.cite}</p>
-                  </div>
-                ))}
+                {(() => {
+                  // Build a lookup: slug → unique-doc count from live DB
+                  const tc: Record<string, number> = {};
+                  ((pm?.tagCounts ?? []) as { slug: string; count: number }[]).forEach((t) => { tc[t.slug] = t.count; });
+                  return [
+                    { label: "Faretta Violations",    slug: "faretta_self_representation",    cite: "Faretta v. California", color: "border-red-800/50 bg-red-950/20 text-red-300" },
+                    { label: "Speedy Trial Issues",   slug: "speedy_trial_delay",             cite: "6th Amendment",         color: "border-amber-800/50 bg-amber-950/20 text-amber-300" },
+                    { label: "Due Process Defects",   slug: "due_process_defect",             cite: "14th Amendment",        color: "border-orange-800/50 bg-orange-950/20 text-orange-300" },
+                    { label: "Warrant / Bail Defects",slug: "warrant_or_bail_defect",         cite: "4th Amendment",         color: "border-sky-800/50 bg-sky-950/20 text-sky-300" },
+                    { label: "Access to Courts",      slug: "access_to_courts_interference",  cite: "Due Process",           color: "border-violet-800/50 bg-violet-950/20 text-violet-300" },
+                    { label: "Competency Abuse",      slug: "competency_proceeding_abuse",    cite: "Pate v. Robinson",      color: "border-rose-800/50 bg-rose-950/20 text-rose-300" },
+                  ].map((sig) => (
+                    <Link key={sig.slug} href={`/patterns/tag/${sig.slug}`}>
+                      <div className={cn("rounded border p-3 cursor-pointer hover:opacity-80 transition-opacity", sig.color)}>
+                        <p className="text-2xl font-black tabular-nums mb-1">{tc[sig.slug] ?? 0}</p>
+                        <p className="text-xs font-mono leading-tight">{sig.label}</p>
+                        <p className="text-[10px] opacity-60 mt-1">{sig.cite}</p>
+                      </div>
+                    </Link>
+                  ));
+                })()}
               </div>
             </div>
 

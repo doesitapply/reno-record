@@ -441,17 +441,19 @@ export async function getPatternMetrics() {
     })
     .from(stories);
 
-  // v4.0: violation tag counts from document evidence
+  // v6.4: violation tag counts — COUNT DISTINCT documentId so a document tagged with the
+  // same violation multiple times (e.g. by Goblin + human) only counts once per tag type.
+  // This prevents inflation and ensures the signal count = unique evidence files, not assignments.
   const tagCounts = await db
     .select({
       slug: violationTags.slug,
       label: violationTags.label,
-      count: sql<number>`COUNT(${documentViolationTags.id})`,
+      count: sql<number>`COUNT(DISTINCT ${documentViolationTags.documentId})`,
     })
     .from(violationTags)
     .leftJoin(documentViolationTags, eq(documentViolationTags.violationTagId, violationTags.id))
     .groupBy(violationTags.id, violationTags.slug, violationTags.label)
-    .orderBy(desc(sql`COUNT(${documentViolationTags.id})`));
+    .orderBy(desc(sql`COUNT(DISTINCT ${documentViolationTags.documentId})`));
 
   return { ...(agg as any), tagCounts };
 }
