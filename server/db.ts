@@ -444,11 +444,30 @@ export async function getPatternMetrics() {
   // v6.4: violation tag counts — COUNT DISTINCT documentId so a document tagged with the
   // same violation multiple times (e.g. by Goblin + human) only counts once per tag type.
   // This prevents inflation and ensures the signal count = unique evidence files, not assignments.
+  // v6.4.2: also surface the most-recently-tagged document (title + date) for hover tooltips.
   const tagCounts = await db
     .select({
       slug: violationTags.slug,
       label: violationTags.label,
       count: sql<number>`COUNT(DISTINCT ${documentViolationTags.documentId})`,
+      latestDocTitle: sql<string | null>`(
+        SELECT d.title FROM documents d
+        INNER JOIN document_violation_tags dvt2 ON dvt2.document_id = d.id
+        WHERE dvt2.violation_tag_id = ${violationTags.id}
+          AND d.public_status = 1
+          AND d.review_status = 'approved'
+        ORDER BY COALESCE(d.document_date, d.created_at) DESC
+        LIMIT 1
+      )`,
+      latestDocDate: sql<string | null>`(
+        SELECT COALESCE(d.document_date, d.created_at) FROM documents d
+        INNER JOIN document_violation_tags dvt2 ON dvt2.document_id = d.id
+        WHERE dvt2.violation_tag_id = ${violationTags.id}
+          AND d.public_status = 1
+          AND d.review_status = 'approved'
+        ORDER BY COALESCE(d.document_date, d.created_at) DESC
+        LIMIT 1
+      )`,
     })
     .from(violationTags)
     .leftJoin(documentViolationTags, eq(documentViolationTags.violationTagId, violationTags.id))

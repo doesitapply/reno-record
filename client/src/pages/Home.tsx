@@ -373,9 +373,12 @@ export default function Home() {
               </div>
               <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
                 {(() => {
-                  // Build a lookup: slug → unique-doc count from live DB
-                  const tc: Record<string, number> = {};
-                  ((pm?.tagCounts ?? []) as { slug: string; count: number }[]).forEach((t) => { tc[t.slug] = t.count; });
+                  // Build a lookup: slug → { count, latestDocTitle, latestDocDate }
+                  type TagMeta = { count: number; latestDocTitle?: string | null; latestDocDate?: string | null };
+                  const tc: Record<string, TagMeta> = {};
+                  ((pm?.tagCounts ?? []) as { slug: string; count: number; latestDocTitle?: string | null; latestDocDate?: string | null }[]).forEach((t) => {
+                    tc[t.slug] = { count: t.count, latestDocTitle: t.latestDocTitle, latestDocDate: t.latestDocDate };
+                  });
                   return [
                     { label: "Faretta Violations",    slug: "faretta_self_representation",    cite: "Faretta v. California", color: "border-red-800/50 bg-red-950/20 text-red-300" },
                     { label: "Speedy Trial Issues",   slug: "speedy_trial_delay",             cite: "6th Amendment",         color: "border-amber-800/50 bg-amber-950/20 text-amber-300" },
@@ -383,15 +386,40 @@ export default function Home() {
                     { label: "Warrant / Bail Defects",slug: "warrant_or_bail_defect",         cite: "4th Amendment",         color: "border-sky-800/50 bg-sky-950/20 text-sky-300" },
                     { label: "Access to Courts",      slug: "access_to_courts_interference",  cite: "Due Process",           color: "border-violet-800/50 bg-violet-950/20 text-violet-300" },
                     { label: "Competency Abuse",      slug: "competency_proceeding_abuse",    cite: "Pate v. Robinson",      color: "border-rose-800/50 bg-rose-950/20 text-rose-300" },
-                  ].map((sig) => (
-                    <Link key={sig.slug} href={`/patterns/tag/${sig.slug}`}>
-                      <div className={cn("rounded border p-3 cursor-pointer hover:opacity-80 transition-opacity", sig.color)}>
-                        <p className="text-2xl font-black tabular-nums mb-1">{tc[sig.slug] ?? 0}</p>
-                        <p className="text-xs font-mono leading-tight">{sig.label}</p>
-                        <p className="text-[10px] opacity-60 mt-1">{sig.cite}</p>
+                  ].map((sig) => {
+                    const meta = tc[sig.slug];
+                    const docTitle = meta?.latestDocTitle;
+                    const docDate = meta?.latestDocDate
+                      ? new Date(meta.latestDocDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+                      : null;
+                    return (
+                      <div key={sig.slug} className="group relative">
+                        <Link href={`/patterns/tag/${sig.slug}`}>
+                          <div className={cn("rounded border p-3 cursor-pointer transition-all duration-150 hover:brightness-110 hover:scale-[1.02]", sig.color)}>
+                            <p className="text-2xl font-black tabular-nums mb-1">{meta?.count ?? 0}</p>
+                            <p className="text-xs font-mono leading-tight">{sig.label}</p>
+                            <p className="text-[10px] opacity-60 mt-1">{sig.cite}</p>
+                          </div>
+                        </Link>
+                        {/* Hover tooltip — most recently tagged document */}
+                        {docTitle && (
+                          <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50
+                                          w-56 rounded-md border border-stone-700 bg-stone-900 shadow-xl px-3 py-2
+                                          opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                            <p className="text-[10px] font-mono text-stone-500 uppercase tracking-widest mb-1">Latest tagged doc</p>
+                            <p className="text-xs text-stone-200 font-medium leading-snug line-clamp-2">{docTitle}</p>
+                            {docDate && (
+                              <p className="text-[10px] font-mono text-stone-500 mt-1">{docDate}</p>
+                            )}
+                            {/* Arrow */}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0
+                                            border-l-4 border-r-4 border-t-4
+                                            border-l-transparent border-r-transparent border-t-stone-700" />
+                          </div>
+                        )}
                       </div>
-                    </Link>
-                  ));
+                    );
+                  });
                 })()}
               </div>
             </div>
