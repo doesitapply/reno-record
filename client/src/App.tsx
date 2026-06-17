@@ -27,6 +27,8 @@ import DocketGoblinBubble from "./components/DocketGoblinBubble";
 import CasesPage from "./pages/Cases";
 import ViolationTagDetailPage from "./pages/ViolationTagDetail";
 import CaseIntelligencePage from "./pages/CaseIntelligence";
+import JudicialPatternPage from "./pages/JudicialPattern";
+import RequestAuditPage from "./pages/RequestAudit";
 
 function Router() {
   return (
@@ -47,6 +49,8 @@ function Router() {
       <Route path="/patterns" component={PatternsPage} />
       <Route path="/patterns/tag/:slug" component={ViolationTagDetailPage} />
       <Route path="/case-intelligence" component={CaseIntelligencePage} />
+      <Route path="/judicial-pattern" component={JudicialPatternPage} />
+      <Route path="/request-audit" component={RequestAuditPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/admin/story/:id" component={AdminPage} />

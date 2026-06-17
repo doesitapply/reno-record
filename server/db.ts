@@ -23,6 +23,10 @@ import {
   InsertTimelineEvent,
   InsertUser,
   InsertViolationTag,
+  boilerplatePhrases,
+  InsertBoilerplatePhrase,
+  InsertJudicialCase,
+  judicialCases,
   publicRecordsRequests,
   stories,
   timelineEvents,
@@ -1169,4 +1173,148 @@ export async function getViolationTagDetail(slug: string) {
     .orderBy(asc(documents.documentDate), asc(documentViolationTags.id));
 
   return { tag, entries: rows };
+}
+
+/* ================= Judicial Pattern Analysis (v6.0) ================= */
+
+export async function insertJudicialCase(input: InsertJudicialCase) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [{ insertId }] = (await db.insert(judicialCases).values(input)) as unknown as [
+    { insertId: number },
+  ];
+  return insertId;
+}
+
+export async function listJudicialCases(opts: {
+  judge?: string;
+  proSe?: boolean;
+  ingestStatus?: string;
+  publicOnly?: boolean;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const filters: any[] = [];
+  if (opts.judge) filters.push(eq(judicialCases.judgeName, opts.judge));
+  if (opts.proSe !== undefined) filters.push(eq(judicialCases.proSeFlag, opts.proSe));
+  if (opts.ingestStatus) filters.push(eq(judicialCases.ingestStatus, opts.ingestStatus as any));
+  if (opts.publicOnly) filters.push(eq(judicialCases.publicStatus, true));
+  let q: any = db.select().from(judicialCases);
+  if (filters.length === 1) q = q.where(filters[0]);
+  else if (filters.length > 1) q = q.where(and(...filters));
+  return q.orderBy(desc(judicialCases.filingDate)).limit(opts.limit ?? 500);
+}
+
+export async function getJudicialCaseById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const r = await db.select().from(judicialCases).where(eq(judicialCases.id, id)).limit(1);
+  return r[0] ?? null;
+}
+
+export async function updateJudicialCase(id: number, patch: Partial<InsertJudicialCase>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(judicialCases).set(patch).where(eq(judicialCases.id, id));
+}
+
+export async function getJudicialPatternMetrics(judge?: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const baseFilter = judge
+    ? and(eq(judicialCases.publicStatus, true), eq(judicialCases.judgeName, judge))
+    : eq(judicialCases.publicStatus, true);
+
+  const [agg] = await db
+    .select({
+      totalCases: sql<number>`COUNT(*)`,
+      proSeCases: sql<number>`SUM(CASE WHEN ${judicialCases.proSeFlag} = 1 THEN 1 ELSE 0 END)`,
+      representedCases: sql<number>`SUM(CASE WHEN ${judicialCases.representedFlag} = 1 THEN 1 ELSE 0 END)`,
+      avgBoilerplateScore: sql<number>`AVG(${judicialCases.boilerplateScore})`,
+      maxBoilerplateScore: sql<number>`MAX(${judicialCases.boilerplateScore})`,
+      avgTimeToRulingMinutes: sql<number>`AVG(${judicialCases.timeToRulingMinutes})`,
+      minTimeToRulingMinutes: sql<number>`MIN(${judicialCases.timeToRulingMinutes})`,
+      convictions: sql<number>`SUM(CASE WHEN ${judicialCases.dispositionType} = 'convicted' THEN 1 ELSE 0 END)`,
+      dismissals: sql<number>`SUM(CASE WHEN ${judicialCases.dispositionType} LIKE 'dismissed%' THEN 1 ELSE 0 END)`,
+      pending: sql<number>`SUM(CASE WHEN ${judicialCases.dispositionType} = 'pending' THEN 1 ELSE 0 END)`,
+      // Pro se outcome breakdown
+      proSeConvictions: sql<number>`SUM(CASE WHEN ${judicialCases.proSeFlag} = 1 AND ${judicialCases.dispositionType} = 'convicted' THEN 1 ELSE 0 END)`,
+      proSeDismissals: sql<number>`SUM(CASE WHEN ${judicialCases.proSeFlag} = 1 AND ${judicialCases.dispositionType} LIKE 'dismissed%' THEN 1 ELSE 0 END)`,
+      representedConvictions: sql<number>`SUM(CASE WHEN ${judicialCases.representedFlag} = 1 AND ${judicialCases.dispositionType} = 'convicted' THEN 1 ELSE 0 END)`,
+      representedDismissals: sql<number>`SUM(CASE WHEN ${judicialCases.representedFlag} = 1 AND ${judicialCases.dispositionType} LIKE 'dismissed%' THEN 1 ELSE 0 END)`,
+    })
+    .from(judicialCases)
+    .where(baseFilter);
+
+  const boilerplateStats = await db
+    .select({
+      flaggedCount: sql<number>`COUNT(*)`,
+      topPhrase: sql<string>`MAX(${boilerplatePhrases.phrase})`,
+    })
+    .from(boilerplatePhrases)
+    .where(
+      and(
+        eq(boilerplatePhrases.flagged, true),
+        judge ? eq(boilerplatePhrases.judgeName, judge) : sql`1=1`,
+      ),
+    );
+
+  return { ...(agg as any), boilerplateStats: boilerplateStats[0] };
+}
+
+/* ================= Boilerplate Phrases ================= */
+
+export async function upsertBoilerplatePhrase(input: InsertBoilerplatePhrase & { caseId: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const { caseId, ...rest } = input;
+  // Check if phrase hash already exists
+  const existing = await db
+    .select()
+    .from(boilerplatePhrases)
+    .where(eq(boilerplatePhrases.phraseHash, input.phraseHash!))
+    .limit(1);
+
+  if (existing.length > 0) {
+    const prev = existing[0];
+    const prevCaseIds: number[] = (prev.caseIds as number[]) ?? [];
+    const newCaseIds = prevCaseIds.includes(caseId) ? prevCaseIds : [...prevCaseIds, caseId];
+    await db
+      .update(boilerplatePhrases)
+      .set({
+        occurrenceCount: newCaseIds.length,
+        caseIds: newCaseIds,
+        lastSeen: new Date(),
+        // Auto-flag when 5+ cases
+        flagged: newCaseIds.length >= 5 ? true : prev.flagged,
+      })
+      .where(eq(boilerplatePhrases.id, prev.id));
+    return prev.id;
+  } else {
+    const [{ insertId }] = (await db
+      .insert(boilerplatePhrases)
+      .values({ ...rest, caseIds: [caseId], occurrenceCount: 1, firstSeen: new Date(), lastSeen: new Date() })) as unknown as [
+      { insertId: number },
+    ];
+    return insertId;
+  }
+}
+
+export async function listBoilerplatePhrases(opts: {
+  judge?: string;
+  flaggedOnly?: boolean;
+  minOccurrences?: number;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const filters: any[] = [];
+  if (opts.judge) filters.push(eq(boilerplatePhrases.judgeName, opts.judge));
+  if (opts.flaggedOnly) filters.push(eq(boilerplatePhrases.flagged, true));
+  if (opts.minOccurrences) filters.push(sql`${boilerplatePhrases.occurrenceCount} >= ${opts.minOccurrences}`);
+  let q: any = db.select().from(boilerplatePhrases);
+  if (filters.length === 1) q = q.where(filters[0]);
+  else if (filters.length > 1) q = q.where(and(...filters));
+  return q.orderBy(desc(boilerplatePhrases.occurrenceCount)).limit(opts.limit ?? 100);
 }

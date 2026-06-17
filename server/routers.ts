@@ -950,6 +950,34 @@ const prrRouter = router({
 const patternRouter = router({
   metrics: publicProcedure.query(async () => db.getPatternMetrics()),
   siteStats: publicProcedure.query(async () => db.getSiteStats()),
+  liveActivity: publicProcedure
+    .input(z.object({ limit: z.number().int().min(1).max(30).optional() }).optional())
+    .query(async ({ input }) => {
+      const db2 = await (db as any).getDb?.() ?? null;
+      // Use raw db helper to get recent sanitized audit events
+      const result = await db.listAuditLog({ limit: input?.limit ?? 15 });
+      const rows = result.rows;
+      const ACTION_LABELS: Record<string, string> = {
+        document_ingested: "Document ingested by Goblin pipeline",
+        document_approved: "Document approved and published",
+        document_uploaded: "New document uploaded to archive",
+        story_submitted: "New case submission received",
+        story_approved: "Case submission approved",
+        review_request_submitted: "Review request submitted",
+        review_request_resolved: "Review request resolved",
+        inline_edit: "Archive entry updated",
+        visibility_changed: "Document visibility updated",
+      };
+      return rows.map((r) => ({
+        id: r.id,
+        action: r.action,
+        label: ACTION_LABELS[r.action] ?? r.action.replace(/_/g, " "),
+        targetType: r.targetType,
+        targetId: r.targetId,
+        createdAt: r.createdAt,
+      }));
+    }),
+
   tagDetail: publicProcedure
     .input(z.object({ slug: z.string().min(1).max(120) }))
     .query(async ({ input }) => {
@@ -2266,6 +2294,157 @@ const billingRouter = router({
     }),
 });
 
+/* ========== Judicial Pattern Router (v6.0) ========== */
+const judicialPatternRouter = router({
+  /** Public: list all public judicial cases */
+  list: publicProcedure
+    .input(
+      z.object({
+        judge: z.string().optional(),
+        proSe: z.boolean().optional(),
+        limit: z.number().int().min(1).max(500).optional(),
+      }).optional(),
+    )
+    .query(async ({ input }) =>
+      db.listJudicialCases({ ...input, publicOnly: true }),
+    ),
+
+  /** Public: aggregate metrics for the pattern dashboard */
+  metrics: publicProcedure
+    .input(z.object({ judge: z.string().optional() }).optional())
+    .query(async ({ input }) =>
+      db.getJudicialPatternMetrics(input?.judge),
+    ),
+
+  /** Public: boilerplate phrases (flagged, min 5 occurrences) */
+  boilerplate: publicProcedure
+    .input(
+      z.object({
+        judge: z.string().optional(),
+        flaggedOnly: z.boolean().optional(),
+        minOccurrences: z.number().int().min(1).optional(),
+      }).optional(),
+    )
+    .query(async ({ input }) =>
+      db.listBoilerplatePhrases({ ...input, flaggedOnly: input?.flaggedOnly ?? true }),
+    ),
+
+  /** Admin: add a judicial case to the corpus */
+  adminIngest: adminProcedure
+    .input(
+      z.object({
+        caseNumber: z.string().max(120),
+        judgeName: z.string().max(200),
+        department: z.string().max(60).optional(),
+        caseType: z.enum([
+          "criminal_felony",
+          "criminal_misdemeanor",
+          "civil",
+          "family",
+          "small_claims",
+          "other",
+        ]).optional(),
+        proSeFlag: z.boolean().optional(),
+        representedFlag: z.boolean().optional(),
+        filingDate: isoDate,
+        dispositionDate: isoDate,
+        dispositionType: z.enum([
+          "convicted",
+          "acquitted",
+          "dismissed_with_prejudice",
+          "dismissed_without_prejudice",
+          "settled",
+          "transferred",
+          "pending",
+          "other",
+        ]).optional(),
+        rulingText: z.string().optional(),
+        timeToRulingMinutes: z.number().int().optional(),
+        dataSource: z.enum(["npra_response", "manual_download", "public_portal", "goblin_ingest"]).optional(),
+        notes: z.string().optional(),
+        publicStatus: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const id = await db.insertJudicialCase({
+        caseNumber: input.caseNumber,
+        judgeName: input.judgeName,
+        department: input.department,
+        caseType: input.caseType ?? "other",
+        proSeFlag: input.proSeFlag ?? false,
+        representedFlag: input.representedFlag ?? false,
+        filingDate: input.filingDate ?? undefined,
+        dispositionDate: input.dispositionDate ?? undefined,
+        dispositionType: input.dispositionType ?? "pending",
+        rulingText: input.rulingText,
+        timeToRulingMinutes: input.timeToRulingMinutes,
+        dataSource: input.dataSource ?? "manual_download",
+        notes: input.notes,
+        publicStatus: input.publicStatus ?? false,
+      });
+      return { id };
+    }),
+
+  /** Admin: update a judicial case */
+  adminUpdate: adminProcedure
+    .input(
+      z.object({
+        id: z.number().int(),
+        patch: z.object({
+          publicStatus: z.boolean().optional(),
+          boilerplateScore: z.number().int().min(0).max(100).optional(),
+          ingestStatus: z.enum(["pending", "text_extracted", "boilerplate_scored", "complete", "failed"]).optional(),
+          notes: z.string().optional(),
+          rulingText: z.string().optional(),
+          timeToRulingMinutes: z.number().int().optional(),
+        }),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await db.updateJudicialCase(input.id, input.patch);
+      return { success: true };
+    }),
+});
+
+const auditRequestRouter = router({
+  submit: publicProcedure
+    .input(
+      z.object({
+        name: z.string().min(2).max(200),
+        email: z.string().email().max(320),
+        caseNumber: z.string().max(160).optional(),
+        court: z.string().max(240).optional(),
+        jurisdiction: z.string().max(160).optional(),
+        caseType: z.enum(["criminal", "civil", "family", "administrative", "other"]).default("criminal"),
+        description: z.string().min(20).max(10000),
+        objectives: z.string().max(5000).optional(),
+        budget: z.enum(["under_500", "500_2000", "2000_5000", "5000_plus", "discuss"]).default("discuss"),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const drizzleDb = await db.getDb();
+      if (!drizzleDb) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const schema = await import("../drizzle/schema");
+      await drizzleDb.insert(schema.auditRequests).values({
+        name: input.name,
+        email: input.email,
+        caseNumber: input.caseNumber,
+        court: input.court,
+        jurisdiction: input.jurisdiction,
+        caseType: input.caseType,
+        description: input.description,
+        objectives: input.objectives,
+        budget: input.budget,
+        status: "new",
+      });
+      await notifyOwner({
+        title: "New Case Audit Request",
+        content: `Name: ${input.name}\nEmail: ${input.email}\nCase: ${input.caseNumber ?? "N/A"}\nCourt: ${input.court ?? "N/A"}\nBudget: ${input.budget}\n\n${input.description.slice(0, 500)}`,
+      });
+      return { success: true };
+    }),
+});
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -2292,6 +2471,8 @@ export const appRouter = router({
   violationTag: violationTagRouter,
   actorLink: actorLinkRouter,
   billing: billingRouter,
+  judicialPattern: judicialPatternRouter,
+  auditRequest: auditRequestRouter,
 });
 
 export type AppRouter = typeof appRouter;

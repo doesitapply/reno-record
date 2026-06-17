@@ -1,488 +1,486 @@
 import { useSEO } from "@/hooks/useSEO";
 import { Link } from "wouter";
-import { ArrowRight, FileText, Users, TrendingUp, AlertTriangle, Clock, Scale } from "lucide-react";
+import {
+  ArrowRight,
+  FileText,
+  Users,
+  AlertTriangle,
+  Clock,
+  Scale,
+  Activity,
+  BarChart3,
+  Search,
+  Zap,
+  Shield,
+  Database,
+  ChevronRight,
+  ExternalLink,
+} from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { trpc } from "@/lib/trpc";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-/* ─── Neon accent line ───────────────────────────────────────── */
-function NeonRule({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn("h-px w-full", className)}
-      style={{
-        background: "linear-gradient(90deg, transparent 0%, var(--neon-gold) 40%, var(--neon-gold) 60%, transparent 100%)",
-        boxShadow: "0 0 8px var(--neon-gold)",
-      }}
-    />
-  );
+/* ─── Utility ─────────────────────────────────────────────────── */
+function relTime(date: Date | string): string {
+  const d = new Date(date);
+  const diff = Date.now() - d.getTime();
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
-/* ─── Violation badge ────────────────────────────────────────── */
-function ViolationBadge({ label, cite }: { label: string; cite?: string }) {
-  return (
-    <div className="inline-flex flex-col gap-0.5 border border-primary/30 bg-primary/5 px-3 py-2 rounded-sm">
-      <span className="text-xs font-mono uppercase tracking-[0.15em] text-primary">{label}</span>
-      {cite && <span className="text-[10px] font-mono text-muted-foreground">{cite}</span>}
-    </div>
-  );
-}
+const ACTION_COLORS: Record<string, string> = {
+  document_ingested: "text-amber-400",
+  document_approved: "text-green-400",
+  document_uploaded: "text-sky-400",
+  story_submitted: "text-violet-400",
+  story_approved: "text-green-400",
+  review_request_submitted: "text-orange-400",
+  inline_edit: "text-stone-400",
+  visibility_changed: "text-stone-400",
+};
 
-/* ─── Stat card ──────────────────────────────────────────────── */
-function StatCard({
+const ACTION_ICONS: Record<string, React.ElementType> = {
+  document_ingested: Zap,
+  document_approved: Shield,
+  document_uploaded: Database,
+  story_submitted: FileText,
+  story_approved: Shield,
+  review_request_submitted: Search,
+  inline_edit: Activity,
+};
+
+/* ─── Gauge component ─────────────────────────────────────────── */
+function Gauge({
   value,
+  max,
   label,
-  sub,
-  accent = false,
+  color = "amber",
 }: {
-  value: string | number;
+  value: number;
+  max: number;
   label: string;
-  sub?: string;
-  accent?: boolean;
+  color?: "amber" | "sky" | "green" | "red" | "violet";
 }) {
+  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+  const colors = {
+    amber: { stroke: "#f59e0b", glow: "rgba(245,158,11,0.3)" },
+    sky: { stroke: "#38bdf8", glow: "rgba(56,189,248,0.3)" },
+    green: { stroke: "#4ade80", glow: "rgba(74,222,128,0.3)" },
+    red: { stroke: "#f87171", glow: "rgba(248,113,113,0.3)" },
+    violet: { stroke: "#a78bfa", glow: "rgba(167,139,250,0.3)" },
+  };
+  const c = colors[color];
+  const r = 38;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+
   return (
-    <div className={cn(
-      "border rounded-sm p-5 flex flex-col gap-1",
-      accent ? "border-primary/40 bg-primary/5" : "border-border bg-card",
-    )}>
-      <div className={cn(
-        "text-3xl font-bold font-mono tabular-nums",
-        accent ? "text-primary" : "text-foreground",
-      )}>
-        {value}
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative w-24 h-24">
+        <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+          <circle cx="50" cy="50" r={r} fill="none" stroke="#292524" strokeWidth="8" />
+          <circle
+            cx="50"
+            cy="50"
+            r={r}
+            fill="none"
+            stroke={c.stroke}
+            strokeWidth="8"
+            strokeDasharray={`${dash} ${circ}`}
+            strokeLinecap="round"
+            style={{ filter: `drop-shadow(0 0 6px ${c.glow})` }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-xl font-black tabular-nums" style={{ color: c.stroke }}>
+            {value}
+          </span>
+        </div>
       </div>
-      <div className="text-sm font-medium text-foreground">{label}</div>
-      {sub && <div className="text-xs text-muted-foreground">{sub}</div>}
+      <div className="text-center">
+        <p className="text-xs font-mono uppercase tracking-widest text-stone-400">{label}</p>
+      </div>
     </div>
   );
 }
 
-/* ─── Section header ─────────────────────────────────────────── */
-function SectionHeader({ eyebrow, headline, sub }: { eyebrow: string; headline: string; sub?: string }) {
+/* ─── Live ticker ─────────────────────────────────────────────── */
+function LiveFeed({ items }: { items: any[] }) {
+  const visible = items.slice(0, 8);
+
+  if (!visible.length) {
+    return (
+      <div className="flex items-center gap-2 text-stone-600 text-xs font-mono py-4">
+        <Activity className="w-3.5 h-3.5 animate-pulse" />
+        <span>Monitoring archive activity…</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="mb-8">
-      <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-primary mb-2">{eyebrow}</div>
-      <h2 className="display-serif text-2xl sm:text-3xl font-bold text-foreground">{headline}</h2>
-      {sub && <p className="mt-2 text-muted-foreground text-sm max-w-xl">{sub}</p>}
+    <div className="space-y-1">
+      {visible.map((item: any, i: number) => {
+        const Icon = ACTION_ICONS[item.action] ?? Activity;
+        const colorClass = ACTION_COLORS[item.action] ?? "text-stone-400";
+        return (
+          <div
+            key={item.id}
+            className={cn(
+              "flex items-start gap-2.5 py-1.5 px-2 rounded transition-all",
+              i === 0 ? "bg-stone-800/60" : "hover:bg-stone-900/40",
+            )}
+          >
+            <Icon className={cn("w-3.5 h-3.5 mt-0.5 shrink-0", colorClass)} />
+            <span className="text-xs text-stone-300 flex-1 leading-relaxed">{item.label}</span>
+            <span className="text-[10px] text-stone-600 font-mono shrink-0 mt-0.5">
+              {relTime(item.createdAt)}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-/* ─── Main page ──────────────────────────────────────────────── */
+/* ─── System status dot ───────────────────────────────────────── */
+function StatusDot({ label, status }: { label: string; status: "online" | "standby" | "offline" }) {
+  const colors = {
+    online: "bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]",
+    standby: "bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)]",
+    offline: "bg-stone-600",
+  };
+  return (
+    <div className="flex items-center gap-2">
+      <span className={cn("w-2 h-2 rounded-full animate-pulse", colors[status])} />
+      <span className="text-xs font-mono text-stone-400">{label}</span>
+    </div>
+  );
+}
+
+/* ─── Main component ──────────────────────────────────────────── */
 export default function Home() {
   useSEO({
-    title: "Home",
-    description: "A public accountability archive documenting constitutional violations and institutional misconduct in Washoe County, Nevada.",
-    canonicalPath: "/",
+    title: "The Reno Record — Forensic Accountability Archive",
+    description:
+      "Live forensic audit of the Second Judicial District Court. Real-time pattern analysis, procedural violation tracking, and evidence archive for State v. Church (CR23-0657) and Church v. Washoe County (3:24-cv-00579).",
   });
 
-  const { data: siteStats } = trpc.patterns.siteStats.useQuery();
-  const { data: recentDocs } = trpc.document.listPublic.useQuery({ limit: 4 } as any);
-  const { data: recentTimeline } = trpc.timeline.listPublic.useQuery(undefined);
+  const { data: stats } = trpc.patterns.siteStats.useQuery(undefined, { refetchInterval: 30_000 });
+  const { data: activity } = trpc.patterns.liveActivity.useQuery(
+    { limit: 15 },
+    { refetchInterval: 15_000 },
+  );
+  const { data: patternMetrics } = trpc.patterns.metrics.useQuery(undefined, {
+    refetchInterval: 60_000,
+  });
 
-  const docCount = siteStats?.documents ?? "—";
-  const actorCount = siteStats?.actors ?? "—";
-  const daysPretrial = siteStats?.daysSinceArrest ?? "1,100+";
+  const s = stats as any;
+  const pm = patternMetrics as any;
+
+  const daysSince = s?.daysSinceArrest ?? 0;
+  const docCount = s?.documents ?? 0;
+  const actorCount = s?.actors ?? 0;
+  const eventCount = s?.timelineEvents ?? 0;
+  const prrCount = s?.prrs ?? 0;
 
   return (
     <SiteShell>
+      <div className="min-h-screen bg-stone-950 text-stone-100">
 
-      {/* ══════════════════════════════════════════════════════════
-          HERO — single-screen gut punch
-      ══════════════════════════════════════════════════════════ */}
-      <section
-        className="relative min-h-[90vh] flex flex-col justify-center overflow-hidden"
-        style={{
-          background: "radial-gradient(ellipse at 50% 0%, oklch(0.22 0.06 70 / 0.12) 0%, transparent 55%)",
-        }}
-      >
-        {/* Grid background */}
-        <div
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
-          style={{
-            backgroundImage: "linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
-
-        {/* Neon top rule */}
-        <NeonRule className="absolute top-0 left-0 right-0" />
-
-        <div className="container relative z-10 py-20 sm:py-28">
-          <div className="max-w-3xl">
-
-            {/* Eyebrow */}
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-px w-8 bg-primary" />
-              <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-primary">
-                Washoe County · Nevada · Public Record
-              </span>
-            </div>
-
-            {/* Headline */}
-            <h1 className="display-serif text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.05] tracking-tight text-foreground mb-6">
-              Washoe County's finest legal minds
-              <br />
-              <span
-                className="text-primary"
-                style={{ textShadow: "0 0 30px oklch(0.76 0.14 72 / 0.5)" }}
-              >
-                at work. Bless their hearts.
-              </span>
-            </h1>
-
-            {/* Sub */}
-            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mb-4">
-              A public archive documenting what happens when highly credentialed legal professionals
-              — judges, prosecutors, public defenders — apply their considerable expertise to
-              a single case for 1,100+ days and somehow still can't manage a trial.
-            </p>
-
-            <p className="text-sm text-muted-foreground/70 mb-10 max-w-xl">
-              Every entry is source-cited. Every document is filed. The professionals may dispute the
-              characterization. The records do not dispute themselves.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-wrap gap-3">
-              <Link href="/the-church-record">
-                <button
-                  className="flex items-center gap-2 px-5 py-3 text-sm font-semibold rounded-sm transition-all"
-                  style={{
-                    background: "var(--neon-gold)",
-                    color: "oklch(0.1 0.02 260)",
-                    boxShadow: "0 0 20px oklch(0.82 0.19 72 / 0.4)",
-                  }}
-                >
-                  Read the Record <ArrowRight className="h-4 w-4" />
-                </button>
-              </Link>
-              <Link href="/evidence">
-                <button className="flex items-center gap-2 px-5 py-3 text-sm font-semibold rounded-sm border border-border hover:border-primary/60 transition-colors text-foreground hover:text-primary">
-                  Browse Evidence <FileText className="h-4 w-4" />
-                </button>
-              </Link>
-              <Link href="/patterns">
-                <button className="flex items-center gap-2 px-5 py-3 text-sm font-semibold rounded-sm border border-border hover:border-primary/60 transition-colors text-foreground hover:text-primary">
-                  View Patterns <TrendingUp className="h-4 w-4" />
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom fade */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, transparent, var(--background))" }}
-        />
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════
-          STATS BAR
-      ══════════════════════════════════════════════════════════ */}
-      <section className="border-y border-border bg-card">
-        <div className="container py-8">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatCard value={docCount} label="Documents archived" accent />
-            <StatCard value={actorCount} label="Named actors" />
-            <StatCard value={siteStats?.timelineEvents ?? "—"} label="Documented events" />
-            <StatCard value={daysPretrial} label="Days pretrial" sub="No trial. No conviction." accent />
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════
-          THE CHURCH RECORD — anchor case
-      ══════════════════════════════════════════════════════════ */}
-      <section className="container py-20">
-        <SectionHeader
-          eyebrow="Anchor Case"
-          headline="The Church Record"
-          sub="A documented pattern of constitutional violations in a single Washoe County criminal case. Every entry is source-cited."
-        />
-
-        <div
-          className="rounded-sm border overflow-hidden"
-          style={{
-            borderColor: "var(--neon-gold)",
-            boxShadow: "0 0 40px oklch(0.82 0.19 72 / 0.08)",
-          }}
-        >
-          {/* Case header */}
+        {/* ── HERO: Command Center Header ─────────────────────────── */}
+        <section className="relative border-b border-stone-800 overflow-hidden">
           <div
-            className="px-6 py-5 border-b"
+            className="absolute inset-0 opacity-[0.04]"
             style={{
-              borderColor: "oklch(0.82 0.19 72 / 0.3)",
-              background: "oklch(0.82 0.19 72 / 0.06)",
+              backgroundImage:
+                "linear-gradient(rgba(245,158,11,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.5) 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
             }}
-          >
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-primary mb-1">
-                  Case No. CR23-0657 · Second Judicial District Court, Dept. 8
-                </div>
-                <h3 className="display-serif text-xl sm:text-2xl font-bold text-foreground">
-                  State of Nevada v. Cameron Church
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  March 2023 – present. Still pending. No trial. Very sophisticated.
-                </p>
+          />
+          <div className="absolute -top-32 -left-32 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative max-w-6xl mx-auto px-4 pt-16 pb-12">
+            {/* Status bar */}
+            <div className="flex flex-wrap items-center gap-4 mb-8">
+              <StatusDot label="ARCHIVE ONLINE" status="online" />
+              <StatusDot label="GOBLIN PIPELINE" status="online" />
+              <StatusDot label="JUDICIAL AUDIT" status="standby" />
+              <StatusDot label="FEDERAL CASE MONITOR" status="online" />
+              <div className="ml-auto text-xs font-mono text-stone-600 hidden md:block">
+                {new Date().toUTCString().replace(" GMT", " UTC")}
               </div>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-1 text-[10px] font-mono uppercase tracking-[0.15em] bg-destructive/15 text-destructive border border-destructive/30 rounded-sm">
-                  Active
+            </div>
+
+            {/* Main headline */}
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 border border-amber-800/40 bg-amber-950/30 rounded px-3 py-1 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-xs font-mono text-amber-400 uppercase tracking-widest">
+                  Live Forensic Archive
                 </span>
-                <span className="px-2 py-1 text-[10px] font-mono uppercase tracking-[0.15em] bg-primary/10 text-primary border border-primary/30 rounded-sm">
-                  Documented
-                </span>
               </div>
-            </div>
-          </div>
-
-          {/* Violation summary */}
-          <div className="px-6 py-6 border-b border-border/60">
-            <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-4">
-              Documented Constitutional Violations (a partial list, because apparently there's more)
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <ViolationBadge label="Faretta Violation" cite="Faretta v. California, 422 U.S. 806" />
-              <ViolationBadge label="Speedy Trial" cite="NRS 178.556 · 6th Amendment" />
-              <ViolationBadge label="Competency Detour" cite="NRS 178.400 misapplication" />
-              <ViolationBadge label="No-Bail Warrant" cite="8th Amendment" />
-              <ViolationBadge label="PRR Obstruction" cite="NRS 239.010" />
-              <ViolationBadge label="Family Separation" cite="14th Amendment" />
-            </div>
-          </div>
-
-          {/* Key facts */}
-          <div className="px-6 py-6 grid sm:grid-cols-3 gap-4 border-b border-border/60">
-            {[
-              { icon: Clock, label: "≈ 110 days", sub: "Pretrial custody. No conviction required." },
-              { icon: Scale, label: "900+ days", sub: "Case pending. Experts working on it." },
-              { icon: AlertTriangle, label: "0 trials", sub: "Despite timely demand. Scheduling is hard." },
-            ].map(({ icon: Icon, label, sub }) => (
-              <div key={label} className="flex items-start gap-3">
-                <div className="mt-0.5 p-1.5 rounded-sm bg-primary/10 text-primary shrink-0">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className="font-mono font-bold text-foreground">{label}</div>
-                  <div className="text-xs text-muted-foreground">{sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* CTA */}
-          <div className="px-6 py-5 flex flex-wrap items-center justify-between gap-4 bg-card">
-            <p className="text-sm text-muted-foreground max-w-md">
-              Every violation listed above has a corresponding court filing, transcript, or public record.
-              The professionals involved have law degrees. The documents have dates.
-            </p>
-            <Link href="/the-church-record">
-              <button
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-sm transition-all"
-                style={{
-                  background: "var(--neon-gold)",
-                  color: "oklch(0.1 0.02 260)",
-                }}
-              >
-                Read the full record <ArrowRight className="h-4 w-4" />
-              </button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════
-          WHAT THIS IS
-      ══════════════════════════════════════════════════════════ */}
-      <section className="border-y border-border bg-card">
-        <div className="container py-16">
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            <div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-primary mb-3">
-                The Mission
-              </div>
-              <h2 className="display-serif text-2xl sm:text-3xl font-bold text-foreground mb-5">
-                Turns out, writing things down
-                <br />
-                <span className="text-muted-foreground">makes them harder to pretend didn't happen.</span>
-              </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                The Reno Record operates on a radical premise: if a judge signs an order, a prosecutor
-                files a motion, or a clerk stamps a document, it happened. We just put it somewhere
-                people can read it. Apparently that's controversial.
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-stone-50 leading-tight mb-4">
+                The Reno Record
+              </h1>
+              <p className="text-lg text-stone-400 leading-relaxed mb-2">
+                Autonomous forensic audit of the Second Judicial District Court, Washoe County, Nevada.
               </p>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                Every document has a source. Every violation tag requires a direct quote from that
-                source. No AI hallucinations, no anonymous tips, no vibes-based accusations.
-                The standard is: if you can't cite it, you can't post it. Unlike some court orders
-                we could name, these rules apply consistently.
+              <p className="text-sm text-stone-500 font-mono">
+                State v. Church · CR23-0657 &nbsp;|&nbsp; Church v. Washoe County · 3:24-cv-00579-ART-CSD
               </p>
-              <Link href="/submit">
-                <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-sm border border-primary/40 text-primary hover:bg-primary/10 transition-colors">
-                  Submit evidence <ArrowRight className="h-4 w-4" />
-                </button>
-              </Link>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              {[
-                {
-                  icon: FileText,
-                  title: "Source-cited evidence",
-                  desc: "Every document has a source, upload date, and direct quote. If it's in the record, it's citable. If it's not citable, it's not in the record.",
-                },
-                {
-                  icon: Users,
-                  title: "Named actors",
-                  desc: "Judges, prosecutors, public defenders — linked by name to the specific filings, orders, and hearings where they appear. No anonymous 'the court' hand-waving.",
-                },
-                {
-                  icon: TrendingUp,
-                  title: "Pattern detection",
-                  desc: "One continuance is scheduling. Five continuances across three counsel substitutions and a competency detour is a pattern. We track the difference.",
-                },
-                {
-                  icon: AlertTriangle,
-                  title: "Docket Goblin AI",
-                  desc: "AI-assisted document classification, reviewed by a human before anything goes live. More oversight than some of the proceedings documented here.",
-                },
-              ].map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="flex items-start gap-4 p-4 rounded-sm border border-border bg-background hover:border-primary/30 transition-colors">
-                  <div className="p-2 rounded-sm bg-primary/10 text-primary shrink-0 mt-0.5">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-foreground mb-1">{title}</div>
-                    <div className="text-xs text-muted-foreground leading-relaxed">{desc}</div>
-                  </div>
-                </div>
-              ))}
+            {/* Gauge strip */}
+            <div className="mt-10 grid grid-cols-2 md:grid-cols-5 gap-3">
+              <Gauge value={daysSince} max={Math.max(daysSince * 1.5, 100)} label="Days in System" color="red" />
+              <Gauge value={docCount} max={Math.max(docCount * 1.5, 10)} label="Public Documents" color="amber" />
+              <Gauge value={eventCount} max={Math.max(eventCount * 1.5, 10)} label="Timeline Events" color="sky" />
+              <Gauge value={actorCount} max={Math.max(actorCount * 1.5, 10)} label="Named Actors" color="violet" />
+              <Gauge value={prrCount} max={Math.max(prrCount * 1.5, 5)} label="Records Requests" color="green" />
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════
-          RECENT EVIDENCE
-      ══════════════════════════════════════════════════════════ */}
-      {recentDocs && recentDocs.length > 0 && (
-        <section className="container py-16">
-          <div className="flex items-end justify-between mb-8">
-            <SectionHeader eyebrow="The Record" headline="Recent evidence" />
-            <Link href="/evidence" className="text-sm text-primary hover:underline flex items-center gap-1 mb-8">
-              All documents <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {recentDocs.slice(0, 4).map(doc => (
-              <Link key={doc.id} href={`/evidence/${doc.id}`}>
-                <div className="h-full p-4 rounded-sm border border-border bg-card hover:border-primary/40 transition-colors cursor-pointer group">
-                  <div className="text-[9px] font-mono uppercase tracking-[0.2em] text-muted-foreground mb-2">
-                    {doc.sourceType?.replace(/_/g, " ") || "Document"}
-                  </div>
-                  <div className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-3 leading-snug">
-                    {doc.title}
-                  </div>
-                  {doc.documentDate && (
-                    <div className="mt-3 text-[10px] font-mono text-muted-foreground">
-                      {new Date(doc.documentDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-                    </div>
-                  )}
-                </div>
-              </Link>
-            ))}
           </div>
         </section>
-      )}
 
-      {/* ══════════════════════════════════════════════════════════
-          RECENT TIMELINE
-      ══════════════════════════════════════════════════════════ */}
-      {recentTimeline && recentTimeline.length > 0 && (
-        <section className="border-t border-border bg-card">
-          <div className="container py-16">
-            <div className="flex items-end justify-between mb-8">
-              <SectionHeader eyebrow="Timeline" headline="Recent events" />
-              <Link href="/timeline" className="text-sm text-primary hover:underline flex items-center gap-1 mb-8">
-                Full timeline <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+        {/* ── MAIN GRID ──────────────────────────────────────────── */}
+        <div className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* LEFT: Live activity + pattern signals + what this is */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Live feed */}
+            <div className="rounded-lg border border-stone-800 bg-stone-900/40">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-stone-800">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-mono uppercase tracking-widest text-stone-300">
+                    Live Archive Activity
+                  </span>
+                </div>
+                <span className="flex items-center gap-1.5 text-[10px] font-mono text-green-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  LIVE
+                </span>
+              </div>
+              <div className="p-4">
+                <LiveFeed items={activity ?? []} />
+              </div>
             </div>
 
-            <div className="relative">
-              <div className="absolute left-3 top-0 bottom-0 w-px bg-border" />
-              <div className="space-y-0">
-                {recentTimeline.slice(0, 5).map((event, i) => (
-                  <div key={event.id} className="relative pl-10 pb-6 last:pb-0">
-                    <div
-                      className={cn(
-                        "absolute left-0 top-1 h-6 w-6 rounded-full border-2 grid place-items-center",
-                        i === 0 ? "border-primary bg-primary/20" : "border-border bg-background",
-                      )}
-                    >
-                      <div className={cn("h-2 w-2 rounded-full", i === 0 ? "bg-primary" : "bg-muted-foreground/40")} />
-                    </div>
-                    <div className="text-[10px] font-mono text-muted-foreground mb-1">
-                      {event.eventDate
-                        ? new Date(event.eventDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
-                        : "Date unknown"}
-                    </div>
-                    <div className="text-sm font-medium text-foreground">{event.title}</div>
-                    {event.summary && (
-                      <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{event.summary}</div>
-                    )}
+            {/* Pattern signals */}
+            <div className="rounded-lg border border-stone-800 bg-stone-900/40">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-stone-800">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-mono uppercase tracking-widest text-stone-300">
+                    Procedural Pattern Signals
+                  </span>
+                </div>
+                <Link href="/patterns" className="text-[10px] font-mono text-amber-400 hover:text-amber-300 flex items-center gap-1">
+                  Full analysis <ChevronRight className="w-3 h-3" />
+                </Link>
+              </div>
+              <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
+                {[
+                  { label: "Faretta Violations", value: pm?.farettaIssues ?? 0, cite: "Faretta v. California", color: "border-red-800/50 bg-red-950/20 text-red-300" },
+                  { label: "Speedy Trial Issues", value: pm?.speedyTrialIssues ?? 0, cite: "6th Amendment", color: "border-amber-800/50 bg-amber-950/20 text-amber-300" },
+                  { label: "Discovery Gaps", value: pm?.discoveryIssues ?? 0, cite: "Brady / Giglio", color: "border-orange-800/50 bg-orange-950/20 text-orange-300" },
+                  { label: "Custody Warrant Flags", value: pm?.noBailWarrant ?? 0, cite: "4th Amendment", color: "border-sky-800/50 bg-sky-950/20 text-sky-300" },
+                  { label: "Ignored Filings", value: pm?.ignoredFilings ?? 0, cite: "Due Process", color: "border-violet-800/50 bg-violet-950/20 text-violet-300" },
+                  { label: "Competency Conflicts", value: pm?.competencyAfterAssertion ?? 0, cite: "Pate v. Robinson", color: "border-rose-800/50 bg-rose-950/20 text-rose-300" },
+                ].map((sig) => (
+                  <div key={sig.label} className={cn("rounded border p-3", sig.color)}>
+                    <p className="text-2xl font-black tabular-nums mb-1">{sig.value}</p>
+                    <p className="text-xs font-mono leading-tight">{sig.label}</p>
+                    <p className="text-[10px] opacity-60 mt-1">{sig.cite}</p>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        </section>
-      )}
 
-      {/* ══════════════════════════════════════════════════════════
-          BOTTOM CTA
-      ══════════════════════════════════════════════════════════ */}
-      <section className="container py-20">
-        <NeonRule className="mb-16" />
-        <div className="text-center max-w-2xl mx-auto">
-          <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-primary mb-4">
-            Contribute
+            {/* What this is */}
+            <div className="rounded-lg border border-stone-800 bg-stone-900/40 p-5">
+              <h2 className="text-sm font-bold text-stone-200 mb-3 flex items-center gap-2">
+                <Scale className="w-4 h-4 text-amber-400" />
+                What This Is
+              </h2>
+              <div className="space-y-3 text-sm text-stone-400 leading-relaxed">
+                <p>
+                  The Reno Record is a <strong className="text-stone-200">live forensic accountability archive</strong> documenting
+                  systemic procedural violations in the Second Judicial District Court of Washoe County, Nevada.
+                  Built on an autonomous AI pipeline that ingests court documents, extracts violation signals,
+                  maps actors, and surfaces patterns — in real time, in public.
+                </p>
+                <p>
+                  The primary case is <strong className="text-stone-200">State v. Church (CR23-0657)</strong>, a pro se criminal
+                  matter with documented violations of Faretta rights, speedy trial guarantees, due process
+                  protections, and access-to-courts doctrine. The parallel federal case,{" "}
+                  <strong className="text-stone-200">Church v. Washoe County (3:24-cv-00579)</strong>, asserts §1983 claims
+                  against the county and named officials.
+                </p>
+                <p>
+                  Everything here is sourced from public records. Every claim is citation-anchored.
+                  The system does not assert guilt — it documents patterns and lets the record speak.
+                </p>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link href="/case-intelligence">
+                  <button className="inline-flex items-center gap-1.5 text-xs font-mono border border-amber-800/50 bg-amber-950/30 text-amber-400 hover:bg-amber-950/50 rounded px-3 py-1.5 transition-colors">
+                    Case Intelligence <ArrowRight className="w-3 h-3" />
+                  </button>
+                </Link>
+                <Link href="/timeline">
+                  <button className="inline-flex items-center gap-1.5 text-xs font-mono border border-stone-700 text-stone-400 hover:border-stone-600 rounded px-3 py-1.5 transition-colors">
+                    Full Timeline <ArrowRight className="w-3 h-3" />
+                  </button>
+                </Link>
+                <Link href="/evidence">
+                  <button className="inline-flex items-center gap-1.5 text-xs font-mono border border-stone-700 text-stone-400 hover:border-stone-600 rounded px-3 py-1.5 transition-colors">
+                    Evidence Archive <ArrowRight className="w-3 h-3" />
+                  </button>
+                </Link>
+              </div>
+            </div>
           </div>
-          <h2 className="display-serif text-2xl sm:text-3xl font-bold text-foreground mb-4">
-            Got paperwork? So do we.
-          </h2>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-            Court filings, public records responses, transcripts, minute entries, correspondence
-            with agencies — if it's stamped, signed, or docketed and it documents a pattern,
-            it belongs here. Submissions are reviewed before publication. Unlike certain orders
-            we've archived, the review process is actually completed.
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Link href="/submit">
-              <button
-                className="flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-sm transition-all"
-                style={{
-                  background: "var(--neon-gold)",
-                  color: "oklch(0.1 0.02 260)",
-                  boxShadow: "0 0 20px oklch(0.82 0.19 72 / 0.3)",
-                }}
-              >
-                Submit evidence <ArrowRight className="h-4 w-4" />
-              </button>
-            </Link>
-            <Link href="/pricing">
-              <button className="flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-sm border border-border hover:border-primary/60 transition-colors text-foreground hover:text-primary">
-                View access tiers
-              </button>
-            </Link>
+
+          {/* RIGHT: Sidebar */}
+          <div className="space-y-6">
+
+            {/* Service offer CTA */}
+            <div className="rounded-lg border border-amber-700/50 bg-gradient-to-br from-amber-950/40 to-stone-900/60 p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Search className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-mono uppercase tracking-widest text-amber-400">
+                  Forensic Audit Services
+                </span>
+              </div>
+              <h3 className="text-base font-black text-stone-100 mb-2 leading-tight">
+                This system can audit your case.
+              </h3>
+              <p className="text-xs text-stone-400 leading-relaxed mb-4">
+                The same AI pipeline that built this archive — document ingest, violation tagging, actor mapping,
+                pattern analysis — is available for other cases. Upload your court documents. Get a structured
+                forensic dossier.
+              </p>
+              <div className="space-y-2 mb-4">
+                {[
+                  "Procedural violation extraction",
+                  "Actor and agency mapping",
+                  "Timeline reconstruction",
+                  "Immunity bypass analysis",
+                  "Pattern detection across filings",
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-2 text-xs text-stone-400">
+                    <span className="w-1 h-1 rounded-full bg-amber-400 shrink-0" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+              <Link href="/request-audit">
+                <button className="w-full bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-sm rounded px-4 py-2.5 transition-colors flex items-center justify-center gap-2">
+                  Request a Case Audit
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
+            </div>
+
+            {/* Quick nav */}
+            <div className="rounded-lg border border-stone-800 bg-stone-900/40">
+              <div className="px-4 py-3 border-b border-stone-800">
+                <span className="text-xs font-mono uppercase tracking-widest text-stone-500">
+                  Archive Navigation
+                </span>
+              </div>
+              <div className="divide-y divide-stone-800/50">
+                {[
+                  { href: "/the-church-record", label: "The Church Record", sub: "Primary case overview", icon: FileText },
+                  { href: "/timeline", label: "Timeline", sub: `${eventCount} documented events`, icon: Clock },
+                  { href: "/evidence", label: "Evidence Archive", sub: `${docCount} public documents`, icon: Database },
+                  { href: "/actors", label: "Named Actors", sub: `${actorCount} individuals`, icon: Users },
+                  { href: "/patterns", label: "Pattern Analysis", sub: "Violation signal dashboard", icon: BarChart3 },
+                  { href: "/judicial-pattern", label: "Judicial Audit", sub: "Comparative corpus analysis", icon: Scale },
+                  { href: "/public-records", label: "Records Requests", sub: `${prrCount} NPRA filings`, icon: Search },
+                ].map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <div className="flex items-center gap-3 px-4 py-3 hover:bg-stone-800/40 transition-colors cursor-pointer group">
+                      <item.icon className="w-4 h-4 text-stone-600 group-hover:text-amber-400 transition-colors shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-stone-300 group-hover:text-stone-100 transition-colors truncate">
+                          {item.label}
+                        </p>
+                        <p className="text-[10px] text-stone-600 font-mono truncate">{item.sub}</p>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-stone-700 group-hover:text-stone-400 transition-colors shrink-0" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Case status */}
+            <div className="rounded-lg border border-stone-800 bg-stone-900/40 p-4">
+              <p className="text-xs font-mono uppercase tracking-widest text-stone-500 mb-3">Case Status</p>
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-mono text-stone-400">CR23-0657</span>
+                    <span className="text-[10px] font-mono bg-amber-900/40 text-amber-400 border border-amber-800/40 rounded px-1.5 py-0.5">ACTIVE</span>
+                  </div>
+                  <p className="text-xs text-stone-500">State v. Church · Washoe County</p>
+                  <p className="text-[10px] text-stone-600 mt-0.5">Pro se · Dept. 6 · Judge Breslow</p>
+                </div>
+                <div className="border-t border-stone-800 pt-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-mono text-stone-400">3:24-cv-00579</span>
+                    <span className="text-[10px] font-mono bg-sky-900/40 text-sky-400 border border-sky-800/40 rounded px-1.5 py-0.5">RULE 59(e)</span>
+                  </div>
+                  <p className="text-xs text-stone-500">Church v. Washoe County · D. Nev.</p>
+                  <p className="text-[10px] text-stone-600 mt-0.5">§1983 · Judge Traum · Post-dismissal</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Builder credit */}
+            <div className="rounded-lg border border-stone-800/50 bg-stone-900/20 p-4">
+              <p className="text-xs font-mono uppercase tracking-widest text-stone-600 mb-2">Built by</p>
+              <p className="text-sm font-bold text-stone-300">Cameron Church</p>
+              <p className="text-xs text-stone-500 mt-1">Systems Architect · Strategic Operator</p>
+              <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                This platform was designed and built pro se — no legal team, no dev team. The forensic
+                pipeline, the evidence archive, the violation tagging system, and the judicial audit
+                corpus were all engineered from scratch.
+              </p>
+              <Link href="/request-audit">
+                <button className="mt-3 text-xs font-mono text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors">
+                  Hire for your case <ExternalLink className="w-3 h-3" />
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
-      </section>
 
+        {/* ── BOTTOM STRIP ───────────────────────────────────────── */}
+        <div className="border-t border-stone-800 bg-stone-950">
+          <div className="max-w-6xl mx-auto px-4 py-6 flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-stone-600">
+            <div className="flex items-center gap-4">
+              <span>All records are public domain</span>
+              <span>·</span>
+              <span>No legal advice is provided</span>
+              <span>·</span>
+              <Link href="/privacy" className="hover:text-stone-400 transition-colors">Privacy Policy</Link>
+            </div>
+            <div className="flex items-center gap-2 text-stone-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span>System operational</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </SiteShell>
   );
 }

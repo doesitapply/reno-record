@@ -114,3 +114,4 @@ client/public/__manus__/version.json
 
 # Local investigation notes and one-off task scripts
 .work/
+.project-config.json

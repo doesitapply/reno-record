@@ -733,3 +733,162 @@ export const creditLedger = mysqlTable(
 );
 export type CreditLedger = typeof creditLedger.$inferSelect;
 export type InsertCreditLedger = typeof creditLedger.$inferInsert;
+
+/* ========== v6.0 — Judicial Pattern Analysis ========== */
+
+/**
+ * Comparative case corpus for judicial pattern analysis.
+ * Stores cases from Washoe County Second Judicial District (Dept 6)
+ * obtained via NPRA requests, manual download, or public portal.
+ * NOT the owner's case — this is the comparative dataset.
+ */
+export const judicialCases = mysqlTable(
+  "judicial_cases",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    /** Washoe County case number, e.g. CR22-1234 */
+    caseNumber: varchar("case_number", { length: 120 }).notNull().unique(),
+    /** Judge name — allows multi-judge corpus later */
+    judgeName: varchar("judge_name", { length: 200 }).notNull(),
+    /** Department number */
+    department: varchar("department", { length: 60 }),
+    caseType: mysqlEnum("case_type", [
+      "criminal_felony",
+      "criminal_misdemeanor",
+      "civil",
+      "family",
+      "small_claims",
+      "other",
+    ]).default("other").notNull(),
+    /** Was the defendant/respondent pro se at any point? */
+    proSeFlag: boolean("pro_se_flag").default(false).notNull(),
+    /** Was defendant represented by counsel at any point? */
+    representedFlag: boolean("represented_flag").default(false).notNull(),
+    filingDate: timestamp("filing_date"),
+    dispositionDate: timestamp("disposition_date"),
+    dispositionType: mysqlEnum("disposition_type", [
+      "convicted",
+      "acquitted",
+      "dismissed_with_prejudice",
+      "dismissed_without_prejudice",
+      "settled",
+      "transferred",
+      "pending",
+      "other",
+    ]).default("pending").notNull(),
+    /** Full text of all minute orders concatenated — NLP target */
+    rulingText: text("ruling_text"),
+    /** 0.0–1.0: fraction of ruling text matching known boilerplate phrases */
+    boilerplateScore: int("boilerplate_score").default(0).notNull(), // stored as 0–100
+    /** Minutes from motion filing to ruling (null if not calculable) */
+    timeToRulingMinutes: int("time_to_ruling_minutes"),
+    /** Source of this record */
+    dataSource: mysqlEnum("data_source", [
+      "npra_response",
+      "manual_download",
+      "public_portal",
+      "goblin_ingest",
+    ]).default("manual_download").notNull(),
+    /** Processing status through the Goblin pipeline */
+    ingestStatus: mysqlEnum("ingest_status", [
+      "pending",
+      "text_extracted",
+      "boilerplate_scored",
+      "complete",
+      "failed",
+    ]).default("pending").notNull(),
+    /** Raw PDF file key in S3 (if uploaded) */
+    fileKey: varchar("file_key", { length: 500 }),
+    fileUrl: varchar("file_url", { length: 600 }),
+    /** Notes from admin review */
+    notes: text("notes"),
+    /** Whether this case is included in public-facing pattern analysis */
+    publicStatus: boolean("public_status").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    judgeIdx: index("jc_judge_idx").on(t.judgeName),
+    caseTypeIdx: index("jc_case_type_idx").on(t.caseType),
+    proSeIdx: index("jc_pro_se_idx").on(t.proSeFlag),
+    ingestIdx: index("jc_ingest_idx").on(t.ingestStatus),
+    publicIdx: index("jc_public_idx").on(t.publicStatus),
+  }),
+);
+export type JudicialCase = typeof judicialCases.$inferSelect;
+export type InsertJudicialCase = typeof judicialCases.$inferInsert;
+
+/**
+ * Boilerplate phrase registry.
+ * A phrase is flagged when it appears verbatim (or near-verbatim) in
+ * 5+ rulings across different cases — indicating templated, non-individualized review.
+ */
+export const boilerplatePhrases = mysqlTable(
+  "boilerplate_phrases",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    /** The exact phrase or sentence fragment */
+    phrase: text("phrase").notNull(),
+    /** Normalized hash for deduplication (SHA-256 of lowercased, trimmed phrase) */
+    phraseHash: varchar("phrase_hash", { length: 64 }).notNull().unique(),
+    /** How many cases in the corpus contain this phrase */
+    occurrenceCount: int("occurrence_count").default(0).notNull(),
+    /** JSON array of judicial_cases.id values where this phrase appears */
+    caseIds: json("case_ids").$type<number[]>(),
+    /** Judge this phrase is attributed to */
+    judgeName: varchar("judge_name", { length: 200 }),
+    /** Is this phrase flagged as a boilerplate signal (vs. standard legal language)? */
+    flagged: boolean("flagged").default(false).notNull(),
+    /** Category of boilerplate */
+    phraseCategory: mysqlEnum("phrase_category", [
+      "denial_of_motion",
+      "faretta_waiver",
+      "competency_finding",
+      "continuance_grant",
+      "speedy_trial_waiver",
+      "pro_se_admonishment",
+      "standard_legal_language",
+      "other",
+    ]).default("other").notNull(),
+    /** Admin note explaining why this phrase is significant */
+    significance: text("significance"),
+    firstSeen: timestamp("first_seen"),
+    lastSeen: timestamp("last_seen"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    hashIdx: index("bp_hash_idx").on(t.phraseHash),
+    judgeIdx: index("bp_judge_idx").on(t.judgeName),
+    flaggedIdx: index("bp_flagged_idx").on(t.flagged),
+    countIdx: index("bp_count_idx").on(t.occurrenceCount),
+  }),
+);
+export type BoilerplatePhrase = typeof boilerplatePhrases.$inferSelect;
+export type InsertBoilerplatePhrase = typeof boilerplatePhrases.$inferInsert;
+
+/* ========== Case Audit Requests (service intake) ========== */
+export const auditRequests = mysqlTable("audit_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  caseNumber: varchar("case_number", { length: 160 }),
+  court: varchar("court", { length: 240 }),
+  jurisdiction: varchar("jurisdiction", { length: 160 }),
+  caseType: mysqlEnum("case_type", ["criminal", "civil", "family", "administrative", "other"])
+    .default("criminal")
+    .notNull(),
+  description: text("description").notNull(),
+  objectives: text("objectives"),
+  budget: mysqlEnum("budget", ["under_500", "500_2000", "2000_5000", "5000_plus", "discuss"])
+    .default("discuss")
+    .notNull(),
+  status: mysqlEnum("status", ["new", "reviewing", "accepted", "declined", "completed"])
+    .default("new")
+    .notNull(),
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+export type AuditRequest = typeof auditRequests.$inferSelect;
+export type InsertAuditRequest = typeof auditRequests.$inferInsert;
