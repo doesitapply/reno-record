@@ -475,13 +475,23 @@ const documentRouter = router({
         .object({
           q: z.string().optional(),
           sourceType: z.string().optional(),
+          caseTag: z.string().optional(),
+          violationTagSlug: z.string().optional(),
+          sortBy: z.enum(["date_desc", "date_asc"]).optional(),
         })
         .optional(),
     )
     .query(async ({ input }) => {
-      const rows = await db.listPublicDocuments({ q: input?.q, sourceType: input?.sourceType });
+      const rows = await db.listPublicDocuments({
+        q: input?.q,
+        sourceType: input?.sourceType,
+        caseTag: input?.caseTag,
+        violationTagSlug: input?.violationTagSlug,
+        sortBy: input?.sortBy,
+      });
       return rows.map(withSameOriginDocumentUrl);
     }),
+  filterMeta: publicProcedure.query(async () => db.getDocumentFilterMeta()),
   byId: publicProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
     const d = await db.getDocumentById(input.id);
     if (!d) return null;

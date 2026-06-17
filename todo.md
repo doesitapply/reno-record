@@ -349,3 +349,15 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [x] audit_requests schema + migration applied
 - [x] /request-audit route registered in App.tsx
 - [x] 73/73 tests passing, 0 TS errors
+
+## v6.4 — Evidence Archive Redesign
+
+- [x] Backend: add caseTag + violationTagSlug filter params to document.listPublic procedure
+- [x] Backend: add document.filterMeta procedure (returns source type counts + violation tag counts for sidebar)
+- [x] Evidence Archive: left sidebar filters (case tab All/State/Federal, source type with counts, violation tag filter)
+- [x] Evidence Archive: card grid with violation signal badge, source type chip, case tag, date, AI summary snippet
+- [x] Evidence Archive: live search bar (debounced, updates URL params, preserves filters)
+- [x] Evidence Archive: sort controls (date desc/asc, violation count)
+- [x] Evidence Archive: empty state per filter combination
+- [x] /evidence/:id standalone page: violation signals section with source quotes added to existing EvidenceDetail
+- [x] Register /evidence/:id route in App.tsx (already registered, confirmed)

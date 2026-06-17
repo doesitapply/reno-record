@@ -159,6 +159,9 @@ export async function insertDocument(input: InsertDocument) {
 export async function listPublicDocuments(opts: {
   q?: string;
   sourceType?: string;
+  caseTag?: string;
+  violationTagSlug?: string;
+  sortBy?: "date_desc" | "date_asc";
   limit?: number;
 }) {
   const db = await getDb();
@@ -166,6 +169,9 @@ export async function listPublicDocuments(opts: {
   const filters = [eq(documents.publicStatus, true), eq(documents.reviewStatus, "approved")];
   if (opts.sourceType && opts.sourceType !== "all") {
     filters.push(eq(documents.sourceType, opts.sourceType as any));
+  }
+  if (opts.caseTag && opts.caseTag !== "all") {
+    filters.push(eq(documents.caseTag, opts.caseTag as any));
   }
   if (opts.q && opts.q.trim()) {
     const q = `%${opts.q.trim()}%`;
@@ -178,12 +184,57 @@ export async function listPublicDocuments(opts: {
       )!,
     );
   }
+  // Filter by violation tag slug via subquery
+  if (opts.violationTagSlug && opts.violationTagSlug !== "all") {
+    const tag = await db
+      .select({ id: violationTags.id })
+      .from(violationTags)
+      .where(eq(violationTags.slug, opts.violationTagSlug))
+      .limit(1);
+    if (tag.length === 0) return [];
+    const tagId = tag[0].id;
+    const taggedDocIds = await db
+      .selectDistinct({ docId: documentViolationTags.documentId })
+      .from(documentViolationTags)
+      .where(eq(documentViolationTags.violationTagId, tagId));
+    if (taggedDocIds.length === 0) return [];
+    const ids = taggedDocIds.map((r) => r.docId);
+    filters.push(sql`${documents.id} IN (${sql.join(ids.map((id) => sql`${id}`), sql`, `)})`);
+  }
+  const orderBy = opts.sortBy === "date_asc" ? asc(documents.documentDate) : desc(documents.documentDate);
   return db
     .select()
     .from(documents)
     .where(and(...filters))
-    .orderBy(desc(documents.documentDate))
+    .orderBy(orderBy)
     .limit(opts.limit ?? 200);
+}
+
+/** Returns counts per source_type, violation_tag, and case_tag for the public filter sidebar */
+export async function getDocumentFilterMeta() {
+  const db = await getDb();
+  if (!db) return { bySourceType: [] as any[], byViolationTag: [] as any[], byCaseTag: [] as any[] };
+  const [bySourceType, byViolationTag, byCaseTag] = await Promise.all([
+    db
+      .select({ sourceType: documents.sourceType, cnt: count() })
+      .from(documents)
+      .where(and(eq(documents.publicStatus, true), eq(documents.reviewStatus, "approved")))
+      .groupBy(documents.sourceType),
+    db
+      .select({ slug: violationTags.slug, label: violationTags.label, cnt: count() })
+      .from(documentViolationTags)
+      .innerJoin(violationTags, eq(documentViolationTags.violationTagId, violationTags.id))
+      .innerJoin(documents, eq(documentViolationTags.documentId, documents.id))
+      .where(and(eq(documents.publicStatus, true), eq(documents.reviewStatus, "approved")))
+      .groupBy(violationTags.slug, violationTags.label)
+      .orderBy(desc(count())),
+    db
+      .select({ caseTag: documents.caseTag, cnt: count() })
+      .from(documents)
+      .where(and(eq(documents.publicStatus, true), eq(documents.reviewStatus, "approved")))
+      .groupBy(documents.caseTag),
+  ]);
+  return { bySourceType, byViolationTag, byCaseTag };
 }
 export async function listAllDocuments(filter?: {
   visibility?: string;

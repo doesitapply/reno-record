@@ -101,6 +101,10 @@ export default function EvidenceDetail() {
     { docId: id },
     { enabled: !!doc }
   );
+  const { data: violationTags = [] } = trpc.violationTag.getDocumentTags.useQuery(
+    { documentId: id },
+    { enabled: !!doc }
+  );
 
   const pageTitle = doc
     ? `${doc.title} — The Reno Record`
@@ -380,6 +384,43 @@ export default function EvidenceDetail() {
                     </div>
                   )}
                 </div>
+
+                {/* Violation Signals */}
+                {violationTags.length > 0 && (
+                  <div className="space-y-3">
+                    <h2 className="font-mono text-xs uppercase tracking-widest text-orange-400 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" />
+                      Violation Signals ({violationTags.length})
+                    </h2>
+                    <div className="space-y-3">
+                      {violationTags.map((vt) => (
+                        <div key={vt.id} className="paper-card p-4 border-l-2 border-orange-400/50 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <Link
+                              href={`/patterns/tag/${vt.tagSlug}`}
+                              className="text-sm font-semibold text-orange-400 hover:text-orange-300 transition-colors"
+                            >
+                              {vt.tagLabel}
+                            </Link>
+                            <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+                              {vt.confidence}% · {vt.addedBy}
+                            </span>
+                          </div>
+                          {vt.sourceQuote && (
+                            <blockquote className="text-xs text-foreground/80 leading-relaxed border-l border-border/60 pl-3 italic">
+                              "{vt.sourceQuote}"
+                            </blockquote>
+                          )}
+                          {vt.sourceCitation && (
+                            <p className="text-[10px] font-mono text-muted-foreground">
+                              {vt.sourceCitation}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Related Timeline Events */}
                 {relatedEvents.length > 0 && (
