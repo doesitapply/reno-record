@@ -38,6 +38,9 @@ const NAV_SECTIONS = [
     children: [
       { href: "/patterns", label: "Pattern Dashboard" },
       { href: "/case-intelligence", label: "Case Intelligence" },
+      { href: "/judicial-pattern", label: "Judicial Pattern Audit" },
+      { href: "/request-audit", label: "Request a Case Audit" },
+      { href: "/leaderboard", label: "Accountability Index" },
       { href: "/election", label: "Accountability" },
     ],
   },

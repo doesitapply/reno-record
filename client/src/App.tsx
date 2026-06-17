@@ -29,6 +29,7 @@ import ViolationTagDetailPage from "./pages/ViolationTagDetail";
 import CaseIntelligencePage from "./pages/CaseIntelligence";
 import JudicialPatternPage from "./pages/JudicialPattern";
 import RequestAuditPage from "./pages/RequestAudit";
+import LeaderboardPage from "./pages/Leaderboard";
 
 function Router() {
   return (
@@ -51,6 +52,7 @@ function Router() {
       <Route path="/case-intelligence" component={CaseIntelligencePage} />
       <Route path="/judicial-pattern" component={JudicialPatternPage} />
       <Route path="/request-audit" component={RequestAuditPage} />
+      <Route path="/leaderboard" component={LeaderboardPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/admin/story/:id" component={AdminPage} />

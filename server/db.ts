@@ -32,6 +32,9 @@ import {
   timelineEvents,
   users,
   violationTags,
+  contributorXp,
+  contributorBadges,
+  badgeDefinitions,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -1317,4 +1320,72 @@ export async function listBoilerplatePhrases(opts: {
   if (filters.length === 1) q = q.where(filters[0]);
   else if (filters.length > 1) q = q.where(and(...filters));
   return q.orderBy(desc(boilerplatePhrases.occurrenceCount)).limit(opts.limit ?? 100);
+}
+
+/* ================= Leaderboard ================= */
+export async function getAuditorLeaderboard(limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  // Top contributors by total XP
+  return db
+    .select({
+      userId: contributorXp.userId,
+      totalXp: sql<number>`SUM(${contributorXp.points})`,
+      actionCount: sql<number>`COUNT(*)`,
+    })
+    .from(contributorXp)
+    .groupBy(contributorXp.userId)
+    .orderBy(desc(sql`SUM(${contributorXp.points})`))
+    .limit(limit);
+}
+
+export async function getActorViolationLeaderboard(limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  // Actors ranked by (document count × violation tag count) — violation density
+  return db
+    .select({
+      actorId: actors.id,
+      actorName: actors.name,
+      actorSlug: actors.slug,
+      actorRole: actors.role,
+      docCount: sql<number>`COUNT(DISTINCT ${actorDocumentLinks.documentId})`,
+      tagCount: sql<number>`COUNT(DISTINCT ${documentViolationTags.id})`,
+      heatScore: sql<number>`COUNT(DISTINCT ${actorDocumentLinks.documentId}) * COUNT(DISTINCT ${documentViolationTags.id})`,
+    })
+    .from(actors)
+    .leftJoin(actorDocumentLinks, eq(actorDocumentLinks.actorId, actors.id))
+    .leftJoin(documentViolationTags, eq(documentViolationTags.documentId, actorDocumentLinks.documentId))
+    .where(eq(actors.publicStatus, true))
+    .groupBy(actors.id, actors.name, actors.slug, actors.role)
+    .orderBy(desc(sql`COUNT(DISTINCT ${actorDocumentLinks.documentId}) * COUNT(DISTINCT ${documentViolationTags.id})`))
+    .limit(limit);
+}
+
+export async function getUserBadges(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      badgeSlug: contributorBadges.badgeSlug,
+      earnedAt: contributorBadges.earnedAt,
+      label: badgeDefinitions.label,
+      description: badgeDefinitions.description,
+      icon: badgeDefinitions.icon,
+      category: badgeDefinitions.category,
+    })
+    .from(contributorBadges)
+    .leftJoin(badgeDefinitions, eq(badgeDefinitions.slug, contributorBadges.badgeSlug))
+    .where(eq(contributorBadges.userId, userId))
+    .orderBy(desc(contributorBadges.earnedAt));
+}
+
+export async function getUserXpTotal(userId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  const [row] = await db
+    .select({ total: sql<number>`SUM(${contributorXp.points})` })
+    .from(contributorXp)
+    .where(eq(contributorXp.userId, userId));
+  return row?.total ?? 0;
 }

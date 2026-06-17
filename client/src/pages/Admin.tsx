@@ -965,6 +965,107 @@ function DocumentsTab() {
   );
 }
 
+function DocumentViolationTagPanel({ documentId }: { documentId: number }) {
+  const { data: tags, refetch: refetchTags } = trpc.violationTag.getDocumentTags.useQuery({ documentId });
+  const { data: allTags } = trpc.violationTag.list.useQuery();
+  const addTag = trpc.violationTag.addToDocument.useMutation({ onSuccess: () => refetchTags() });
+  const removeTag = trpc.violationTag.removeFromDocument.useMutation({ onSuccess: () => refetchTags() });
+  const [form, setForm] = useState({ violationTagId: "", sourceQuote: "", sourceCitation: "", confidence: 90 });
+  const [adding, setAdding] = useState(false);
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.violationTagId || !form.sourceQuote) {
+      toast.error("Tag and source quote are required");
+      return;
+    }
+    try {
+      await addTag.mutateAsync({
+        documentId,
+        violationTagId: Number(form.violationTagId),
+        sourceQuote: form.sourceQuote,
+        sourceCitation: form.sourceCitation || undefined,
+        confidence: form.confidence,
+        addedBy: "human",
+      });
+      setForm({ violationTagId: "", sourceQuote: "", sourceCitation: "", confidence: 90 });
+      setAdding(false);
+      toast.success("Violation tag added");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to add tag");
+    }
+  }
+
+  return (
+    <div className="paper-card mt-4 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="font-semibold text-sm flex items-center gap-2">
+          <Shield className="h-4 w-4 text-amber-400" />
+          Violation Tags ({tags?.length ?? 0})
+        </div>
+        <Button size="sm" variant="outline" onClick={() => setAdding(v => !v)}>
+          <Plus className="h-3 w-3 mr-1" /> Add Tag
+        </Button>
+      </div>
+      {adding && (
+        <form onSubmit={handleAdd} className="border border-border rounded p-3 mb-3 space-y-2 bg-secondary/30">
+          <div>
+            <Label className="text-xs">Violation Tag *</Label>
+            <Select value={form.violationTagId} onValueChange={v => setForm(f => ({ ...f, violationTagId: v }))}>
+              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select tag..." /></SelectTrigger>
+              <SelectContent>
+                {(allTags ?? []).map(t => (
+                  <SelectItem key={t.id} value={String(t.id)}>{t.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Source Quote * (exact text from document)</Label>
+            <Textarea className="text-xs mt-1 h-20" placeholder="Paste the exact quote..." value={form.sourceQuote} onChange={e => setForm(f => ({ ...f, sourceQuote: e.target.value }))} />
+          </div>
+          <div>
+            <Label className="text-xs">Source Citation (page, paragraph, exhibit)</Label>
+            <Input className="h-8 text-xs mt-1" placeholder="e.g. Page 3, ¶2" value={form.sourceCitation} onChange={e => setForm(f => ({ ...f, sourceCitation: e.target.value }))} />
+          </div>
+          <div>
+            <Label className="text-xs">Confidence: {form.confidence}%</Label>
+            <input type="range" min={50} max={100} value={form.confidence} onChange={e => setForm(f => ({ ...f, confidence: Number(e.target.value) }))} className="w-full mt-1" />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button type="submit" size="sm" disabled={addTag.isPending}>
+              {addTag.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save Tag
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setAdding(false)}>Cancel</Button>
+          </div>
+        </form>
+      )}
+      {!tags || tags.length === 0 ? (
+        <p className="text-xs text-muted-foreground py-2">No violation tags assigned. Use the Goblin pipeline or add manually above.</p>
+      ) : (
+        <div className="space-y-2">
+          {tags.map(t => (
+            <div key={t.id} className="flex items-start gap-2 border border-border rounded p-2 text-xs">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-medium">{(allTags ?? []).find(a => a.id === t.violationTagId)?.label ?? `Tag #${t.violationTagId}`}</span>
+                  <span className="text-muted-foreground">{t.confidence}% conf</span>
+                  {t.addedBy === "goblin" && <Badge className="text-xs bg-amber-500/20 text-amber-400 border-amber-500/30">Goblin</Badge>}
+                </div>
+                <blockquote className="mt-1 border-l-2 border-amber-500/40 pl-2 text-muted-foreground italic line-clamp-2">{t.sourceQuote}</blockquote>
+                {t.sourceCitation && <div className="text-muted-foreground mt-0.5">Cite: {t.sourceCitation}</div>}
+              </div>
+              <button onClick={() => removeTag.mutate({ id: t.id })} className="shrink-0 text-muted-foreground hover:text-destructive transition-colors" title="Remove tag">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DocumentReview({ id }: { id: number }) {
   const { data: doc, isLoading, refetch } = trpc.document.adminGet.useQuery({ id });
   const utils = trpc.useUtils();
@@ -1232,6 +1333,7 @@ function DocumentReview({ id }: { id: number }) {
             </div>
           </div>
         </div>
+        <DocumentViolationTagPanel documentId={id} />
       </section>
     </SiteShell>
   );

@@ -34,7 +34,7 @@ import {
   getCustomerPortalUrl,
 } from "./stripe/checkout";
 import { TIERS, CREDIT_PACKS } from "./stripe/products";
-import { hasTier, freeGoblinRemaining, tierLabel } from "./stripe/gating";
+import { hasTier, freeGoblinRemaining, tierLabel, hasGoblinCredits } from "./stripe/gating";
 import { scoreVerifiability, AUTO_PUBLISH_THRESHOLD } from "./goblinAutoPublish";
 
 const isoDate = z
@@ -1291,6 +1291,14 @@ Submitter narrative: ${s.summary ?? ""}`;
         throw e;
       }
 
+      // Stripe gating: check Goblin credits before proceeding
+      const ingestingUser = await db.getUserById(ctx.user.id);
+      if (ingestingUser && !hasGoblinCredits(ingestingUser, 10)) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Insufficient Goblin credits. Upgrade to Goblin Pro or purchase a credit pack to continue.",
+        });
+      }
       // Rate-limit Goblin ingest per user (30 / 24h).
       await checkRateLimit({
         userId: ctx.user.id,
@@ -2445,6 +2453,19 @@ const auditRequestRouter = router({
     }),
 });
 
+/* ========== Leaderboard Router (v6.2) ========== */
+const leaderboardRouter = router({
+  /** Public: actor violation density leaderboard */
+  actorViolations: publicProcedure
+    .input(z.object({ limit: z.number().int().min(1).max(50).optional() }).optional())
+    .query(async ({ input }) => db.getActorViolationLeaderboard(input?.limit ?? 20)),
+
+  /** Public: auditor XP leaderboard */
+  auditors: publicProcedure
+    .input(z.object({ limit: z.number().int().min(1).max(50).optional() }).optional())
+    .query(async ({ input }) => db.getAuditorLeaderboard(input?.limit ?? 20)),
+});
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -2473,6 +2494,7 @@ export const appRouter = router({
   billing: billingRouter,
   judicialPattern: judicialPatternRouter,
   auditRequest: auditRequestRouter,
+  leaderboard: leaderboardRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -319,26 +319,26 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 
 ## v6.0 — Judicial Pattern Analysis Infrastructure
 
-- [ ] NPRA request letter drafted and ready to send (Breslow docket 2020-present)
-- [ ] Schema: judicial_cases table (caseId, judge, filingDate, dispositionDate, parties, proSeFlag, rulingText, boilerplateScore, ingestStatus)
-- [ ] Schema: boilerplate_phrases table (phrase, occurrenceCount, caseIds, firstSeen, lastSeen, flagged)
-- [ ] Migration generated and applied for judicial_cases and boilerplate_phrases
-- [ ] db.ts: getJudicialCases(), getBoilerplatePhrases(), getJudgeMetrics(), insertJudicialCase(), updateBoilerplateScore()
-- [ ] tRPC: judicialPattern.list, judicialPattern.metrics, judicialPattern.boilerplate, judicialPattern.adminIngest
-- [ ] Judicial Pattern dashboard page (/judicial-pattern) — public-facing, statistical findings
-- [ ] Wire NPRA request as a public_records_request entry in the DB (logged in the archive)
-- [ ] Scraper script (user-run Python): hits Washoe County public case search, downloads Breslow minute orders
+- [x] NPRA request letter drafted and ready to send (Breslow docket 2020-present)
+- [x] Schema: judicial_cases table (caseId, judge, filingDate, dispositionDate, parties, proSeFlag, rulingText, boilerplateScore, ingestStatus)
+- [x] Schema: boilerplate_phrases table (phrase, occurrenceCount, caseIds, firstSeen, lastSeen, flagged)
+- [x] Migration generated and applied for judicial_cases and boilerplate_phrases
+- [x] db.ts: getJudicialCases(), getBoilerplatePhrases(), getJudgeMetrics(), insertJudicialCase(), updateBoilerplateScore()
+- [x] tRPC: judicialPattern.list, judicialPattern.metrics, judicialPattern.boilerplate, judicialPattern.adminIngest
+- [x] Judicial Pattern dashboard page (/judicial-pattern) — public-facing, statistical findings
+- [x] Wire NPRA request as a public_records_request entry in the DB (logged in the archive)
+- [x] Scraper script (user-run Python): hits Washoe County public case search, downloads Breslow minute orders
 - [ ] Admin: judicial case ingest queue (upload PDFs → Goblin pipeline → boilerplate score)
-- [ ] Nav: add Judicial Pattern to The Pattern dropdown in SiteShell
+- [x] Nav: add Judicial Pattern to The Pattern dropdown in SiteShell
 
 ## v6.1 — Command Center Landing Page + Service Offer
 
-- [ ] Judicial Pattern dashboard page (/judicial-pattern): corpus metrics, boilerplate phrase table, pro se vs represented outcome differential, time-to-ruling distribution
-- [ ] Home page redesign: live command center aesthetic — live agent activity feed (ingest_jobs + agent_tasks), system health gauges (cases ingested, boilerplate rate, violation tags, docs processed), high-contrast "Request a Case Audit" CTA
-- [ ] Case Audit intake page (/request-audit): case number, jurisdiction, objective, file upload, submits as story with audit_request type
-- [ ] Nav: add Judicial Pattern and Request Audit to navigation
-- [ ] Scraper script (docs/washoe_scraper.py): user-run Python, hits Washoe County public portal, downloads Breslow minute orders, outputs PDFs for Goblin ingest
-- [ ] Update seed.sql after all changes
+- [x] Judicial Pattern dashboard page (/judicial-pattern): corpus metrics, boilerplate phrase table, pro se vs represented outcome differential, time-to-ruling distribution
+- [x] Home page redesign: live command center aesthetic — live agent activity feed (ingest_jobs + agent_tasks), system health gauges (cases ingested, boilerplate rate, violation tags, docs processed), high-contrast "Request a Case Audit" CTA
+- [x] Case Audit intake page (/request-audit): case number, jurisdiction, objective, file upload, submits as story with audit_request type
+- [x] Nav: add Judicial Pattern and Request Audit to navigation
+- [x] Scraper script (docs/washoe_scraper.py): user-run Python, hits Washoe County public portal, downloads Breslow minute orders, outputs PDFs for Goblin ingest
+- [x] Update seed.sql after all changes (426 INSERT statements, 200KB)
 
 ## v6.1 — Command Center Landing Page + Service Offer
 
