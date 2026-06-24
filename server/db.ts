@@ -35,6 +35,12 @@ import {
   contributorXp,
   contributorBadges,
   badgeDefinitions,
+  operatorProfile,
+  buildLogEntries,
+  projects,
+  InsertOperatorProfile,
+  InsertBuildLogEntry,
+  InsertProject,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -1460,4 +1466,92 @@ export async function getUserXpTotal(userId: number) {
     .from(contributorXp)
     .where(eq(contributorXp.userId, userId));
   return row?.total ?? 0;
+}
+
+
+/* ================= v7.0 Artificially Educated — Operator Platform ================= */
+
+export async function getOperatorProfile() {
+  const db = await getDb();
+  if (!db) return null;
+  const r = await db.select().from(operatorProfile).where(eq(operatorProfile.id, 1)).limit(1);
+  return r[0] ?? null;
+}
+
+export async function upsertOperatorProfile(patch: Partial<InsertOperatorProfile>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await db.select().from(operatorProfile).where(eq(operatorProfile.id, 1)).limit(1);
+  if (existing[0]) {
+    await db.update(operatorProfile).set(patch).where(eq(operatorProfile.id, 1));
+  } else {
+    await db.insert(operatorProfile).values({ ...patch, id: 1 } as InsertOperatorProfile);
+  }
+  const r = await db.select().from(operatorProfile).where(eq(operatorProfile.id, 1)).limit(1);
+  return r[0] ?? null;
+}
+
+export async function listBuildLog(opts?: { includeHidden?: boolean }) {
+  const db = await getDb();
+  if (!db) return [];
+  const q = db.select().from(buildLogEntries);
+  const rows = opts?.includeHidden
+    ? await q.orderBy(asc(buildLogEntries.sortOrder), desc(buildLogEntries.createdAt))
+    : await q.where(eq(buildLogEntries.publicStatus, true)).orderBy(asc(buildLogEntries.sortOrder), desc(buildLogEntries.createdAt));
+  return rows;
+}
+
+export async function insertBuildLogEntry(input: InsertBuildLogEntry) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [{ insertId }] = (await db.insert(buildLogEntries).values(input)) as unknown as [{ insertId: number }];
+  return insertId;
+}
+
+export async function updateBuildLogEntry(id: number, patch: Partial<InsertBuildLogEntry>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(buildLogEntries).set(patch).where(eq(buildLogEntries.id, id));
+}
+
+export async function deleteBuildLogEntry(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(buildLogEntries).where(eq(buildLogEntries.id, id));
+}
+
+export async function listProjects(opts?: { includeHidden?: boolean }) {
+  const db = await getDb();
+  if (!db) return [];
+  const q = db.select().from(projects);
+  const rows = opts?.includeHidden
+    ? await q.orderBy(desc(projects.featured), asc(projects.sortOrder), desc(projects.createdAt))
+    : await q.where(eq(projects.publicStatus, true)).orderBy(desc(projects.featured), asc(projects.sortOrder), desc(projects.createdAt));
+  return rows;
+}
+
+export async function getProjectBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const r = await db.select().from(projects).where(eq(projects.slug, slug)).limit(1);
+  return r[0] ?? null;
+}
+
+export async function insertProject(input: InsertProject) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [{ insertId }] = (await db.insert(projects).values(input)) as unknown as [{ insertId: number }];
+  return insertId;
+}
+
+export async function updateProject(id: number, patch: Partial<InsertProject>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(projects).set(patch).where(eq(projects.id, id));
+}
+
+export async function deleteProject(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(projects).where(eq(projects.id, id));
 }

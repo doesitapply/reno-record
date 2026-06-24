@@ -43,6 +43,14 @@ const NAV_SECTIONS = [
       { href: "/request-audit", label: "Request a Case Audit", sub: "Have this system analyze your case" },
     ],
   },
+  {
+    label: "The Operator",
+    href: "/operator",
+    children: [
+      { href: "/operator", label: "Artificially Educated", sub: "Cameron Church — systems architect" },
+      { href: "/projects", label: "Project Catalog", sub: "AI automation, agents, legal tech" },
+    ],
+  },
 ];
 
 /* ─── Logo mark ─────────────────────────────────────────────── */
@@ -455,6 +463,8 @@ export default function SiteShell({ children }: { children: ReactNode }) {
               <li><Link href="/evidence" className="text-muted-foreground hover:text-foreground transition-colors">Evidence Archive</Link></li>
               <li><Link href="/actors" className="text-muted-foreground hover:text-foreground transition-colors">Actor Dossiers</Link></li>
               <li><Link href="/the-church-record" className="text-muted-foreground hover:text-foreground transition-colors">The Church Record</Link></li>
+              <li><Link href="/operator" className="text-muted-foreground hover:text-foreground transition-colors">The Operator</Link></li>
+              <li><Link href="/projects" className="text-muted-foreground hover:text-foreground transition-colors">Project Catalog</Link></li>
             </ul>
           </div>
           <div>

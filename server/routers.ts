@@ -2476,6 +2476,161 @@ const leaderboardRouter = router({
     .query(async ({ input }) => db.getAuditorLeaderboard(input?.limit ?? 20)),
 });
 
+/* =============== Operator platform (v7.0 Artificially Educated) =============== */
+const projectStatusEnum = z.enum(["live", "in_development", "beta", "concept", "archived"]);
+const buildLogCategoryEnum = z.enum([
+  "ai_automation",
+  "ai_agents",
+  "systems_architecture",
+  "legal_tech",
+  "data_pipeline",
+  "web_platform",
+  "infrastructure",
+  "other",
+]);
+
+const operatorRouter = router({
+  // ---- Public reads ----
+  profile: publicProcedure.query(async () => db.getOperatorProfile()),
+  buildLog: publicProcedure.query(async () => db.listBuildLog()),
+  projects: publicProcedure.query(async () => db.listProjects()),
+  projectBySlug: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ input }) => {
+      const p = await db.getProjectBySlug(input.slug);
+      if (!p || !p.publicStatus) return null;
+      return p;
+    }),
+
+  // ---- Admin: profile ----
+  adminProfile: adminProcedure.query(async () => db.getOperatorProfile()),
+  updateProfile: adminProcedure
+    .input(
+      z.object({
+        brand: z.string().max(160).optional(),
+        fullName: z.string().max(200).optional(),
+        roleTitle: z.string().max(240).nullish(),
+        tagline: z.string().max(400).nullish(),
+        thesis: z.string().nullish(),
+        bioMarkdown: z.string().nullish(),
+        location: z.string().max(160).nullish(),
+        links: z.array(z.object({ label: z.string(), url: z.string(), icon: z.string().optional() })).nullish(),
+        avatarKey: z.string().max(400).nullish(),
+        heroImageKey: z.string().max(400).nullish(),
+      }),
+    )
+    .mutation(async ({ input }) => db.upsertOperatorProfile(input as any)),
+
+  // ---- Admin: build log ----
+  adminBuildLog: adminProcedure.query(async () => db.listBuildLog({ includeHidden: true })),
+  createBuildLog: adminProcedure
+    .input(
+      z.object({
+        title: z.string().min(1).max(280),
+        category: buildLogCategoryEnum.default("other"),
+        summary: z.string().max(600).nullish(),
+        detailMarkdown: z.string().nullish(),
+        outcome: z.string().max(400).nullish(),
+        eventDate: isoDate,
+        featured: z.boolean().default(false),
+        publicStatus: z.boolean().default(true),
+        sortOrder: z.number().int().default(0),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const id = await db.insertBuildLogEntry(input as any);
+      return { id };
+    }),
+  updateBuildLog: adminProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        title: z.string().min(1).max(280).optional(),
+        category: buildLogCategoryEnum.optional(),
+        summary: z.string().max(600).nullish(),
+        detailMarkdown: z.string().nullish(),
+        outcome: z.string().max(400).nullish(),
+        eventDate: isoDate,
+        featured: z.boolean().optional(),
+        publicStatus: z.boolean().optional(),
+        sortOrder: z.number().int().optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...patch } = input;
+      await db.updateBuildLogEntry(id, patch as any);
+      return { success: true } as const;
+    }),
+  deleteBuildLog: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      await db.deleteBuildLogEntry(input.id);
+      return { success: true } as const;
+    }),
+
+  // ---- Admin: projects ----
+  adminProjects: adminProcedure.query(async () => db.listProjects({ includeHidden: true })),
+  createProject: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1).max(200),
+        slug: z.string().max(160).optional(),
+        tagline: z.string().max(400).nullish(),
+        description: z.string().nullish(),
+        status: projectStatusEnum.default("concept"),
+        role: z.string().max(240).nullish(),
+        techStack: z.array(z.string()).nullish(),
+        liveUrl: z.string().max(600).nullish(),
+        repoUrl: z.string().max(600).nullish(),
+        thumbnailKey: z.string().max(400).nullish(),
+        screenshots: z.array(z.object({ key: z.string(), caption: z.string().optional() })).nullish(),
+        parentBrand: z.string().max(200).nullish(),
+        featured: z.boolean().default(false),
+        internalPath: z.string().max(300).nullish(),
+        publicStatus: z.boolean().default(true),
+        sortOrder: z.number().int().default(0),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const slug = (input.slug && input.slug.length ? input.slug : slugify(input.name)) || slugify(input.name);
+      const id = await db.insertProject({ ...input, slug } as any);
+      return { id, slug };
+    }),
+  updateProject: adminProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        name: z.string().min(1).max(200).optional(),
+        slug: z.string().max(160).optional(),
+        tagline: z.string().max(400).nullish(),
+        description: z.string().nullish(),
+        status: projectStatusEnum.optional(),
+        role: z.string().max(240).nullish(),
+        techStack: z.array(z.string()).nullish(),
+        liveUrl: z.string().max(600).nullish(),
+        repoUrl: z.string().max(600).nullish(),
+        thumbnailKey: z.string().max(400).nullish(),
+        screenshots: z.array(z.object({ key: z.string(), caption: z.string().optional() })).nullish(),
+        parentBrand: z.string().max(200).nullish(),
+        featured: z.boolean().optional(),
+        internalPath: z.string().max(300).nullish(),
+        publicStatus: z.boolean().optional(),
+        sortOrder: z.number().int().optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { id, ...patch } = input;
+      await db.updateProject(id, patch as any);
+      return { success: true } as const;
+    }),
+  deleteProject: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      await db.deleteProject(input.id);
+      return { success: true } as const;
+    }),
+});
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -2505,6 +2660,7 @@ export const appRouter = router({
   judicialPattern: judicialPatternRouter,
   auditRequest: auditRequestRouter,
   leaderboard: leaderboardRouter,
+  operator: operatorRouter,
 });
 
 export type AppRouter = typeof appRouter;

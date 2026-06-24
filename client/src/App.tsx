@@ -30,6 +30,9 @@ import CaseIntelligencePage from "./pages/CaseIntelligence";
 import JudicialPatternPage from "./pages/JudicialPattern";
 import RequestAuditPage from "./pages/RequestAudit";
 import LeaderboardPage from "./pages/Leaderboard";
+import OperatorPage from "./pages/Operator";
+import ProjectsPage from "./pages/Projects";
+import ProjectDetailPage from "./pages/ProjectDetail";
 
 function Router() {
   return (
@@ -53,6 +56,9 @@ function Router() {
       <Route path="/judicial-pattern" component={JudicialPatternPage} />
       <Route path="/request-audit" component={RequestAuditPage} />
       <Route path="/leaderboard" component={LeaderboardPage} />
+      <Route path="/operator" component={OperatorPage} />
+      <Route path="/projects" component={ProjectsPage} />
+      <Route path="/projects/:slug" component={ProjectDetailPage} />
       <Route path="/privacy" component={PrivacyPage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/admin/story/:id" component={AdminPage} />

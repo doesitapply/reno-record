@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import {
   ArrowLeft,
@@ -11,6 +11,9 @@ import {
   ClipboardList,
   Check,
   X,
+  Cpu,
+  FolderGit2,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -135,7 +138,7 @@ export default function AdminManagePage() {
         </div>
 
         <Tabs defaultValue="timeline">
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 flex-wrap h-auto">
             <TabsTrigger value="timeline" className="gap-2">
               <Calendar className="h-3.5 w-3.5" /> Timeline Events
             </TabsTrigger>
@@ -144,6 +147,15 @@ export default function AdminManagePage() {
             </TabsTrigger>
             <TabsTrigger value="prrs" className="gap-2">
               <ClipboardList className="h-3.5 w-3.5" /> Public Records
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="gap-2">
+              <Star className="h-3.5 w-3.5" /> Operator Profile
+            </TabsTrigger>
+            <TabsTrigger value="buildlog" className="gap-2">
+              <Cpu className="h-3.5 w-3.5" /> Build Log
+            </TabsTrigger>
+            <TabsTrigger value="projects" className="gap-2">
+              <FolderGit2 className="h-3.5 w-3.5" /> Projects
             </TabsTrigger>
           </TabsList>
 
@@ -155,6 +167,15 @@ export default function AdminManagePage() {
           </TabsContent>
           <TabsContent value="prrs">
             <PRRsTab />
+          </TabsContent>
+          <TabsContent value="profile">
+            <OperatorProfileTab />
+          </TabsContent>
+          <TabsContent value="buildlog">
+            <BuildLogTab />
+          </TabsContent>
+          <TabsContent value="projects">
+            <ProjectsTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -1232,4 +1253,420 @@ function parsePrrStatusHistory(value: string) {
       };
     });
   return entries.length > 0 ? entries : undefined;
+}
+
+
+/* ============================================================
+   Operator platform admin tabs (v7.0 Artificially Educated)
+   ============================================================ */
+
+const BUILD_LOG_CATEGORIES = [
+  "ai_automation",
+  "ai_agents",
+  "systems_architecture",
+  "legal_tech",
+  "data_pipeline",
+  "web_platform",
+  "infrastructure",
+  "other",
+] as const;
+
+const BUILD_LOG_CAT_LABELS: Record<string, string> = {
+  ai_automation: "AI Automation",
+  ai_agents: "AI Agents",
+  systems_architecture: "Systems Architecture",
+  legal_tech: "Legal Tech",
+  data_pipeline: "Data Pipeline",
+  web_platform: "Web Platform",
+  infrastructure: "Infrastructure",
+  other: "Other",
+};
+
+const PROJECT_STATUSES = ["live", "in_development", "beta", "concept", "archived"] as const;
+const PROJECT_STATUS_LABELS: Record<string, string> = {
+  live: "Live",
+  in_development: "In Development",
+  beta: "Beta",
+  concept: "Concept",
+  archived: "Archived",
+};
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <Label className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">{children}</Label>;
+}
+
+/* ---- Operator Profile ---- */
+function OperatorProfileTab() {
+  const utils = trpc.useUtils();
+  const { data: profile, isLoading } = trpc.operator.adminProfile.useQuery();
+  const [form, setForm] = useState({
+    brand: "",
+    fullName: "",
+    roleTitle: "",
+    tagline: "",
+    thesis: "",
+    bioMarkdown: "",
+    location: "",
+    linksText: "",
+  });
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (profile && !loaded) {
+      const links = ((profile.links as { label: string; url: string; icon?: string }[] | null) ?? [])
+        .map((l) => `${l.label} | ${l.url}${l.icon ? ` | ${l.icon}` : ""}`)
+        .join("\n");
+      setForm({
+        brand: profile.brand ?? "",
+        fullName: profile.fullName ?? "",
+        roleTitle: profile.roleTitle ?? "",
+        tagline: profile.tagline ?? "",
+        thesis: profile.thesis ?? "",
+        bioMarkdown: profile.bioMarkdown ?? "",
+        location: profile.location ?? "",
+        linksText: links,
+      });
+      setLoaded(true);
+    }
+  }, [profile, loaded]);
+
+  const saveMut = trpc.operator.updateProfile.useMutation({
+    onSuccess: () => {
+      utils.operator.adminProfile.invalidate();
+      utils.operator.profile.invalidate();
+      toast.success("Profile saved");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleSave = () => {
+    const links = form.linksText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((l) => {
+        const [label, url, icon] = l.split("|").map((p) => p.trim());
+        return { label: label || url, url: url || "", icon: icon || undefined };
+      })
+      .filter((l) => l.url);
+    saveMut.mutate({
+      brand: form.brand,
+      fullName: form.fullName,
+      roleTitle: form.roleTitle || null,
+      tagline: form.tagline || null,
+      thesis: form.thesis || null,
+      bioMarkdown: form.bioMarkdown || null,
+      location: form.location || null,
+      links,
+    });
+  };
+
+  if (isLoading) {
+    return <div className="py-10 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
+  }
+
+  return (
+    <div className="max-w-3xl space-y-5">
+      <p className="text-sm text-muted-foreground">
+        This drives the <Link href="/operator" className="text-primary hover:underline">/operator</Link> page. Bio supports Markdown.
+      </p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <FieldLabel>Brand (umbrella)</FieldLabel>
+          <Input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="Artificially Educated" />
+        </div>
+        <div className="space-y-1.5">
+          <FieldLabel>Full name</FieldLabel>
+          <Input value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} placeholder="Cameron Church" />
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <FieldLabel>Role title</FieldLabel>
+        <Input value={form.roleTitle} onChange={(e) => setForm({ ...form, roleTitle: e.target.value })} placeholder="Systems Architect · Strategic Operator" />
+      </div>
+      <div className="space-y-1.5">
+        <FieldLabel>Tagline (the hook)</FieldLabel>
+        <Textarea value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} rows={2} placeholder="I build with gravity. Structural. Undeniable. It brings broken systems down." />
+      </div>
+      <div className="space-y-1.5">
+        <FieldLabel>Thesis</FieldLabel>
+        <Textarea value={form.thesis} onChange={(e) => setForm({ ...form, thesis: e.target.value })} rows={3} />
+      </div>
+      <div className="space-y-1.5">
+        <FieldLabel>Bio / origin story (Markdown)</FieldLabel>
+        <Textarea value={form.bioMarkdown} onChange={(e) => setForm({ ...form, bioMarkdown: e.target.value })} rows={12} className="font-mono text-sm" placeholder="## How we got here&#10;&#10;Write your story here..." />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <FieldLabel>Location</FieldLabel>
+          <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Reno, Nevada" />
+        </div>
+        <div className="space-y-1.5">
+          <FieldLabel>Links (one per line: Label | URL | icon)</FieldLabel>
+          <Textarea value={form.linksText} onChange={(e) => setForm({ ...form, linksText: e.target.value })} rows={4} className="font-mono text-xs" placeholder="GitHub | https://github.com/you | github&#10;The Reno Record | /the-church-record | scale" />
+        </div>
+      </div>
+      <Button onClick={handleSave} disabled={saveMut.isPending} className="gap-2">
+        {saveMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Save profile
+      </Button>
+    </div>
+  );
+}
+
+/* ---- Build Log ---- */
+type BuildLogForm = {
+  id?: number;
+  title: string;
+  category: (typeof BUILD_LOG_CATEGORIES)[number];
+  summary: string;
+  outcome: string;
+  featured: boolean;
+  publicStatus: boolean;
+  sortOrder: number;
+};
+
+const emptyBuildLog: BuildLogForm = {
+  title: "", category: "other", summary: "", outcome: "", featured: false, publicStatus: true, sortOrder: 0,
+};
+
+function BuildLogTab() {
+  const utils = trpc.useUtils();
+  const { data: entries, isLoading } = trpc.operator.adminBuildLog.useQuery();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<BuildLogForm>(emptyBuildLog);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const refresh = () => { utils.operator.adminBuildLog.invalidate(); utils.operator.buildLog.invalidate(); };
+  const createMut = trpc.operator.createBuildLog.useMutation({ onSuccess: () => { refresh(); toast.success("Capability added"); setOpen(false); }, onError: (e) => toast.error(e.message) });
+  const updateMut = trpc.operator.updateBuildLog.useMutation({ onSuccess: () => { refresh(); toast.success("Updated"); setOpen(false); }, onError: (e) => toast.error(e.message) });
+  const deleteMut = trpc.operator.deleteBuildLog.useMutation({ onSuccess: () => { refresh(); toast.success("Deleted"); setDeleteId(null); }, onError: (e) => toast.error(e.message) });
+
+  const openNew = () => { setForm(emptyBuildLog); setOpen(true); };
+  const openEdit = (e: any) => {
+    setForm({ id: e.id, title: e.title, category: e.category, summary: e.summary ?? "", outcome: e.outcome ?? "", featured: !!e.featured, publicStatus: !!e.publicStatus, sortOrder: e.sortOrder ?? 0 });
+    setOpen(true);
+  };
+  const handleSubmit = () => {
+    const payload = { title: form.title, category: form.category, summary: form.summary || null, outcome: form.outcome || null, featured: form.featured, publicStatus: form.publicStatus, sortOrder: form.sortOrder };
+    if (form.id) updateMut.mutate({ id: form.id, ...payload });
+    else createMut.mutate(payload);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">Capabilities shown on the /operator build log.</p>
+        <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Add capability</Button>
+      </div>
+
+      {isLoading ? (
+        <div className="py-10 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+      ) : !entries?.length ? (
+        <p className="text-sm text-muted-foreground py-8 text-center">No capabilities yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {entries.map((e) => (
+            <div key={e.id} className="flex items-center gap-3 p-3 rounded-sm border border-border bg-card/40">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium truncate">{e.title}</span>
+                  {e.featured && <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Featured</Badge>}
+                  {!e.publicStatus && <Badge variant="outline" className="text-[10px] text-muted-foreground">Hidden</Badge>}
+                </div>
+                <div className="text-xs text-muted-foreground font-mono">{BUILD_LOG_CAT_LABELS[e.category]}</div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => openEdit(e)}><Pencil className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => setDeleteId(e.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{form.id ? "Edit capability" : "Add capability"}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5"><FieldLabel>Title</FieldLabel><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+            <div className="space-y-1.5">
+              <FieldLabel>Category</FieldLabel>
+              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v as any })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{BUILD_LOG_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{BUILD_LOG_CAT_LABELS[c]}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5"><FieldLabel>Summary</FieldLabel><Textarea value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} rows={3} /></div>
+            <div className="space-y-1.5"><FieldLabel>Outcome (the result)</FieldLabel><Input value={form.outcome} onChange={(e) => setForm({ ...form, outcome: e.target.value })} placeholder="43 docs ingested, 137 violations tagged" /></div>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2"><Switch checked={form.featured} onCheckedChange={(v) => setForm({ ...form, featured: v })} /><FieldLabel>Featured</FieldLabel></div>
+              <div className="flex items-center gap-2"><Switch checked={form.publicStatus} onCheckedChange={(v) => setForm({ ...form, publicStatus: v })} /><FieldLabel>Public</FieldLabel></div>
+              <div className="flex items-center gap-2"><FieldLabel>Order</FieldLabel><Input type="number" className="w-20" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })} /></div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={createMut.isPending || updateMut.isPending} className="gap-2">
+              {(createMut.isPending || updateMut.isPending) && <Loader2 className="h-4 w-4 animate-spin" />} Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader><AlertDialogTitle>Delete capability?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteId && deleteMut.mutate({ id: deleteId })} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+/* ---- Projects ---- */
+type ProjectForm = {
+  id?: number;
+  name: string;
+  slug: string;
+  tagline: string;
+  description: string;
+  status: (typeof PROJECT_STATUSES)[number];
+  role: string;
+  techStackText: string;
+  liveUrl: string;
+  repoUrl: string;
+  internalPath: string;
+  parentBrand: string;
+  thumbnailKey: string;
+  featured: boolean;
+  publicStatus: boolean;
+  sortOrder: number;
+};
+
+const emptyProject: ProjectForm = {
+  name: "", slug: "", tagline: "", description: "", status: "concept", role: "", techStackText: "",
+  liveUrl: "", repoUrl: "", internalPath: "", parentBrand: "", thumbnailKey: "", featured: false, publicStatus: true, sortOrder: 0,
+};
+
+function ProjectsTab() {
+  const utils = trpc.useUtils();
+  const { data: projects, isLoading } = trpc.operator.adminProjects.useQuery();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<ProjectForm>(emptyProject);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const refresh = () => { utils.operator.adminProjects.invalidate(); utils.operator.projects.invalidate(); };
+  const createMut = trpc.operator.createProject.useMutation({ onSuccess: () => { refresh(); toast.success("Project added"); setOpen(false); }, onError: (e) => toast.error(e.message) });
+  const updateMut = trpc.operator.updateProject.useMutation({ onSuccess: () => { refresh(); toast.success("Updated"); setOpen(false); }, onError: (e) => toast.error(e.message) });
+  const deleteMut = trpc.operator.deleteProject.useMutation({ onSuccess: () => { refresh(); toast.success("Deleted"); setDeleteId(null); }, onError: (e) => toast.error(e.message) });
+
+  const openNew = () => { setForm(emptyProject); setOpen(true); };
+  const openEdit = (p: any) => {
+    setForm({
+      id: p.id, name: p.name, slug: p.slug ?? "", tagline: p.tagline ?? "", description: p.description ?? "",
+      status: p.status, role: p.role ?? "", techStackText: ((p.techStack as string[] | null) ?? []).join(", "),
+      liveUrl: p.liveUrl ?? "", repoUrl: p.repoUrl ?? "", internalPath: p.internalPath ?? "", parentBrand: p.parentBrand ?? "",
+      thumbnailKey: p.thumbnailKey ?? "", featured: !!p.featured, publicStatus: !!p.publicStatus, sortOrder: p.sortOrder ?? 0,
+    });
+    setOpen(true);
+  };
+  const handleSubmit = () => {
+    const techStack = form.techStackText.split(",").map((t) => t.trim()).filter(Boolean);
+    const payload = {
+      name: form.name, slug: form.slug || undefined, tagline: form.tagline || null, description: form.description || null,
+      status: form.status, role: form.role || null, techStack, liveUrl: form.liveUrl || null, repoUrl: form.repoUrl || null,
+      internalPath: form.internalPath || null, parentBrand: form.parentBrand || null, thumbnailKey: form.thumbnailKey || null,
+      featured: form.featured, publicStatus: form.publicStatus, sortOrder: form.sortOrder,
+    };
+    if (form.id) updateMut.mutate({ id: form.id, ...payload });
+    else createMut.mutate(payload);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">Projects shown in the <Link href="/projects" className="text-primary hover:underline">/projects</Link> catalog.</p>
+        <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Add project</Button>
+      </div>
+
+      {isLoading ? (
+        <div className="py-10 flex justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+      ) : !projects?.length ? (
+        <p className="text-sm text-muted-foreground py-8 text-center">No projects yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {projects.map((p) => (
+            <div key={p.id} className="flex items-center gap-3 p-3 rounded-sm border border-border bg-card/40">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium truncate">{p.name}</span>
+                  {p.featured && <Badge variant="outline" className="text-[10px] border-primary/40 text-primary gap-1"><Star className="h-2.5 w-2.5 fill-current" /> Flagship</Badge>}
+                  {!p.publicStatus && <Badge variant="outline" className="text-[10px] text-muted-foreground">Hidden</Badge>}
+                </div>
+                <div className="text-xs text-muted-foreground font-mono">{PROJECT_STATUS_LABELS[p.status]}{p.parentBrand ? ` · ${p.parentBrand}` : ""}</div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => setDeleteId(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{form.id ? "Edit project" : "Add project"}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5"><FieldLabel>Name</FieldLabel><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div className="space-y-1.5"><FieldLabel>Slug (auto if blank)</FieldLabel><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="due-process-ai" /></div>
+            </div>
+            <div className="space-y-1.5"><FieldLabel>Tagline</FieldLabel><Input value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} /></div>
+            <div className="space-y-1.5"><FieldLabel>Description (Markdown)</FieldLabel><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={6} className="font-mono text-sm" /></div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <FieldLabel>Status</FieldLabel>
+                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as any })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{PROJECT_STATUSES.map((s) => <SelectItem key={s} value={s}>{PROJECT_STATUS_LABELS[s]}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5"><FieldLabel>Parent brand</FieldLabel><Input value={form.parentBrand} onChange={(e) => setForm({ ...form, parentBrand: e.target.value })} placeholder="Artificially Educated" /></div>
+            </div>
+            <div className="space-y-1.5"><FieldLabel>Role</FieldLabel><Input value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder="Architect & sole engineer" /></div>
+            <div className="space-y-1.5"><FieldLabel>Tech stack (comma separated)</FieldLabel><Input value={form.techStackText} onChange={(e) => setForm({ ...form, techStackText: e.target.value })} placeholder="React, tRPC, LLM pipeline" /></div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5"><FieldLabel>Live URL (external)</FieldLabel><Input value={form.liveUrl} onChange={(e) => setForm({ ...form, liveUrl: e.target.value })} placeholder="https://..." /></div>
+              <div className="space-y-1.5"><FieldLabel>Internal path (this site)</FieldLabel><Input value={form.internalPath} onChange={(e) => setForm({ ...form, internalPath: e.target.value })} placeholder="/the-church-record" /></div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5"><FieldLabel>Repo URL</FieldLabel><Input value={form.repoUrl} onChange={(e) => setForm({ ...form, repoUrl: e.target.value })} placeholder="https://github.com/..." /></div>
+              <div className="space-y-1.5"><FieldLabel>Thumbnail key (storage)</FieldLabel><Input value={form.thumbnailKey} onChange={(e) => setForm({ ...form, thumbnailKey: e.target.value })} placeholder="optional" /></div>
+            </div>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2"><Switch checked={form.featured} onCheckedChange={(v) => setForm({ ...form, featured: v })} /><FieldLabel>Flagship</FieldLabel></div>
+              <div className="flex items-center gap-2"><Switch checked={form.publicStatus} onCheckedChange={(v) => setForm({ ...form, publicStatus: v })} /><FieldLabel>Public</FieldLabel></div>
+              <div className="flex items-center gap-2"><FieldLabel>Order</FieldLabel><Input type="number" className="w-20" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })} /></div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={createMut.isPending || updateMut.isPending} className="gap-2">
+              {(createMut.isPending || updateMut.isPending) && <Loader2 className="h-4 w-4 animate-spin" />} Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader><AlertDialogTitle>Delete project?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteId && deleteMut.mutate({ id: deleteId })} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
 }

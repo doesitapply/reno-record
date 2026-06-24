@@ -64,6 +64,13 @@
       "when": 1781672074879,
       "tag": "0008_outgoing_dagger",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1782289929805,
+      "tag": "0009_abandoned_weapon_omega",
+      "breakpoints": true
     }
   ]
 }

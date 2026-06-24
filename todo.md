@@ -361,3 +361,40 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [x] Evidence Archive: empty state per filter combination
 - [x] /evidence/:id standalone page: violation signals section with source quotes added to existing EvidenceDetail
 - [x] Register /evidence/:id route in App.tsx (already registered, confirmed)
+
+
+## v7.0 — Artificially Educated Operator Platform
+
+- [ ] Schema: operator_profile table (singleton: name, handle, tagline, thesis, bioMarkdown, location, links JSON, avatarKey)
+- [ ] Schema: build_log_entries table (title, category, summary, detailMarkdown, eventDate, featured, sortOrder)
+- [ ] Schema: projects table (name, slug, tagline, description, status, role, techStack JSON, liveUrl, repoUrl, thumbnailKey, screenshots JSON, featured, sortOrder, parentBrand)
+- [ ] Generate + apply migration SQL
+- [ ] db.ts: query helpers for profile (get/upsert), build log (list/crud), projects (list/getBySlug/crud)
+- [ ] routers.ts: operatorRouter (public read + admin write)
+- [ ] Seed: Artificially Educated profile + gravity thesis
+- [ ] Seed: projects — Artificially Educated, Due Process AI, Gaslight Goblin, FAULTLINE, The Reno Record (flagship/featured)
+- [ ] Public page: /operator — bio/origin story, thesis, capabilities/build log
+- [ ] Public page: /projects — catalog grid; Reno Record pinned flagship
+- [ ] Project detail: /projects/:slug — full description, screenshots, stack, links
+- [ ] Admin: profile editor
+- [ ] Admin: build log CRUD
+- [ ] Admin: projects CRUD with screenshot upload
+- [ ] Nav: add Operator + Projects entries to SiteShell
+- [ ] SEO meta on all new pages
+- [ ] TypeScript clean + tests pass
+- [ ] Checkpoint + agent content spec
+
+
+## v7.0 — Artificially Educated operator platform (DONE)
+
+- [x] Schema: operator_profile, build_log_entries, projects tables + migration applied
+- [x] Seed: profile (Cameron Church / Artificially Educated), 5 projects (Reno Record flagship), 6 build log entries
+- [x] Backend: operator router (public reads + admin CRUD), gated by adminProcedure
+- [x] Public page /operator: hero, gravity thesis, origin bio (markdown), build log grid, flagship callout
+- [x] Public page /projects: catalog with flagship pinned, status chips, tech stack, links
+- [x] Public page /projects/:slug: detail with description, screenshots, sidebar metadata
+- [x] Admin UI: Operator Profile, Build Log, Projects tabs in /admin/manage (full CRUD)
+- [x] Nav: "The Operator" dropdown in SiteShell + footer links
+- [x] SEO meta on all operator pages
+- [x] vitest: server/operator.test.ts (7 tests, public reads + admin gating) — 80/80 passing
+- [x] Agent content spec: OPERATOR_PLATFORM_SPEC.md

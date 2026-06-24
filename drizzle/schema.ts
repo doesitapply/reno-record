@@ -892,3 +892,124 @@ export const auditRequests = mysqlTable("audit_requests", {
 });
 export type AuditRequest = typeof auditRequests.$inferSelect;
 export type InsertAuditRequest = typeof auditRequests.$inferInsert;
+
+
+/* ========== v7.0 Artificially Educated — Operator Platform ========== */
+
+/** Singleton operator profile (Artificially Educated + Cameron Church). Always id=1. */
+export const operatorProfile = mysqlTable("operator_profile", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Umbrella brand, e.g. "Artificially Educated" */
+  brand: varchar("brand", { length: 160 }).notNull().default("Artificially Educated"),
+  /** Real name anchor */
+  fullName: varchar("full_name", { length: 200 }).notNull().default("Cameron Church"),
+  /** Role line, e.g. "Systems Architect | Strategic Operator" */
+  roleTitle: varchar("role_title", { length: 240 }),
+  /** Short punchy tagline / thesis line */
+  tagline: varchar("tagline", { length: 400 }),
+  /** Longer thesis statement (the "gravity" positioning) */
+  thesis: text("thesis"),
+  /** Origin story / how we got here — markdown */
+  bioMarkdown: text("bio_markdown"),
+  location: varchar("location", { length: 160 }),
+  /** Contact / social / external links as JSON array of { label, url, icon } */
+  links: json("links"),
+  /** Avatar storage key (optional) */
+  avatarKey: varchar("avatar_key", { length: 400 }),
+  /** Hero background image storage key (optional) */
+  heroImageKey: varchar("hero_image_key", { length: 400 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+});
+export type OperatorProfile = typeof operatorProfile.$inferSelect;
+export type InsertOperatorProfile = typeof operatorProfile.$inferInsert;
+
+/** Build log / capabilities — what the operator has engineered, orchestrated, automated. */
+export const buildLogEntries = mysqlTable(
+  "build_log_entries",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    title: varchar("title", { length: 280 }).notNull(),
+    /** Capability bucket */
+    category: mysqlEnum("category", [
+      "ai_automation",
+      "ai_agents",
+      "systems_architecture",
+      "legal_tech",
+      "data_pipeline",
+      "web_platform",
+      "infrastructure",
+      "other",
+    ])
+      .default("other")
+      .notNull(),
+    /** One-line summary shown on cards */
+    summary: varchar("summary", { length: 600 }),
+    /** Full detail — markdown */
+    detailMarkdown: text("detail_markdown"),
+    /** Optional outcome metric, e.g. "Cut review time 80%" */
+    outcome: varchar("outcome", { length: 400 }),
+    eventDate: timestamp("event_date"),
+    featured: boolean("featured").default(false).notNull(),
+    publicStatus: boolean("public_status").default(true).notNull(),
+    sortOrder: int("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    catIdx: index("build_log_category_idx").on(t.category),
+    featuredIdx: index("build_log_featured_idx").on(t.featured),
+  }),
+);
+export type BuildLogEntry = typeof buildLogEntries.$inferSelect;
+export type InsertBuildLogEntry = typeof buildLogEntries.$inferInsert;
+
+/** Project catalog — apps, tools, systems built under the umbrella brand. */
+export const projects = mysqlTable(
+  "projects",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 200 }).notNull(),
+    slug: varchar("slug", { length: 160 }).notNull().unique(),
+    /** One-line hook */
+    tagline: varchar("tagline", { length: 400 }),
+    /** Full description — markdown */
+    description: text("description"),
+    status: mysqlEnum("status", [
+      "live",
+      "in_development",
+      "beta",
+      "concept",
+      "archived",
+    ])
+      .default("concept")
+      .notNull(),
+    /** Operator's role on this project */
+    role: varchar("role", { length: 240 }),
+    /** Tech stack as JSON array of strings */
+    techStack: json("tech_stack"),
+    liveUrl: varchar("live_url", { length: 600 }),
+    repoUrl: varchar("repo_url", { length: 600 }),
+    /** Primary thumbnail storage key */
+    thumbnailKey: varchar("thumbnail_key", { length: 400 }),
+    /** Additional screenshots as JSON array of { key, caption } */
+    screenshots: json("screenshots"),
+    /** Parent brand grouping, e.g. "Artificially Educated" */
+    parentBrand: varchar("parent_brand", { length: 200 }),
+    /** Pin as the flagship exhibit (e.g. The Reno Record) */
+    featured: boolean("featured").default(false).notNull(),
+    /** Internal vs. self-link to a route on this same site (e.g. "/") */
+    internalPath: varchar("internal_path", { length: 300 }),
+    publicStatus: boolean("public_status").default(true).notNull(),
+    sortOrder: int("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    slugIdx: index("projects_slug_idx").on(t.slug),
+    statusIdx: index("projects_status_idx").on(t.status),
+    featuredIdx: index("projects_featured_idx").on(t.featured),
+  }),
+);
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = typeof projects.$inferInsert;
