@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 
 export type Theme = "dark" | "light";
 
@@ -16,34 +16,30 @@ interface ThemeProviderProps {
   switchable?: boolean;
 }
 
-export function ThemeProvider({
-  children,
-  defaultTheme = "dark",
-}: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    try {
-      const stored = localStorage.getItem("rr-theme");
-      if (stored === "light" || stored === "dark") return stored as Theme;
-    } catch { /* ignore */ }
-    return defaultTheme;
-  });
-
+/**
+ * Dark mode is locked site-wide. The `dark` class is set on <html> in index.html
+ * before first paint (no light-mode flash). This provider keeps the class pinned
+ * and exposes a no-op toggle so existing callers don't break.
+ */
+export function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-      root.classList.remove("light");
-    } else {
-      root.classList.add("light");
-      root.classList.remove("dark");
-    }
-    try { localStorage.setItem("rr-theme", theme); } catch { /* ignore */ }
-  }, [theme]);
+    root.classList.add("dark");
+    root.classList.remove("light");
+    try {
+      // Clear any stale light preference from earlier builds.
+      localStorage.setItem("rr-theme", "dark");
+    } catch { /* ignore */ }
+  }, []);
 
-  const toggleTheme = () => setTheme(prev => prev === "dark" ? "light" : "dark");
+  const value: ThemeContextType = {
+    theme: "dark",
+    isDark: true,
+    toggleTheme: () => { /* dark mode locked — intentional no-op */ },
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, isDark: theme === "dark" }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

@@ -19,6 +19,8 @@ import {
   buildArchiveContextString,
   draftFromExtractedText,
   extractText,
+  classifyDocument,
+  qcReview,
 } from "./_goblin";
 import {
   MAX_FILES_PER_SUBMISSION,
@@ -476,6 +478,7 @@ const documentRouter = router({
           q: z.string().optional(),
           sourceType: z.string().optional(),
           caseTag: z.string().optional(),
+          recordStatus: z.string().optional(),
           violationTagSlug: z.string().optional(),
           sortBy: z.enum(["date_desc", "date_asc"]).optional(),
         })
@@ -486,6 +489,7 @@ const documentRouter = router({
         q: input?.q,
         sourceType: input?.sourceType,
         caseTag: input?.caseTag,
+        recordStatus: input?.recordStatus,
         violationTagSlug: input?.violationTagSlug,
         sortBy: input?.sortBy,
       });
@@ -1390,6 +1394,99 @@ Submitter narrative: ${s.summary ?? ""}`;
           targetId: documentId,
           metadata: { filename: v.filename, jobId, storyId },
         });
+
+        // 5b) v7.1 SMARTER ENGINE: extract real filing-stamp date + classify record status,
+        //     run the QC supervisor, group into a filing package, and snapshot v1.
+        try {
+          const classification = await classifyDocument({
+            filename: v.filename,
+            mimeType: v.mime,
+            text: extracted,
+          });
+          const qc = qcReview(classification);
+
+          // Map record status -> the legacy caseTag so existing UI keeps working.
+          const legacyCaseTag =
+            qc.recordStatus === "on_record_federal"
+              ? "federal"
+              : qc.recordStatus === "on_record_state"
+              ? "state"
+              : undefined;
+
+          // Group into a filing package only when it is genuinely on-record.
+          let filingPackageId: number | undefined;
+          if (
+            (qc.recordStatus === "on_record_state" || qc.recordStatus === "on_record_federal") &&
+            (qc.docketEntryNo || qc.caseNumber)
+          ) {
+            filingPackageId = await db.findOrCreateFilingPackage({
+              docketEntryNo: qc.docketEntryNo,
+              title: qc.docketEntryNo
+                ? `${qc.caseNumber ?? "Case"} — ${qc.docketEntryNo}`
+                : draft.title || v.filename,
+              recordStatus: qc.recordStatus,
+              caseNumber: qc.caseNumber,
+              filedDate: qc.filingStampDate ? new Date(qc.filingStampDate) : null,
+            });
+          }
+
+          await db.updateDocument(documentId, {
+            filingStampDate: qc.filingStampDate ? new Date(qc.filingStampDate) : undefined,
+            dateSource: qc.dateSource,
+            dateConfidence: qc.dateConfidence,
+            needsDateReview: qc.needsDateReview,
+            dateSourceQuote: qc.dateSourceQuote ?? undefined,
+            recordStatus: qc.recordStatus,
+            recordStatusConfidence: qc.recordStatusConfidence,
+            recordStatusSource: qc.recordStatusSource,
+            recordStatusReason: qc.recordStatusReason ?? undefined,
+            needsClassificationReview: qc.needsClassificationReview,
+            filingPackageId,
+            ...(legacyCaseTag ? { caseTag: legacyCaseTag as any } : {}),
+            // Prefer the real filing-stamp date as the document's effective date.
+            ...(qc.dateSource === "filing_stamp" && qc.filingStampDate
+              ? { documentDate: new Date(qc.filingStampDate) }
+              : {}),
+          });
+
+          await writeAudit({
+            actorUserId: ctx.user.id,
+            actorRole: ctx.user.role,
+            action: "document_ingested",
+            targetType: "document",
+            targetId: documentId,
+            metadata: {
+              phase: "classify_qc",
+              recordStatus: qc.recordStatus,
+              recordStatusConfidence: qc.recordStatusConfidence,
+              dateSource: qc.dateSource,
+              dateConfidence: qc.dateConfidence,
+              needsDateReview: qc.needsDateReview,
+              needsClassificationReview: qc.needsClassificationReview,
+              qcNotes: qc.qcNotes,
+            },
+          });
+
+          // Notify owner only when something genuinely needs a human.
+          if (qc.needsDateReview || qc.needsClassificationReview) {
+            await notifyOwner({
+              title: "Goblin escalation: document needs review",
+              content: `"${draft.title || v.filename}" — ${qc.qcNotes.join(" ")}`,
+            }).catch(() => {});
+          }
+        } catch (classifyErr) {
+          console.error("[ingest] classify/QC step failed (non-fatal):", classifyErr);
+        }
+
+        // 5c) Immutable v1 snapshot of the document's initial state.
+        await db
+          .snapshotDocumentVersion({
+            documentId,
+            changeNote: "Initial Goblin ingest",
+            changedBy: ctx.user.id,
+            changedBySource: "goblin",
+          })
+          .catch((e) => console.error("[ingest] snapshot failed (non-fatal):", e));
 
         // 6) Score verifiability and potentially auto-approve admin uploads.
         const verifResult = scoreVerifiability(draft);
@@ -2631,6 +2728,297 @@ const operatorRouter = router({
     }),
 });
 
+/* =============== v7.1 Evidence Engine: classification, versions, packages =============== */
+const recordStatusEnum = z.enum([
+  "on_record_state",
+  "on_record_federal",
+  "supporting",
+  "unfiled_not_on_record",
+  "unclassified",
+]);
+
+const evidenceEngineRouter = router({
+  /** Public: filing packages grouped for the archive (only on-record buckets shown publicly). */
+  listPackages: publicProcedure
+    .input(z.object({ recordStatus: recordStatusEnum.optional() }).optional())
+    .query(async ({ input }) => {
+      return db.listFilingPackages(input?.recordStatus ? { recordStatus: input.recordStatus } : undefined);
+    }),
+
+  /** Admin: documents flagged by QC as needing human review (date or classification). */
+  reviewQueue: adminProcedure.query(async () => {
+    return db.listDocumentsNeedingReview();
+  }),
+
+  /** Admin: manually set/override a document's classification + date. Snapshots a new version. */
+  setClassification: adminProcedure
+    .input(
+      z.object({
+        documentId: z.number(),
+        recordStatus: recordStatusEnum.optional(),
+        filingStampDate: z.string().nullish(), // ISO date or null
+        dateSource: z.enum(["filing_stamp", "file_metadata", "inferred", "undated"]).optional(),
+        clearDateReview: z.boolean().optional(),
+        clearClassificationReview: z.boolean().optional(),
+        note: z.string().max(600).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const doc = await db.getDocumentById(input.documentId);
+      if (!doc) throw new TRPCError({ code: "NOT_FOUND", message: "Document not found" });
+
+      const patch: any = { recordStatusSource: "admin" };
+      if (input.recordStatus) {
+        patch.recordStatus = input.recordStatus;
+        patch.recordStatusConfidence = 100;
+        patch.needsClassificationReview = false;
+        // keep legacy caseTag aligned
+        if (input.recordStatus === "on_record_federal") patch.caseTag = "federal";
+        else if (input.recordStatus === "on_record_state") patch.caseTag = "state";
+      }
+      if (input.filingStampDate !== undefined) {
+        const d = input.filingStampDate ? new Date(input.filingStampDate) : null;
+        patch.filingStampDate = d ?? undefined;
+        patch.dateSource = input.dateSource ?? (d ? "filing_stamp" : "undated");
+        patch.dateConfidence = d ? 100 : 0;
+        patch.needsDateReview = false;
+        if (d) patch.documentDate = d;
+      }
+      if (input.clearDateReview) patch.needsDateReview = false;
+      if (input.clearClassificationReview) patch.needsClassificationReview = false;
+
+      await db.updateDocument(input.documentId, patch);
+      const versionNo = await db.snapshotDocumentVersion({
+        documentId: input.documentId,
+        changeNote: input.note || "Admin classification override",
+        changedBy: ctx.user.id,
+        changedBySource: "admin",
+      });
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "document_edited",
+        targetType: "document",
+        targetId: input.documentId,
+        metadata: { phase: "manual_classification", patch, versionNo },
+      });
+      return { success: true, versionNo } as const;
+    }),
+
+  /** Admin: re-run Goblin classification on a single existing document. */
+  reclassify: adminProcedure
+    .input(z.object({ documentId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const doc = await db.getDocumentById(input.documentId);
+      if (!doc) throw new TRPCError({ code: "NOT_FOUND", message: "Document not found" });
+      // Pull text from the stored file if we have it; else use title + description.
+      let text = [doc.title, doc.description, doc.aiSummary].filter(Boolean).join("\n\n");
+      try {
+        if (doc.fileKey && doc.mimeType) {
+          const { storageGetSignedUrl } = await import("./storage");
+          const signedUrl = await storageGetSignedUrl(doc.fileKey).catch(() => null);
+          if (signedUrl) {
+            const resp = await fetch(signedUrl).catch(() => null);
+            if (resp && resp.ok) {
+              const bytes = Buffer.from(await resp.arrayBuffer());
+              const extracted = await extractText(bytes, doc.mimeType);
+              if (extracted && extracted.length > text.length) text = extracted;
+            }
+          }
+        }
+      } catch (e) {
+        console.error("[reclassify] text fetch failed, using metadata:", e);
+      }
+      const classification = await classifyDocument({
+        filename: doc.title,
+        mimeType: doc.mimeType || "application/octet-stream",
+        text,
+      });
+      const qc = qcReview(classification);
+      const legacyCaseTag =
+        qc.recordStatus === "on_record_federal"
+          ? "federal"
+          : qc.recordStatus === "on_record_state"
+          ? "state"
+          : undefined;
+      let filingPackageId: number | undefined;
+      if (
+        (qc.recordStatus === "on_record_state" || qc.recordStatus === "on_record_federal") &&
+        (qc.docketEntryNo || qc.caseNumber)
+      ) {
+        filingPackageId = await db.findOrCreateFilingPackage({
+          docketEntryNo: qc.docketEntryNo,
+          title: qc.docketEntryNo ? `${qc.caseNumber ?? "Case"} — ${qc.docketEntryNo}` : doc.title,
+          recordStatus: qc.recordStatus,
+          caseNumber: qc.caseNumber,
+          filedDate: qc.filingStampDate ? new Date(qc.filingStampDate) : null,
+        });
+      }
+      await db.updateDocument(input.documentId, {
+        filingStampDate: qc.filingStampDate ? new Date(qc.filingStampDate) : undefined,
+        dateSource: qc.dateSource,
+        dateConfidence: qc.dateConfidence,
+        needsDateReview: qc.needsDateReview,
+        dateSourceQuote: qc.dateSourceQuote ?? undefined,
+        recordStatus: qc.recordStatus,
+        recordStatusConfidence: qc.recordStatusConfidence,
+        recordStatusSource: qc.recordStatusSource,
+        recordStatusReason: qc.recordStatusReason ?? undefined,
+        needsClassificationReview: qc.needsClassificationReview,
+        filingPackageId,
+        ...(legacyCaseTag ? { caseTag: legacyCaseTag as any } : {}),
+        ...(qc.dateSource === "filing_stamp" && qc.filingStampDate
+          ? { documentDate: new Date(qc.filingStampDate) }
+          : {}),
+      });
+      const versionNo = await db.snapshotDocumentVersion({
+        documentId: input.documentId,
+        changeNote: "Goblin reclassification",
+        changedBy: ctx.user.id,
+        changedBySource: "goblin",
+      });
+      return { success: true, qc, versionNo } as const;
+    }),
+
+  /** Admin: batch (re)classify documents. Processes a bounded slice per call to stay
+   *  under the serverless request timeout; returns a cursor for the next slice. */
+  batchClassify: adminProcedure
+    .input(
+      z.object({
+        onlyUnclassified: z.boolean().default(true),
+        limit: z.number().int().min(1).max(15).default(8),
+        afterId: z.number().int().default(0),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const targets = await db.listDocumentsForClassification({
+        onlyUnclassified: input.onlyUnclassified,
+        limit: input.limit,
+        afterId: input.afterId,
+      });
+      const results: Array<{ id: number; recordStatus: string; dateSource: string; flagged: boolean }> = [];
+      let lastId = input.afterId;
+      for (const doc of targets) {
+        lastId = doc.id;
+        try {
+          let text = [doc.title, doc.description, doc.aiSummary].filter(Boolean).join("\n\n");
+          if (doc.fileKey && doc.mimeType) {
+            const { storageGetSignedUrl } = await import("./storage");
+            const signedUrl = await storageGetSignedUrl(doc.fileKey).catch(() => null);
+            if (signedUrl) {
+              const resp = await fetch(signedUrl).catch(() => null);
+              if (resp && resp.ok) {
+                const bytes = Buffer.from(await resp.arrayBuffer());
+                const extracted = await extractText(bytes, doc.mimeType).catch(() => "");
+                if (extracted && extracted.length > text.length) text = extracted;
+              }
+            }
+          }
+          const classification = await classifyDocument({
+            filename: doc.title,
+            mimeType: doc.mimeType || "application/octet-stream",
+            text,
+          });
+          const qc = qcReview(classification);
+          const legacyCaseTag =
+            qc.recordStatus === "on_record_federal"
+              ? "federal"
+              : qc.recordStatus === "on_record_state"
+              ? "state"
+              : undefined;
+          let filingPackageId: number | undefined;
+          if (
+            (qc.recordStatus === "on_record_state" || qc.recordStatus === "on_record_federal") &&
+            (qc.docketEntryNo || qc.caseNumber)
+          ) {
+            filingPackageId = await db.findOrCreateFilingPackage({
+              docketEntryNo: qc.docketEntryNo,
+              title: qc.docketEntryNo ? `${qc.caseNumber ?? "Case"} — ${qc.docketEntryNo}` : doc.title,
+              recordStatus: qc.recordStatus,
+              caseNumber: qc.caseNumber,
+              filedDate: qc.filingStampDate ? new Date(qc.filingStampDate) : null,
+            });
+          }
+          await db.updateDocument(doc.id, {
+            filingStampDate: qc.filingStampDate ? new Date(qc.filingStampDate) : undefined,
+            dateSource: qc.dateSource,
+            dateConfidence: qc.dateConfidence,
+            needsDateReview: qc.needsDateReview,
+            dateSourceQuote: qc.dateSourceQuote ?? undefined,
+            recordStatus: qc.recordStatus,
+            recordStatusConfidence: qc.recordStatusConfidence,
+            recordStatusSource: qc.recordStatusSource,
+            recordStatusReason: qc.recordStatusReason ?? undefined,
+            needsClassificationReview: qc.needsClassificationReview,
+            filingPackageId,
+            ...(legacyCaseTag ? { caseTag: legacyCaseTag as any } : {}),
+            ...(qc.dateSource === "filing_stamp" && qc.filingStampDate
+              ? { documentDate: new Date(qc.filingStampDate) }
+              : {}),
+          });
+          await db.snapshotDocumentVersion({
+            documentId: doc.id,
+            changeNote: "Batch classification backfill",
+            changedBy: ctx.user.id,
+            changedBySource: "goblin",
+          });
+          results.push({
+            id: doc.id,
+            recordStatus: qc.recordStatus,
+            dateSource: qc.dateSource,
+            flagged: qc.needsDateReview || qc.needsClassificationReview,
+          });
+        } catch (e) {
+          console.error(`[batchClassify] doc ${doc.id} failed:`, e);
+          results.push({ id: doc.id, recordStatus: "error", dateSource: "error", flagged: true });
+        }
+      }
+      return {
+        processed: results.length,
+        results,
+        nextAfterId: targets.length === input.limit ? lastId : null,
+        done: targets.length < input.limit,
+      } as const;
+    }),
+
+  /** Admin: version history for a document. */
+  versions: adminProcedure
+    .input(z.object({ documentId: z.number() }))
+    .query(async ({ input }) => {
+      return db.listDocumentVersions(input.documentId);
+    }),
+
+  /** Admin: a single version snapshot. */
+  version: adminProcedure
+    .input(z.object({ documentId: z.number(), versionNo: z.number() }))
+    .query(async ({ input }) => {
+      const v = await db.getDocumentVersion(input.documentId, input.versionNo);
+      if (!v) throw new TRPCError({ code: "NOT_FOUND", message: "Version not found" });
+      return v;
+    }),
+
+  /** Admin: restore a document to a prior version (append-only; never destroys history). */
+  restoreVersion: adminProcedure
+    .input(z.object({ documentId: z.number(), versionNo: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const res = await db.restoreDocumentVersion({
+        documentId: input.documentId,
+        versionNo: input.versionNo,
+        changedBy: ctx.user.id,
+      });
+      if (!res) throw new TRPCError({ code: "NOT_FOUND", message: "Version not found" });
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "document_edited",
+        targetType: "document",
+        targetId: input.documentId,
+        metadata: { phase: "restore_version", ...res },
+      });
+      return { success: true, ...res } as const;
+    }),
+});
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -2661,6 +3049,7 @@ export const appRouter = router({
   auditRequest: auditRequestRouter,
   leaderboard: leaderboardRouter,
   operator: operatorRouter,
+  evidenceEngine: evidenceEngineRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -10,6 +10,11 @@ import {
   ChevronUp,
   AlertTriangle,
   Filter,
+  CalendarOff,
+  Landmark,
+  Building2,
+  Paperclip,
+  FileClock,
 } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { Button } from "@/components/ui/button";
@@ -50,22 +55,108 @@ const SOURCE_COLORS: Record<string, string> = {
   other: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
 };
 
-const CASE_TABS = [
-  { value: "all", label: "All Cases" },
-  { value: "state", label: "State — CR23-0657" },
-  { value: "federal", label: "Federal — 3:24-cv-00579" },
+/* The 4-way record classification. This replaces the old coarse State/Federal split.
+   "Supporting" and "Not Yet On Record" are deliberately NOT presented as part of the
+   official court record. */
+type RecordStatusKey =
+  | "on_record_state"
+  | "on_record_federal"
+  | "supporting"
+  | "unfiled_not_on_record"
+  | "unclassified";
+
+const RECORD_SECTIONS: {
+  key: RecordStatusKey;
+  title: string;
+  subtitle: string;
+  accent: "amber" | "blue" | "violet" | "zinc";
+  icon: typeof Landmark;
+  onRecord: boolean;
+}[] = [
+  {
+    key: "on_record_state",
+    title: "On Record — State",
+    subtitle: "Filed in State v. Church · CR23-0657 · Washoe County District Court",
+    accent: "amber",
+    icon: Landmark,
+    onRecord: true,
+  },
+  {
+    key: "on_record_federal",
+    title: "On Record — Federal",
+    subtitle: "Filed in Church v. Washoe County · 3:24-cv-00579 · U.S. District Court, D. Nev.",
+    accent: "blue",
+    icon: Building2,
+    onRecord: true,
+  },
+  {
+    key: "supporting",
+    title: "Supporting Material",
+    subtitle: "Evidence and exhibits that support the record but are not themselves filed entries",
+    accent: "violet",
+    icon: Paperclip,
+    onRecord: false,
+  },
+  {
+    key: "unfiled_not_on_record",
+    title: "Not Yet On Record",
+    subtitle: "Unfiled material — collected but not part of any official court record",
+    accent: "zinc",
+    icon: FileClock,
+    onRecord: false,
+  },
+  {
+    key: "unclassified",
+    title: "Unclassified — Needs Review",
+    subtitle: "The engine could not confidently classify these. Escalated for human review.",
+    accent: "zinc",
+    icon: AlertTriangle,
+    onRecord: false,
+  },
+];
+
+const RECORD_FILTERS: { value: string; label: string }[] = [
+  { value: "all", label: "All Material" },
+  { value: "on_record_state", label: "On Record — State" },
+  { value: "on_record_federal", label: "On Record — Federal" },
+  { value: "supporting", label: "Supporting" },
+  { value: "unfiled_not_on_record", label: "Not Yet On Record" },
+  { value: "unclassified", label: "Unclassified" },
 ];
 
 /* ─────────────────────────────────────────────
    Helpers
 ───────────────────────────────────────────── */
 function formatDate(d: Date | string | null | undefined) {
-  if (!d) return "—";
+  if (!d) return null;
   return new Date(d).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
+}
+
+/** Resolve the legal date of a document: filing stamp first, then documentDate,
+ *  else null (UNDATED). Returns the timestamp used for sorting + display metadata. */
+function resolveDocDate(doc: any): {
+  ts: number | null;
+  label: string | null;
+  isFilingStamp: boolean;
+  undated: boolean;
+} {
+  const stamp = doc.filingStampDate ?? null;
+  const fallback = doc.documentDate ?? null;
+  const flagged = doc.needsDateReview || doc.dateSource === "undated";
+  if (stamp && doc.dateSource === "filing_stamp") {
+    return { ts: new Date(stamp).getTime(), label: formatDate(stamp), isFilingStamp: true, undated: false };
+  }
+  if (stamp) {
+    return { ts: new Date(stamp).getTime(), label: formatDate(stamp), isFilingStamp: false, undated: false };
+  }
+  if (fallback && !flagged) {
+    return { ts: new Date(fallback).getTime(), label: formatDate(fallback), isFilingStamp: false, undated: false };
+  }
+  return { ts: null, label: fallback ? formatDate(fallback) : null, isFilingStamp: false, undated: true };
 }
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -77,6 +168,19 @@ function useDebounce<T>(value: T, delay: number): T {
   return debounced;
 }
 
+const ACCENT_HEADER: Record<string, string> = {
+  amber: "bg-amber-500/8 border-amber-500/20",
+  blue: "bg-blue-500/8 border-blue-500/20",
+  violet: "bg-violet-500/8 border-violet-500/20",
+  zinc: "bg-zinc-500/8 border-zinc-500/20",
+};
+const ACCENT_TEXT: Record<string, string> = {
+  amber: "text-amber-400",
+  blue: "text-blue-400",
+  violet: "text-violet-400",
+  zinc: "text-zinc-400",
+};
+
 /* ─────────────────────────────────────────────
    Main page
 ───────────────────────────────────────────── */
@@ -84,12 +188,12 @@ export default function EvidencePage() {
   useSEO({
     title: "Evidence Archive",
     description:
-      "Searchable archive of source documents: court orders, motions, transcripts, public records, emails, audio, and other receipts behind misconduct-pattern claims in CR23-0657 and 3:24-cv-00579.",
+      "Searchable archive of source documents grouped by record status: on-record State and Federal filings, supporting material, and unfiled material. Sorted by court filing-stamp date.",
     canonicalPath: "/evidence",
   });
 
   const [q, setQ] = useState("");
-  const [caseTab, setCaseTab] = useState("all");
+  const [recordFilter, setRecordFilter] = useState("all");
   const [sourceType, setSourceType] = useState("all");
   const [violationSlug, setViolationSlug] = useState("all");
   const [sortBy, setSortBy] = useState<"date_asc" | "date_desc">("date_asc");
@@ -102,58 +206,76 @@ export default function EvidencePage() {
   const { data: rawDocs = [], isLoading } = trpc.document.listPublic.useQuery({
     q: debouncedQ || undefined,
     sourceType: sourceType !== "all" ? sourceType : undefined,
-    caseTag: caseTab !== "all" ? caseTab : undefined,
+    recordStatus: recordFilter !== "all" ? recordFilter : undefined,
     violationTagSlug: violationSlug !== "all" ? violationSlug : undefined,
     sortBy,
   });
 
-  // Sort chronologically client-side (server already sorts, but ensure consistency)
+  /* Sort by resolved legal date. UNDATED docs always sink to the bottom
+     regardless of sort direction — we never fake their chronological position. */
   const docs = useMemo(() => {
-    return [...rawDocs].sort((a, b) => {
-      const da = a.documentDate ? new Date(a.documentDate).getTime() : 0;
-      const db_ = b.documentDate ? new Date(b.documentDate).getTime() : 0;
+    const withDate = rawDocs.map((d) => ({ doc: d, resolved: resolveDocDate(d) }));
+    withDate.sort((a, b) => {
+      if (a.resolved.undated && b.resolved.undated) return 0;
+      if (a.resolved.undated) return 1;
+      if (b.resolved.undated) return -1;
+      const da = a.resolved.ts ?? 0;
+      const db_ = b.resolved.ts ?? 0;
       return sortBy === "date_asc" ? da - db_ : db_ - da;
     });
+    return withDate;
   }, [rawDocs, sortBy]);
 
-  // Split into state / federal buckets
-  const { stateDocs, federalDocs } = useMemo(() => {
-    const stateDocs = docs.filter((d) => d.caseTag === "state" || d.caseTag === "both");
-    const federalDocs = docs.filter((d) => d.caseTag === "federal" || d.caseTag === "both");
-    return { stateDocs, federalDocs };
+  /* Bucket by record_status. */
+  const buckets = useMemo(() => {
+    const map: Record<string, typeof docs> = {};
+    for (const item of docs) {
+      const key = (item.doc.recordStatus ?? "unclassified") as string;
+      (map[key] ??= []).push(item);
+    }
+    return map;
   }, [docs]);
 
   const totalCount = docs.length;
+  const undatedCount = useMemo(() => docs.filter((d) => d.resolved.undated).length, [docs]);
 
-  // Sidebar counts
+  /* Sidebar counts */
   const sourceTypeCounts = useMemo(() => {
     const map: Record<string, number> = {};
-    (meta?.bySourceType ?? []).forEach((r) => {
+    (meta?.bySourceType ?? []).forEach((r: any) => {
       map[r.sourceType ?? "other"] = Number(r.cnt);
     });
     return map;
   }, [meta]);
 
-  const caseTagCounts = useMemo(() => {
+  const recordStatusCounts = useMemo(() => {
     const map: Record<string, number> = { all: 0 };
-    (meta?.byCaseTag ?? []).forEach((r) => {
-      const k = r.caseTag ?? "state";
+    (meta?.byRecordStatus ?? []).forEach((r: any) => {
+      const k = r.recordStatus ?? "unclassified";
       map[k] = Number(r.cnt);
-      map.all = (map.all ?? 0) + Number(r.cnt);
+      map.all += Number(r.cnt);
     });
     return map;
   }, [meta]);
 
   const clearFilters = useCallback(() => {
     setQ("");
-    setCaseTab("all");
+    setRecordFilter("all");
     setSourceType("all");
     setViolationSlug("all");
     setSortBy("date_asc");
   }, []);
 
   const hasActiveFilters =
-    !!q || caseTab !== "all" || sourceType !== "all" || violationSlug !== "all";
+    !!q || recordFilter !== "all" || sourceType !== "all" || violationSlug !== "all";
+
+  /* Which sections to render: if a record filter is active, only that one. */
+  const sectionsToRender = useMemo(() => {
+    if (recordFilter !== "all") {
+      return RECORD_SECTIONS.filter((s) => s.key === recordFilter);
+    }
+    return RECORD_SECTIONS;
+  }, [recordFilter]);
 
   return (
     <SiteShell>
@@ -163,11 +285,18 @@ export default function EvidencePage() {
           <div className="eyebrow mb-2">Forensic Archive</div>
           <h1 className="display-serif text-3xl md:text-4xl">Evidence Archive</h1>
           <p className="mt-2 text-muted-foreground max-w-2xl text-sm leading-relaxed">
-            Primary source documents for{" "}
-            <span className="text-foreground font-medium">State v. Church (CR23-0657)</span> and{" "}
-            <span className="text-foreground font-medium">Church v. Washoe County (3:24-cv-00579)</span>.
-            Sorted chronologically. Every document is a receipt.
+            Source documents grouped by <span className="text-foreground font-medium">record status</span> —
+            on-record State and Federal filings are kept separate from supporting material and
+            unfiled material. Sorted by court filing-stamp date; undated items are flagged, never
+            guessed.
           </p>
+
+          {undatedCount > 0 && (
+            <div className="mt-3 inline-flex items-center gap-2 text-xs text-amber-400/90 bg-amber-500/10 border border-amber-500/25 rounded px-2.5 py-1">
+              <CalendarOff className="h-3.5 w-3.5" />
+              {undatedCount} document{undatedCount !== 1 ? "s" : ""} undated — needs a verified filing date
+            </div>
+          )}
 
           {/* Search + sort bar */}
           <div className="mt-5 flex flex-wrap gap-3 items-center">
@@ -227,9 +356,7 @@ export default function EvidencePage() {
             )}
 
             <span className="text-xs text-muted-foreground shrink-0">
-              {isLoading
-                ? "Loading…"
-                : `${totalCount} document${totalCount !== 1 ? "s" : ""}`}
+              {isLoading ? "Loading…" : `${totalCount} document${totalCount !== 1 ? "s" : ""}`}
             </span>
           </div>
         </div>
@@ -255,37 +382,32 @@ export default function EvidencePage() {
               </div>
             )}
 
-            {/* Case tab */}
+            {/* Record status */}
             <div>
-              <div className="eyebrow mb-2">Case</div>
+              <div className="eyebrow mb-2">Record Status</div>
               <div className="space-y-0.5">
-                {CASE_TABS.map((tab) => (
-                  <button
-                    key={tab.value}
-                    onClick={() => {
-                      setCaseTab(tab.value);
-                      setSidebarOpen(false);
-                    }}
-                    className={cn(
-                      "w-full text-left px-2.5 py-1.5 rounded text-sm flex items-center justify-between gap-2 transition-colors",
-                      caseTab === tab.value
-                        ? "bg-amber-500/15 text-amber-400 font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
-                    )}
-                  >
-                    <span className="truncate">{tab.label}</span>
-                    {tab.value === "all" && caseTagCounts.all !== undefined && (
-                      <span className="text-[10px] tabular-nums shrink-0 opacity-60">
-                        {caseTagCounts.all}
-                      </span>
-                    )}
-                    {tab.value !== "all" && caseTagCounts[tab.value] !== undefined && (
-                      <span className="text-[10px] tabular-nums shrink-0 opacity-60">
-                        {caseTagCounts[tab.value] ?? 0}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                {RECORD_FILTERS.map((f) => {
+                  const cnt = f.value === "all" ? recordStatusCounts.all : recordStatusCounts[f.value] ?? 0;
+                  if (f.value !== "all" && cnt === 0) return null;
+                  return (
+                    <button
+                      key={f.value}
+                      onClick={() => {
+                        setRecordFilter(f.value);
+                        setSidebarOpen(false);
+                      }}
+                      className={cn(
+                        "w-full text-left px-2.5 py-1.5 rounded text-sm flex items-center justify-between gap-2 transition-colors",
+                        recordFilter === f.value
+                          ? "bg-amber-500/15 text-amber-400 font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
+                      )}
+                    >
+                      <span className="truncate">{f.label}</span>
+                      <span className="text-[10px] tabular-nums shrink-0 opacity-60">{cnt}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -307,7 +429,7 @@ export default function EvidencePage() {
                 >
                   <span>All types</span>
                   <span className="text-[10px] tabular-nums opacity-60">
-                    {caseTagCounts.all ?? 0}
+                    {recordStatusCounts.all ?? 0}
                   </span>
                 </button>
                 {Object.entries(SOURCE_LABELS).map(([val, label]) => {
@@ -354,7 +476,7 @@ export default function EvidencePage() {
                   >
                     <span>All signals</span>
                   </button>
-                  {(meta?.byViolationTag ?? []).map((tag) => (
+                  {(meta?.byViolationTag ?? []).map((tag: any) => (
                     <button
                       key={tag.slug}
                       onClick={() => {
@@ -385,39 +507,18 @@ export default function EvidencePage() {
               <LoadingSkeleton />
             ) : totalCount === 0 ? (
               <EmptyState onClear={clearFilters} hasFilters={hasActiveFilters} />
-            ) : caseTab === "state" ? (
-              <DocSection
-                title="State Case — CR23-0657"
-                subtitle="Washoe County District Court · State v. Church"
-                docs={docs}
-                caseColor="amber"
-              />
-            ) : caseTab === "federal" ? (
-              <DocSection
-                title="Federal Case — 3:24-cv-00579"
-                subtitle="U.S. District Court, District of Nevada · Church v. Washoe County"
-                docs={docs}
-                caseColor="blue"
-              />
             ) : (
-              <>
-                {stateDocs.length > 0 && (
+              sectionsToRender.map((section) => {
+                const sectionDocs = buckets[section.key] ?? [];
+                if (sectionDocs.length === 0) return null;
+                return (
                   <DocSection
-                    title="State Case — CR23-0657"
-                    subtitle="Washoe County District Court · State v. Church"
-                    docs={stateDocs}
-                    caseColor="amber"
+                    key={section.key}
+                    section={section}
+                    docs={sectionDocs}
                   />
-                )}
-                {federalDocs.length > 0 && (
-                  <DocSection
-                    title="Federal Case — 3:24-cv-00579"
-                    subtitle="U.S. District Court, District of Nevada · Church v. Washoe County"
-                    docs={federalDocs}
-                    caseColor="blue"
-                  />
-                )}
-              </>
+                );
+              })
             )}
           </div>
         </div>
@@ -427,23 +528,17 @@ export default function EvidencePage() {
 }
 
 /* ─────────────────────────────────────────────
-   DocSection — collapsible case group
+   DocSection — collapsible record-status group
 ───────────────────────────────────────────── */
 function DocSection({
-  title,
-  subtitle,
+  section,
   docs,
-  caseColor,
 }: {
-  title: string;
-  subtitle: string;
-  docs: any[];
-  caseColor: "amber" | "blue";
+  section: (typeof RECORD_SECTIONS)[number];
+  docs: { doc: any; resolved: ReturnType<typeof resolveDocDate> }[];
 }) {
   const [collapsed, setCollapsed] = useState(false);
-
-  const headerBg = caseColor === "amber" ? "bg-amber-500/8 border-amber-500/20" : "bg-blue-500/8 border-blue-500/20";
-  const accentText = caseColor === "amber" ? "text-amber-400" : "text-blue-400";
+  const Icon = section.icon;
 
   return (
     <section>
@@ -451,17 +546,32 @@ function DocSection({
         onClick={() => setCollapsed((c) => !c)}
         className={cn(
           "w-full flex items-center justify-between gap-4 px-4 py-3 rounded-lg border mb-4 transition-colors hover:bg-muted/20",
-          headerBg,
+          ACCENT_HEADER[section.accent],
         )}
       >
-        <div className="text-left">
-          <div className={cn("font-mono text-xs font-bold tracking-widest uppercase", accentText)}>
-            {title}
+        <div className="text-left flex items-start gap-3 min-w-0">
+          <Icon className={cn("h-4 w-4 mt-0.5 shrink-0", ACCENT_TEXT[section.accent])} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "font-mono text-xs font-bold tracking-widest uppercase",
+                  ACCENT_TEXT[section.accent],
+                )}
+              >
+                {section.title}
+              </span>
+              {!section.onRecord && (
+                <span className="text-[9px] uppercase tracking-wider font-mono px-1 py-px rounded bg-zinc-500/20 text-zinc-400 border border-zinc-500/30">
+                  not a filing
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">{section.subtitle}</div>
           </div>
-          <div className="text-xs text-muted-foreground mt-0.5">{subtitle}</div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <span className={cn("text-xs font-mono font-bold tabular-nums", accentText)}>
+          <span className={cn("text-xs font-mono font-bold tabular-nums", ACCENT_TEXT[section.accent])}>
             {docs.length} doc{docs.length !== 1 ? "s" : ""}
           </span>
           {collapsed ? (
@@ -474,8 +584,8 @@ function DocSection({
 
       {!collapsed && (
         <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
-          {docs.map((doc) => (
-            <DocCard key={doc.id} doc={doc} />
+          {docs.map(({ doc, resolved }) => (
+            <DocCard key={doc.id} doc={doc} resolved={resolved} />
           ))}
         </div>
       )}
@@ -486,7 +596,13 @@ function DocSection({
 /* ─────────────────────────────────────────────
    DocCard
 ───────────────────────────────────────────── */
-function DocCard({ doc }: { doc: any }) {
+function DocCard({
+  doc,
+  resolved,
+}: {
+  doc: any;
+  resolved: ReturnType<typeof resolveDocDate>;
+}) {
   const { data: tags = [] } = trpc.violationTag.getDocumentTags.useQuery(
     { documentId: doc.id },
     { staleTime: 60_000 },
@@ -494,7 +610,6 @@ function DocCard({ doc }: { doc: any }) {
 
   const sourceLabel = SOURCE_LABELS[doc.sourceType] ?? doc.sourceType;
   const sourceColor = SOURCE_COLORS[doc.sourceType] ?? SOURCE_COLORS.other;
-  const dateStr = formatDate(doc.documentDate);
   const snippet = doc.description?.slice(0, 120) ?? doc.aiSummary?.slice(0, 120) ?? null;
 
   return (
@@ -510,9 +625,20 @@ function DocCard({ doc }: { doc: any }) {
           >
             {sourceLabel}
           </span>
-          <span className="text-[10px] text-muted-foreground font-mono tabular-nums shrink-0">
-            {dateStr}
-          </span>
+          {resolved.undated ? (
+            <span className="flex items-center gap-1 text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5 shrink-0">
+              <CalendarOff className="h-3 w-3" />
+              UNDATED
+            </span>
+          ) : (
+            <span
+              className="text-[10px] text-muted-foreground font-mono tabular-nums shrink-0 flex items-center gap-1"
+              title={resolved.isFilingStamp ? "Court filing-stamp date" : "Approximate date — not from a filing stamp"}
+            >
+              {resolved.isFilingStamp && <span className="h-1.5 w-1.5 rounded-full bg-green-500" />}
+              {resolved.label}
+            </span>
+          )}
         </div>
 
         {/* Title */}

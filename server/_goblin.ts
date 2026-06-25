@@ -409,3 +409,307 @@ Return JSON matching the schema. Separate record-backed facts from allegations. 
     };
   }
 }
+
+/* ============================================================
+ * v7.1 — Smarter engine: filing-stamp date + record classification + QC
+ * ============================================================ */
+
+export type DateSource = "filing_stamp" | "file_metadata" | "inferred" | "undated";
+export type RecordStatus =
+  | "on_record_state"
+  | "on_record_federal"
+  | "supporting"
+  | "unfiled_not_on_record"
+  | "unclassified";
+
+export type ClassifyResult = {
+  /** Court filing-stamp date in ISO YYYY-MM-DD, or null if none readable */
+  filingStampDate: string | null;
+  dateSource: DateSource;
+  dateConfidence: number; // 0-100
+  dateSourceQuote: string | null;
+  recordStatus: RecordStatus;
+  recordStatusConfidence: number; // 0-100
+  recordStatusReason: string;
+  /** Docket entry number if present, e.g. "ECF 57", "Doc 12" */
+  docketEntryNo: string | null;
+  caseNumber: string | null;
+};
+
+const CLASSIFY_SCHEMA = {
+  name: "doc_classification",
+  strict: true,
+  schema: {
+    type: "object",
+    properties: {
+      filingStampDate: {
+        type: ["string", "null"],
+        description:
+          "The COURT FILING-STAMP date only — the date printed by the clerk's filing stamp (e.g. 'FILED 2024-12-18', 'ELECTRONICALLY FILED 12/18/2024'). ISO YYYY-MM-DD. NULL if there is no clerk filing stamp visible in the text. Do NOT guess from context, letterhead, or body dates.",
+      },
+      dateSourceQuote: {
+        type: ["string", "null"],
+        description: "The exact text fragment the filing-stamp date was read from, e.g. 'FILED DEC 18 2024 WASHOE COUNTY CLERK'. NULL if no stamp.",
+      },
+      dateConfidence: {
+        type: "integer",
+        description: "0-100 confidence that filingStampDate is the real clerk filing-stamp date. If you inferred or guessed, this must be LOW (<40).",
+      },
+      recordStatus: {
+        type: "string",
+        enum: [
+          "on_record_state",
+          "on_record_federal",
+          "supporting",
+          "unfiled_not_on_record",
+          "unclassified",
+        ],
+        description:
+          "Classify the document: 'on_record_state' = officially filed in the Nevada state case (has a state clerk filing stamp / state case number on docket); 'on_record_federal' = officially filed in the federal case (ECF stamp / federal case number); 'supporting' = exhibit/correspondence/evidence that supports a filing but is itself a referenced attachment; 'unfiled_not_on_record' = drafts, personal notes, emails, recordings, or material NOT filed with any court (NOT part of the official record yet); 'unclassified' = genuinely cannot tell.",
+      },
+      recordStatusConfidence: {
+        type: "integer",
+        description: "0-100 confidence in the recordStatus classification.",
+      },
+      recordStatusReason: {
+        type: "string",
+        description: "One or two sentences citing the specific evidence (stamp text, case number, docket number, or its absence) that drove the classification.",
+      },
+      docketEntryNo: {
+        type: ["string", "null"],
+        description: "Docket / ECF entry number if present, e.g. 'ECF 57', 'Doc 12', '#150044'. NULL if none.",
+      },
+      caseNumber: {
+        type: ["string", "null"],
+        description: "Case number printed on the document, e.g. 'CR23-0657' or '3:24-cv-00579'. NULL if none.",
+      },
+    },
+    required: [
+      "filingStampDate",
+      "dateSourceQuote",
+      "dateConfidence",
+      "recordStatus",
+      "recordStatusConfidence",
+      "recordStatusReason",
+      "docketEntryNo",
+      "caseNumber",
+    ],
+    additionalProperties: false,
+  },
+} as const;
+
+const CLASSIFY_SYSTEM = `You are the classification unit of "Docket Goblin" for The Reno Record. Your single job: read a court document's text and determine (1) the real CLERK FILING-STAMP date and (2) whether the document is officially ON THE RECORD (state or federal), merely SUPPORTING material, or UNFILED / not on the record yet.
+
+CRITICAL RULES:
+- The filing-stamp date is ONLY the clerk's stamp ("FILED", "ELECTRONICALLY FILED", "ENTERED", "RECEIVED AND FILED"). It is NOT the date in the body, the signature date, the certificate-of-service date, or the letterhead date. If there is no clerk stamp, return null and LOW confidence — do NOT guess.
+- "On the record" requires evidence of official filing: a clerk filing stamp, a docket/ECF entry number, or an explicit statement it was filed. Absent that, it is NOT on the record. An email, a draft motion, a personal recording, or an exhibit that was never independently filed is 'unfiled_not_on_record' or 'supporting'.
+- Nevada state case is typically 'CR##-####' style; federal is typically '#:##-cv-#####'. Use the case number AND filing evidence together.
+- Be conservative. A false "on_record" is worse than admitting uncertainty. When the evidence is thin, lower your confidence.
+
+Return strict JSON matching the schema.`;
+
+/**
+ * Classify a single document: extract the real filing-stamp date and the
+ * record status. This is Goblin's first pass. Pure LLM structured output.
+ */
+export async function classifyDocument(opts: {
+  filename: string;
+  mimeType: string;
+  text: string;
+  fileMetadataDate?: string | null; // ISO date from file mtime if available
+}): Promise<ClassifyResult> {
+  // No extractable text (image/audio/video/empty): cannot read a stamp.
+  if (!opts.text || opts.text.trim().length < 20) {
+    return {
+      filingStampDate: null,
+      dateSource: opts.fileMetadataDate ? "file_metadata" : "undated",
+      dateConfidence: opts.fileMetadataDate ? 25 : 0,
+      dateSourceQuote: null,
+      recordStatus: "unclassified",
+      recordStatusConfidence: 0,
+      recordStatusReason:
+        "No extractable text (likely image/audio/video or empty). Cannot read a filing stamp or determine record status from content.",
+      docketEntryNo: null,
+      caseNumber: null,
+    };
+  }
+
+  const userPrompt = `Filename: ${opts.filename}
+MIME: ${opts.mimeType}
+${opts.fileMetadataDate ? `File metadata date (fallback only): ${opts.fileMetadataDate}` : ""}
+
+Document text (truncated):
+"""${opts.text.slice(0, 14000)}"""
+
+Read carefully and return the classification JSON. Remember: filing-stamp date ONLY from a clerk stamp; never guess.`;
+
+  let parsed: Omit<ClassifyResult, "dateSource"> & { dateSource?: DateSource };
+  try {
+    const result = await invokeLLM({
+      messages: [
+        { role: "system", content: CLASSIFY_SYSTEM },
+        { role: "user", content: userPrompt },
+      ],
+      response_format: { type: "json_schema", json_schema: CLASSIFY_SCHEMA as any },
+    });
+    const content = result.choices?.[0]?.message?.content;
+    const raw = typeof content === "string" ? content : JSON.stringify(content);
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    console.error("[classifyDocument] failed:", e);
+    return {
+      filingStampDate: null,
+      dateSource: opts.fileMetadataDate ? "file_metadata" : "undated",
+      dateConfidence: 0,
+      dateSourceQuote: null,
+      recordStatus: "unclassified",
+      recordStatusConfidence: 0,
+      recordStatusReason: "Classification LLM call failed; needs human review.",
+      docketEntryNo: null,
+      caseNumber: null,
+    };
+  }
+
+  // Resolve effective date source with deterministic fallback chain:
+  // filing_stamp (if confident) -> file_metadata -> undated.
+  let dateSource: DateSource;
+  let filingStampDate = parsed.filingStampDate;
+  let dateConfidence = clampPct(parsed.dateConfidence);
+  if (filingStampDate && dateConfidence >= 40) {
+    dateSource = "filing_stamp";
+  } else if (opts.fileMetadataDate) {
+    // Stamp missing/weak — fall back to file metadata, but mark lower confidence.
+    filingStampDate = filingStampDate && dateConfidence >= 40 ? filingStampDate : opts.fileMetadataDate;
+    dateSource = "file_metadata";
+    dateConfidence = Math.min(dateConfidence, 35);
+  } else {
+    filingStampDate = null;
+    dateSource = "undated";
+    dateConfidence = 0;
+  }
+
+  return {
+    filingStampDate,
+    dateSource,
+    dateConfidence,
+    dateSourceQuote: parsed.dateSourceQuote ?? null,
+    recordStatus: parsed.recordStatus,
+    recordStatusConfidence: clampPct(parsed.recordStatusConfidence),
+    recordStatusReason: parsed.recordStatusReason ?? "",
+    docketEntryNo: parsed.docketEntryNo ?? null,
+    caseNumber: parsed.caseNumber ?? null,
+  };
+}
+
+function clampPct(n: unknown): number {
+  const x = typeof n === "number" ? n : Number(n);
+  if (!Number.isFinite(x)) return 0;
+  return Math.max(0, Math.min(100, Math.round(x)));
+}
+
+/* ===== QC Supervisor — deterministic triage of Goblin's classification ===== */
+
+export type QcDecision = {
+  /** Final, possibly-corrected classification to persist */
+  filingStampDate: string | null;
+  dateSource: DateSource;
+  dateConfidence: number;
+  dateSourceQuote: string | null;
+  recordStatus: RecordStatus;
+  recordStatusConfidence: number;
+  recordStatusReason: string;
+  recordStatusSource: "goblin" | "qc";
+  /** Whether the resolved date needs a human to look at it */
+  needsDateReview: boolean;
+  /** Whether the classification needs a human to look at it */
+  needsClassificationReview: boolean;
+  docketEntryNo: string | null;
+  caseNumber: string | null;
+  /** Human-readable QC notes for the audit trail */
+  qcNotes: string[];
+};
+
+// Confidence thresholds for auto-accept vs escalate.
+export const QC_DATE_ACCEPT = 70;
+export const QC_CLASS_ACCEPT = 65;
+
+/**
+ * The QC supervisor takes Goblin's raw classification and decides, with
+ * deterministic rules, what to auto-accept and what to escalate to a human.
+ * No second LLM call by default — this is the cheap, fast triage layer.
+ * It also applies obvious corrections (e.g. align record_status with case number).
+ */
+export function qcReview(c: ClassifyResult): QcDecision {
+  const notes: string[] = [];
+  let recordStatus = c.recordStatus;
+  let recordStatusConfidence = c.recordStatusConfidence;
+  let recordStatusSource: "goblin" | "qc" = "goblin";
+
+  // Rule 1: case-number / record-status coherence correction.
+  const cn = (c.caseNumber || "").toLowerCase();
+  const looksFederal = /\d:\d{2}-cv-\d/.test(cn) || /-cv-/.test(cn);
+  const looksState = /^cr\d/.test(cn) || /\bcr\d{2}-\d/.test(cn);
+  if (looksFederal && recordStatus === "on_record_state") {
+    recordStatus = "on_record_federal";
+    recordStatusSource = "qc";
+    notes.push("QC corrected state→federal based on federal case number pattern.");
+  } else if (looksState && recordStatus === "on_record_federal") {
+    recordStatus = "on_record_state";
+    recordStatusSource = "qc";
+    notes.push("QC corrected federal→state based on state case number pattern.");
+  }
+
+  // Rule 2: claims to be on-record but has no docket entry AND low confidence → downgrade.
+  const onRecord = recordStatus === "on_record_state" || recordStatus === "on_record_federal";
+  if (onRecord && !c.docketEntryNo && c.dateSource !== "filing_stamp" && recordStatusConfidence < QC_CLASS_ACCEPT) {
+    recordStatus = "supporting";
+    recordStatusSource = "qc";
+    notes.push(
+      "QC downgraded to 'supporting': claimed on-record but no docket entry, no filing stamp, and low confidence.",
+    );
+  }
+
+  // Rule 3: date review escalation.
+  const needsDateReview =
+    c.dateSource === "undated" ||
+    c.dateConfidence < QC_DATE_ACCEPT ||
+    (c.dateSource === "file_metadata"); // metadata date is never authoritative for a court record
+  if (needsDateReview) {
+    notes.push(
+      c.dateSource === "undated"
+        ? "No filing stamp found — flagged UNDATED for human review."
+        : `Date confidence ${c.dateConfidence}% below ${QC_DATE_ACCEPT}% (source: ${c.dateSource}) — flagged for review.`,
+    );
+  }
+
+  // Rule 4: classification review escalation.
+  const needsClassificationReview =
+    recordStatus === "unclassified" || recordStatusConfidence < QC_CLASS_ACCEPT;
+  if (needsClassificationReview) {
+    notes.push(
+      recordStatus === "unclassified"
+        ? "Could not classify record status — escalated to human."
+        : `Classification confidence ${recordStatusConfidence}% below ${QC_CLASS_ACCEPT}% — escalated to human.`,
+    );
+  }
+
+  if (!needsDateReview && !needsClassificationReview && notes.length === 0) {
+    notes.push("Auto-accepted: filing stamp and classification both above QC thresholds.");
+  }
+
+  return {
+    filingStampDate: c.filingStampDate,
+    dateSource: c.dateSource,
+    dateConfidence: c.dateConfidence,
+    dateSourceQuote: c.dateSourceQuote,
+    recordStatus,
+    recordStatusConfidence,
+    recordStatusReason: c.recordStatusReason,
+    recordStatusSource,
+    needsDateReview,
+    needsClassificationReview,
+    docketEntryNo: c.docketEntryNo,
+    caseNumber: c.caseNumber,
+    qcNotes: notes,
+  };
+}

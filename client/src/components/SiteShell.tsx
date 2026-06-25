@@ -2,14 +2,13 @@ import { ReactNode, useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
   Menu, X, ScrollText, Shield, LogIn, User, LogOut,
-  ChevronDown, FileText, CreditCard, Sun, Moon,
+  ChevronDown, FileText, CreditCard,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { useTheme } from "@/contexts/ThemeContext";
 
 /* ─── Navigation structure ─────────────────────────────────── */
 const NAV_SECTIONS = [
@@ -77,21 +76,6 @@ function GoblinMark({ className }: { className?: string }) {
       </text>
       <rect x="6" y="32" width="22" height="2" fill="var(--neon-gold)" />
     </svg>
-  );
-}
-
-/* ─── Theme toggle ──────────────────────────────────────────── */
-function ThemeToggle() {
-  const { isDark, toggleTheme } = useTheme();
-  return (
-    <button
-      onClick={toggleTheme}
-      className="p-2 rounded-sm border border-border hover:border-primary/60 transition-colors text-muted-foreground hover:text-foreground"
-      aria-label={isDark ? "Switch to editorial (light) mode" : "Switch to Dark Reno mode"}
-      title={isDark ? "Editorial mode" : "Dark Reno mode"}
-    >
-      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-    </button>
   );
 }
 
@@ -291,7 +275,6 @@ export default function SiteShell({ children }: { children: ReactNode }) {
 
           {/* Desktop actions */}
           <div className="hidden lg:flex items-center gap-2">
-            <ThemeToggle />
             {isAdmin && (
               <Link href="/admin">
                 <Button variant="outline" size="sm" className="gap-1.5">
@@ -326,7 +309,6 @@ export default function SiteShell({ children }: { children: ReactNode }) {
 
           {/* Mobile: theme toggle + hamburger */}
           <div className="lg:hidden flex items-center gap-2">
-            <ThemeToggle />
             <button
               className="p-2 -mr-1"
               onClick={() => setMobileOpen(v => !v)}

@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gte, like, lte, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, gte, like, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   actors,
@@ -38,9 +38,14 @@ import {
   operatorProfile,
   buildLogEntries,
   projects,
+  filingPackages,
+  documentVersions,
   InsertOperatorProfile,
   InsertBuildLogEntry,
   InsertProject,
+  InsertFilingPackage,
+  InsertDocumentVersion,
+  DocumentRow,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -166,6 +171,7 @@ export async function listPublicDocuments(opts: {
   q?: string;
   sourceType?: string;
   caseTag?: string;
+  recordStatus?: string;
   violationTagSlug?: string;
   sortBy?: "date_desc" | "date_asc";
   limit?: number;
@@ -178,6 +184,9 @@ export async function listPublicDocuments(opts: {
   }
   if (opts.caseTag && opts.caseTag !== "all") {
     filters.push(eq(documents.caseTag, opts.caseTag as any));
+  }
+  if (opts.recordStatus && opts.recordStatus !== "all") {
+    filters.push(eq(documents.recordStatus, opts.recordStatus as any));
   }
   if (opts.q && opts.q.trim()) {
     const q = `%${opts.q.trim()}%`;
@@ -219,8 +228,8 @@ export async function listPublicDocuments(opts: {
 /** Returns counts per source_type, violation_tag, and case_tag for the public filter sidebar */
 export async function getDocumentFilterMeta() {
   const db = await getDb();
-  if (!db) return { bySourceType: [] as any[], byViolationTag: [] as any[], byCaseTag: [] as any[] };
-  const [bySourceType, byViolationTag, byCaseTag] = await Promise.all([
+  if (!db) return { bySourceType: [] as any[], byViolationTag: [] as any[], byCaseTag: [] as any[], byRecordStatus: [] as any[] };
+  const [bySourceType, byViolationTag, byCaseTag, byRecordStatus] = await Promise.all([
     db
       .select({ sourceType: documents.sourceType, cnt: count() })
       .from(documents)
@@ -239,8 +248,13 @@ export async function getDocumentFilterMeta() {
       .from(documents)
       .where(and(eq(documents.publicStatus, true), eq(documents.reviewStatus, "approved")))
       .groupBy(documents.caseTag),
+    db
+      .select({ recordStatus: documents.recordStatus, cnt: count() })
+      .from(documents)
+      .where(and(eq(documents.publicStatus, true), eq(documents.reviewStatus, "approved")))
+      .groupBy(documents.recordStatus),
   ]);
-  return { bySourceType, byViolationTag, byCaseTag };
+  return { bySourceType, byViolationTag, byCaseTag, byRecordStatus };
 }
 export async function listAllDocuments(filter?: {
   visibility?: string;
@@ -1554,4 +1568,252 @@ export async function deleteProject(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(projects).where(eq(projects.id, id));
+}
+
+/* ================= v7.1 Filing packages ================= */
+export async function insertFilingPackage(input: InsertFilingPackage) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const [{ insertId }] = (await db.insert(filingPackages).values(input)) as unknown as [
+    { insertId: number },
+  ];
+  return insertId;
+}
+
+export async function updateFilingPackage(id: number, patch: Partial<InsertFilingPackage>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(filingPackages).set(patch).where(eq(filingPackages.id, id));
+}
+
+export async function deleteFilingPackage(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Detach member documents first so they aren't orphaned to a dead FK.
+  await db.update(documents).set({ filingPackageId: null }).where(eq(documents.filingPackageId, id));
+  await db.delete(filingPackages).where(eq(filingPackages.id, id));
+}
+
+export async function getFilingPackageById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const r = await db.select().from(filingPackages).where(eq(filingPackages.id, id)).limit(1);
+  return r[0] ?? null;
+}
+
+export async function listFilingPackages(opts?: { recordStatus?: string }) {
+  const db = await getDb();
+  if (!db) return [];
+  const q = db.select().from(filingPackages);
+  const rows = opts?.recordStatus
+    ? await q
+        .where(eq(filingPackages.recordStatus, opts.recordStatus as any))
+        .orderBy(asc(filingPackages.filedDate), asc(filingPackages.sortOrder))
+    : await q.orderBy(asc(filingPackages.filedDate), asc(filingPackages.sortOrder));
+  return rows;
+}
+
+/**
+ * Find or create a filing package by docket entry number within a record/case.
+ * Goblin uses this to group related documents deterministically without dupes.
+ */
+export async function findOrCreateFilingPackage(opts: {
+  docketEntryNo: string | null;
+  title: string;
+  recordStatus: string;
+  caseNumber: string | null;
+  filedDate: Date | null;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Only dedupe when we have a real docket entry number + case to anchor on.
+  if (opts.docketEntryNo && opts.caseNumber) {
+    const existing = await db
+      .select()
+      .from(filingPackages)
+      .where(
+        and(
+          eq(filingPackages.docketEntryNo, opts.docketEntryNo),
+          eq(filingPackages.caseNumber, opts.caseNumber),
+        ),
+      )
+      .limit(1);
+    if (existing[0]) return existing[0].id;
+  }
+  return insertFilingPackage({
+    title: opts.title,
+    docketEntryNo: opts.docketEntryNo,
+    recordStatus: opts.recordStatus as any,
+    caseNumber: opts.caseNumber,
+    filedDate: opts.filedDate ?? null,
+    source: "goblin",
+  });
+}
+
+/* ================= v7.1 Document version history (immutable) ================= */
+/**
+ * Capture an immutable snapshot of a document's current state as a new version.
+ * Version numbers are monotonic per-document. A saved snapshot is never mutated.
+ */
+export async function snapshotDocumentVersion(opts: {
+  documentId: number;
+  changeNote?: string | null;
+  changedBy?: number | null;
+  changedBySource?: "admin" | "goblin" | "qc" | "system" | "restore";
+  restoredFromVersionNo?: number | null;
+}): Promise<number | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const doc = await getDocumentById(opts.documentId);
+  if (!doc) return null;
+  // Next version number = current max + 1 (append-only).
+  const [{ maxNo }] = (await db
+    .select({ maxNo: sql<number>`COALESCE(MAX(${documentVersions.versionNo}), 0)` })
+    .from(documentVersions)
+    .where(eq(documentVersions.documentId, opts.documentId))) as unknown as [{ maxNo: number }];
+  const versionNo = Number(maxNo) + 1;
+  await db.insert(documentVersions).values({
+    documentId: opts.documentId,
+    versionNo,
+    snapshot: doc as unknown as Record<string, unknown>,
+    changeNote: opts.changeNote ?? null,
+    changedBy: opts.changedBy ?? null,
+    changedBySource: opts.changedBySource ?? "system",
+    restoredFromVersionNo: opts.restoredFromVersionNo ?? null,
+  });
+  return versionNo;
+}
+
+export async function listDocumentVersions(documentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(documentVersions)
+    .where(eq(documentVersions.documentId, documentId))
+    .orderBy(desc(documentVersions.versionNo));
+}
+
+export async function getDocumentVersion(documentId: number, versionNo: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const r = await db
+    .select()
+    .from(documentVersions)
+    .where(
+      and(
+        eq(documentVersions.documentId, documentId),
+        eq(documentVersions.versionNo, versionNo),
+      ),
+    )
+    .limit(1);
+  return r[0] ?? null;
+}
+
+/**
+ * Restore a document to a prior version. This does NOT overwrite history:
+ * it first snapshots the current state (so you can undo the restore), then
+ * applies the old snapshot's editable fields, then records that the new live
+ * state came from a restore. Immutable-version-identity is preserved.
+ */
+export async function restoreDocumentVersion(opts: {
+  documentId: number;
+  versionNo: number;
+  changedBy?: number | null;
+}): Promise<{ restoredTo: number; newCurrentVersion: number } | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const target = await getDocumentVersion(opts.documentId, opts.versionNo);
+  if (!target) return null;
+  // 1) snapshot current state first (preserve the pre-restore state in history)
+  await snapshotDocumentVersion({
+    documentId: opts.documentId,
+    changeNote: `Auto-snapshot before restoring to v${opts.versionNo}`,
+    changedBy: opts.changedBy ?? null,
+    changedBySource: "system",
+  });
+  // 2) apply the old snapshot's editable fields to the live row
+  const snap = target.snapshot as Partial<DocumentRow>;
+  const editable: Partial<InsertDocument> = {
+    title: snap.title,
+    description: snap.description,
+    sourceType: snap.sourceType,
+    caseNumber: snap.caseNumber,
+    documentDate: snap.documentDate ?? undefined,
+    filingStampDate: snap.filingStampDate ?? undefined,
+    dateSource: snap.dateSource,
+    dateConfidence: snap.dateConfidence,
+    needsDateReview: snap.needsDateReview,
+    dateSourceQuote: snap.dateSourceQuote,
+    recordStatus: snap.recordStatus,
+    recordStatusConfidence: snap.recordStatusConfidence,
+    recordStatusSource: snap.recordStatusSource,
+    recordStatusReason: snap.recordStatusReason,
+    needsClassificationReview: snap.needsClassificationReview,
+    filingPackageId: snap.filingPackageId ?? undefined,
+    caseTag: snap.caseTag,
+    actorNames: snap.actorNames,
+    issueTags: snap.issueTags ?? undefined,
+    aiSummary: snap.aiSummary,
+    aiTags: snap.aiTags ?? undefined,
+    editorialNote: snap.editorialNote,
+    correctionNote: snap.correctionNote,
+  };
+  await updateDocument(opts.documentId, editable);
+  // 3) record the post-restore state as a new immutable version
+  const newCurrentVersion = await snapshotDocumentVersion({
+    documentId: opts.documentId,
+    changeNote: `Restored to v${opts.versionNo}`,
+    changedBy: opts.changedBy ?? null,
+    changedBySource: "restore",
+    restoredFromVersionNo: opts.versionNo,
+  });
+  return { restoredTo: opts.versionNo, newCurrentVersion: newCurrentVersion ?? 0 };
+}
+
+/* ================= v7.1 Documents needing human review (QC escalations) ================= */
+export async function listDocumentsNeedingReview() {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(documents)
+    .where(
+      and(
+        sql`${documents.deletedAt} IS NULL`,
+        or(
+          eq(documents.needsDateReview, true),
+          eq(documents.needsClassificationReview, true),
+        ),
+      ),
+    )
+    .orderBy(desc(documents.createdAt));
+}
+
+/**
+ * v7.1 — list documents for batch classification, keyset-paginated by id.
+ * onlyUnclassified=true skips docs already classified (recordStatus set and not 'unclassified').
+ */
+export async function listDocumentsForClassification(opts: {
+  onlyUnclassified: boolean;
+  limit: number;
+  afterId: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const conds = [sql`${documents.deletedAt} IS NULL`, gt(documents.id, opts.afterId)];
+  if (opts.onlyUnclassified) {
+    conds.push(
+      or(
+        sql`${documents.recordStatus} IS NULL`,
+        eq(documents.recordStatus, "unclassified" as any),
+      )!,
+    );
+  }
+  return db
+    .select()
+    .from(documents)
+    .where(and(...conds))
+    .orderBy(asc(documents.id))
+    .limit(opts.limit);
 }

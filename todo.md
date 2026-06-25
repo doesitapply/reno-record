@@ -398,3 +398,40 @@ Patterns · Actors · Evidence. A public-interest misconduct exposure archive fo
 - [x] SEO meta on all operator pages
 - [x] vitest: server/operator.test.ts (7 tests, public reads + admin gating) — 80/80 passing
 - [x] Agent content spec: OPERATOR_PLATFORM_SPEC.md
+
+
+## v7.1 — Smarter Evidence Engine + Dark Mode + Versioning
+
+### Dark mode
+- [x] Lock dark mode site-wide as default; remove light-mode flash (class set in index.html before paint)
+- [x] Removed theme toggle (desktop + mobile); provider pins dark; clears stale light pref
+
+### Schema + migration
+- [x] documents: filingStampDate, dateSource, dateConfidence, needsDateReview, dateSourceQuote, recordStatus (5-way incl unclassified), recordStatusConfidence/Source/Reason, needsClassificationReview, filingPackageId
+- [x] filing_packages table (id, title, docketEntryNo, recordStatus, caseNumber, filedDate, description, source)
+- [x] document_versions table (immutable snapshots, versionNo, changedBySource, restoredFromVersionNo)
+- [x] Versioning consolidated onto document_versions (no separate artifact table exists in this project; "artifact" concept was video bleed)
+- [x] Generate + apply migration (0010_square_human_torch.sql applied, no data loss)
+
+### Smarter Goblin engine
+- [x] Goblin ingest: extract court filing-stamp date (classifyDocument: filingStampDate + dateConfidence + dateSourceQuote)
+- [x] Date resolution: filing_stamp -> file_metadata -> inferred -> undated; needsDateReview set when undated/low-confidence
+- [x] Goblin auto-classify recordStatus (5-way incl unclassified) with confidence + reasoning
+- [x] QC supervisor pass (deterministic): corrects state/fed coherence, downgrades weak on-record claims, escalates ambiguous (qcNotes + needsReview)
+- [x] Never block on human approval for high-confidence items; only escalate ambiguous ones (backfill: 0 escalated, all confident)
+
+### Artifact bug fix + versioning
+- [x] Immutable version identity enforced in snapshotDocumentVersion/restoreDocumentVersion (no separate artifact table exists; video-bleed item mapped to document versions)
+- [x] Document version history: auto-snapshot, list/view/restore (restore creates new version, never destroys); 50 snapshots created on backfill
+- [x] Versioning consolidated onto document_versions
+
+### Evidence UI rework
+- [x] Replaced coarse State/Federal buckets with 4-way record_status grouping (collapsible sections)
+- [x] Supporting (18) and Not-Yet-On-Record (10) shown as separate non-filing sections, clearly marked 'not a filing'
+- [x] Sort by resolved filing-stamp date; UNDATED items sink to bottom + flagged, never fake-placed
+- [x] Skeleton load on Evidence page (no streaming render in card grid path)
+- [x] Visible UNDATED badge + green filing-stamp dot on cards; archive-level undated count banner
+
+### QA
+- [x] vitest: 12 QC supervisor tests (coherence correction, downgrade, undated flagging, escalation thresholds, stamp preservation)
+- [x] Full suite passes (92/92), checkpoint, deliver

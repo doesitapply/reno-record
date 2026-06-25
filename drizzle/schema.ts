@@ -169,6 +169,51 @@ export const documents = mysqlTable(
     correctionNote: text("correction_note"),
     /** v5.1: which case this document belongs to */
     caseTag: mysqlEnum("case_tag", ["state", "federal", "both"]).default("state").notNull(),
+    /* ===== v7.1 smarter engine: real-date + classification ===== */
+    /** The actual court filing-stamp date extracted from the document (source of truth) */
+    filingStampDate: timestamp("filing_stamp_date"),
+    /** Where the effective date came from */
+    dateSource: mysqlEnum("date_source", [
+      "filing_stamp",
+      "file_metadata",
+      "inferred",
+      "undated",
+    ])
+      .default("undated")
+      .notNull(),
+    /** 0-100 confidence in the resolved date */
+    dateConfidence: int("date_confidence").default(0).notNull(),
+    /** When true, the date could not be reliably resolved and needs human review */
+    needsDateReview: boolean("needs_date_review").default(true).notNull(),
+    /** Short quote from the doc that the stamp date was read from */
+    dateSourceQuote: text("date_source_quote"),
+    /** Four-way record status — separates official record from supporting/unfiled material */
+    recordStatus: mysqlEnum("record_status", [
+      "on_record_state",
+      "on_record_federal",
+      "supporting",
+      "unfiled_not_on_record",
+      "unclassified",
+    ])
+      .default("unclassified")
+      .notNull(),
+    /** 0-100 confidence in record status classification */
+    recordStatusConfidence: int("record_status_confidence").default(0).notNull(),
+    /** Who/what set the record status */
+    recordStatusSource: mysqlEnum("record_status_source", [
+      "goblin",
+      "qc",
+      "admin",
+      "unset",
+    ])
+      .default("unset")
+      .notNull(),
+    /** Goblin/QC reasoning for the classification (audit trail) */
+    recordStatusReason: text("record_status_reason"),
+    /** When true, classification was ambiguous and escalated to a human */
+    needsClassificationReview: boolean("needs_classification_review").default(false).notNull(),
+    /** Which filing package / docket grouping this belongs to */
+    filingPackageId: int("filing_package_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
   },
@@ -176,6 +221,9 @@ export const documents = mysqlTable(
     sourceTypeIdx: index("documents_source_type_idx").on(t.sourceType),
     reviewIdx: index("documents_review_idx").on(t.reviewStatus),
     publicIdx: index("documents_public_idx").on(t.publicStatus),
+    recordStatusIdx: index("documents_record_status_idx").on(t.recordStatus),
+    filingPackageIdx: index("documents_filing_package_idx").on(t.filingPackageId),
+    filingStampIdx: index("documents_filing_stamp_idx").on(t.filingStampDate),
   }),
 );
 export type DocumentRow = typeof documents.$inferSelect;
@@ -1013,3 +1061,86 @@ export const projects = mysqlTable(
 );
 export type Project = typeof projects.$inferSelect;
 export type InsertProject = typeof projects.$inferInsert;
+
+/* ========== v7.1 — Filing packages (docket grouping) ========== */
+/**
+ * A filing package groups documents that belong together as a single court
+ * filing / docket entry (e.g. a motion + its exhibits + proposed order), rather
+ * than the coarse two-bucket State/Federal split.
+ */
+export const filingPackages = mysqlTable(
+  "filing_packages",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    title: varchar("title", { length: 320 }).notNull(),
+    /** Docket entry number, e.g. "ECF 57" or "Doc 12" */
+    docketEntryNo: varchar("docket_entry_no", { length: 80 }),
+    /** Which record this package belongs to */
+    recordStatus: mysqlEnum("record_status", [
+      "on_record_state",
+      "on_record_federal",
+      "supporting",
+      "unfiled_not_on_record",
+      "unclassified",
+    ])
+      .default("unclassified")
+      .notNull(),
+    caseNumber: varchar("case_number", { length: 120 }),
+    /** Effective filing date of the package (from member docs' stamp dates) */
+    filedDate: timestamp("filed_date"),
+    description: text("description"),
+    /** Auto-created by Goblin vs. curated by admin */
+    source: mysqlEnum("source", ["goblin", "admin"]).default("goblin").notNull(),
+    sortOrder: int("sort_order").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    recordStatusIdx: index("filing_packages_record_status_idx").on(t.recordStatus),
+    filedDateIdx: index("filing_packages_filed_date_idx").on(t.filedDate),
+  }),
+);
+export type FilingPackage = typeof filingPackages.$inferSelect;
+export type InsertFilingPackage = typeof filingPackages.$inferInsert;
+
+/* ========== v7.1 — Document version history (immutable snapshots) ========== */
+/**
+ * Every meaningful edit to a document (metadata, classification, Goblin analysis)
+ * is captured as an immutable snapshot. Restoring a version writes a NEW version
+ * from the old snapshot — history is append-only and never destroyed. This is the
+ * immutable-version-identity guarantee: a saved version can never be overwritten
+ * or made to resolve to a live/draft state.
+ */
+export const documentVersions = mysqlTable(
+  "document_versions",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    documentId: int("document_id").notNull(),
+    /** Monotonic per-document version number, starting at 1 */
+    versionNo: int("version_no").notNull(),
+    /** Full snapshot of the document row at this version (JSON) */
+    snapshot: json("snapshot").$type<Record<string, unknown>>().notNull(),
+    /** What changed, human-readable */
+    changeNote: varchar("change_note", { length: 600 }),
+    /** Who/what produced this version */
+    changedBy: int("changed_by"),
+    changedBySource: mysqlEnum("changed_by_source", [
+      "admin",
+      "goblin",
+      "qc",
+      "system",
+      "restore",
+    ])
+      .default("system")
+      .notNull(),
+    /** If this version was created by restoring an older one, which version */
+    restoredFromVersionNo: int("restored_from_version_no"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    docIdx: index("document_versions_doc_idx").on(t.documentId),
+    docVerIdx: index("document_versions_doc_ver_idx").on(t.documentId, t.versionNo),
+  }),
+);
+export type DocumentVersion = typeof documentVersions.$inferSelect;
+export type InsertDocumentVersion = typeof documentVersions.$inferInsert;
