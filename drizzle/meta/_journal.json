@@ -78,6 +78,20 @@
       "when": 1782388227073,
       "tag": "0010_square_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1782537264628,
+      "tag": "0011_smart_firelord",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1782537804170,
+      "tag": "0012_quick_azazel",
+      "breakpoints": true
     }
   ]
 }

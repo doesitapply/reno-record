@@ -65,3 +65,24 @@
 - "Artifact versioning / draft-bleeds-into-persisted" item from earlier was VIDEO BLEED, not this project. No separate artifact table exists; versioning lives on document_versions. Closed.
 - Human-in-the-loop manual approval queues (from old v5.0 plan) intentionally SCRAPPED per Cam: autonomy over gatekeeping. QC supervisor escalates only genuine ambiguity.
 - Theme toggle / "Dark Reno" toggle items SCRAPPED: dark is now locked, no toggle.
+
+---
+
+## v7.2 — Public API + MCP/OpenAPI integration layer (COMPLETE)
+
+- [x] api_keys table (id, label, keyHash, keyPrefix, scope [read|ingest], lastUsedAt, useCount, createdAt, revokedAt)
+- [x] Key generation + hashing (sha256), shown once, prefix stored for display
+- [x] Admin tab: create/revoke/list API keys (one-time reveal modal, copy, revoke confirm, explicit error+retry state)
+- [x] Shared runGoblinPipeline helper — admin + public ingest now one code path (server/_pipeline.ts)
+- [x] Express middleware: validate Bearer/x-api-key, enforce scope, bump useCount + lastUsedAt
+- [x] GET /api/public/stats (gauge numbers)
+- [x] GET /api/public/documents (filters: recordStatus, caseTag, violationTagSlug, q, sortBy, limit, offset)
+- [x] GET /api/public/documents/:id (doc + violation tags + version history; fileKey/uploadedBy redacted on doc AND in version snapshots)
+- [x] GET /api/public/violations (taxonomy + counts + latest tagged doc)
+- [x] GET /api/public/actors, GET /api/public/timeline
+- [x] POST /api/public/ingest (ingest scope only -> shared Goblin pipeline; pending, never auto-publish unless threshold)
+- [x] GET /api/public/openapi.json (OpenAPI 3 spec — Hermes bridge)
+- [x] GET /api/public/mcp.json (MCP manifest — Codex/Claude/MCP clients)
+- [x] vitest: 16 tests — key auth, invalid/revoked, scope enforcement, doc+snapshot redaction, read endpoints, manifests (108/108 total)
+- [x] API_ACCESS.md usage docs
+- [ ] Checkpoint + deliver

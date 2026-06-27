@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { registerFileProxy } from "../fileProxy";
 import { stripeWebhookHandler } from "../stripe/webhook";
 import { appRouter } from "../routers";
+import { createPublicApiRouter } from "../publicApi";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 
@@ -42,6 +43,8 @@ async function startServer() {
   registerStorageProxy(app);
   registerFileProxy(app);
   registerOAuthRoutes(app);
+  // Public REST API (API-key auth) for external agents (Hermes / Codex / MCP clients).
+  app.use("/api/public", createPublicApiRouter());
   // tRPC API
   app.use(
     "/api/trpc",

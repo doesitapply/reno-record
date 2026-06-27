@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import crypto from "node:crypto";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -38,6 +39,7 @@ import {
 import { TIERS, CREDIT_PACKS } from "./stripe/products";
 import { hasTier, freeGoblinRemaining, tierLabel, hasGoblinCredits } from "./stripe/gating";
 import { scoreVerifiability, AUTO_PUBLISH_THRESHOLD } from "./goblinAutoPublish";
+import { runGoblinPipeline } from "./_pipeline";
 
 const isoDate = z
   .union([z.string(), z.date()])
@@ -1323,205 +1325,25 @@ Submitter narrative: ${s.summary ?? ""}`;
 
       const fileSize = v.size;
 
-      const jobId = await db.insertIngestJob({
-        userId: ctx.user.id,
-        storyId: input.storyId ?? null,
-        filename: v.filename,
-        mimeType: v.mime,
-        fileSize,
-        status: "pending",
-      });
-
+      // Single shared code path (admin + public REST ingest both call this).
       try {
-        const { key, url } = await storagePut(
-          `evidence/ingest-${jobId}-${v.storageFilename}`,
-          v.buffer,
-          v.mime,
-        );
-
-        const extracted = await extractText(v.buffer, v.mime);
-        await db.updateIngestJob(jobId, {
-          status: "extracted",
-          extractedText: extracted.slice(0, 60000) || null,
-        });
-
-        // 3) Ask Docket Goblin to draft structured metadata (uses archive context for consistency)
-        const archive = await db.getArchiveContextForLLM();
-        const archiveStr = buildArchiveContextString(archive);
-        const draft = await draftFromExtractedText({
-          filename: input.filename,
-          mimeType: input.mimeType,
-          text: extracted,
-          archiveSummary: archiveStr,
-        });
-
-        // 4) Resolve story if not provided: if archive has a featured (Church Record) story, default to that.
-        let storyId = input.storyId ?? null;
-        if (!storyId) {
-          const featured = await db.getFeaturedStory();
-          if (featured) storyId = featured.id;
-        }
-
-        // 5) Create a pending document (NEVER public, NEVER approved automatically,
-        //    NEVER goblin-readable until admin opts in).
-        const documentId = await db.insertDocument({
-          title: draft.title || v.filename,
-          description: draft.summary,
-          fileKey: key,
-          fileUrl: url,
+        const result = await runGoblinPipeline({
+          filename: v.filename,
+          storageFilename: v.storageFilename,
           mimeType: v.mime,
+          buffer: v.buffer,
           fileSize,
-          sourceType: draft.sourceType,
-          caseNumber: draft.caseNumber || null,
-          documentDate: draft.documentDate ? new Date(draft.documentDate) : undefined,
-          actorNames: draft.actorNames.join(", "),
-          issueTags: draft.tags,
-          storyId: storyId ?? undefined,
-          publicStatus: false, // hard guarantee
-          reviewStatus: "pending", // hard guarantee
-          visibility: "pending_review",
-          aiPolicy: "no_ai_processing",
-          uploadedBy: ctx.user.id,
-          aiSummary: draft.summary,
-          aiTags: draft.tags,
+          storyId: input.storyId ?? null,
+          actor: { userId: ctx.user.id, role: ctx.user.role, source: "goblin" },
         });
-
-        await writeAudit({
-          actorUserId: ctx.user.id,
-          actorRole: ctx.user.role,
-          action: "document_ingested",
-          targetType: "document",
-          targetId: documentId,
-          metadata: { filename: v.filename, jobId, storyId },
-        });
-
-        // 5b) v7.1 SMARTER ENGINE: extract real filing-stamp date + classify record status,
-        //     run the QC supervisor, group into a filing package, and snapshot v1.
-        try {
-          const classification = await classifyDocument({
-            filename: v.filename,
-            mimeType: v.mime,
-            text: extracted,
-          });
-          const qc = qcReview(classification);
-
-          // Map record status -> the legacy caseTag so existing UI keeps working.
-          const legacyCaseTag =
-            qc.recordStatus === "on_record_federal"
-              ? "federal"
-              : qc.recordStatus === "on_record_state"
-              ? "state"
-              : undefined;
-
-          // Group into a filing package only when it is genuinely on-record.
-          let filingPackageId: number | undefined;
-          if (
-            (qc.recordStatus === "on_record_state" || qc.recordStatus === "on_record_federal") &&
-            (qc.docketEntryNo || qc.caseNumber)
-          ) {
-            filingPackageId = await db.findOrCreateFilingPackage({
-              docketEntryNo: qc.docketEntryNo,
-              title: qc.docketEntryNo
-                ? `${qc.caseNumber ?? "Case"} — ${qc.docketEntryNo}`
-                : draft.title || v.filename,
-              recordStatus: qc.recordStatus,
-              caseNumber: qc.caseNumber,
-              filedDate: qc.filingStampDate ? new Date(qc.filingStampDate) : null,
-            });
-          }
-
-          await db.updateDocument(documentId, {
-            filingStampDate: qc.filingStampDate ? new Date(qc.filingStampDate) : undefined,
-            dateSource: qc.dateSource,
-            dateConfidence: qc.dateConfidence,
-            needsDateReview: qc.needsDateReview,
-            dateSourceQuote: qc.dateSourceQuote ?? undefined,
-            recordStatus: qc.recordStatus,
-            recordStatusConfidence: qc.recordStatusConfidence,
-            recordStatusSource: qc.recordStatusSource,
-            recordStatusReason: qc.recordStatusReason ?? undefined,
-            needsClassificationReview: qc.needsClassificationReview,
-            filingPackageId,
-            ...(legacyCaseTag ? { caseTag: legacyCaseTag as any } : {}),
-            // Prefer the real filing-stamp date as the document's effective date.
-            ...(qc.dateSource === "filing_stamp" && qc.filingStampDate
-              ? { documentDate: new Date(qc.filingStampDate) }
-              : {}),
-          });
-
-          await writeAudit({
-            actorUserId: ctx.user.id,
-            actorRole: ctx.user.role,
-            action: "document_ingested",
-            targetType: "document",
-            targetId: documentId,
-            metadata: {
-              phase: "classify_qc",
-              recordStatus: qc.recordStatus,
-              recordStatusConfidence: qc.recordStatusConfidence,
-              dateSource: qc.dateSource,
-              dateConfidence: qc.dateConfidence,
-              needsDateReview: qc.needsDateReview,
-              needsClassificationReview: qc.needsClassificationReview,
-              qcNotes: qc.qcNotes,
-            },
-          });
-
-          // Notify owner only when something genuinely needs a human.
-          if (qc.needsDateReview || qc.needsClassificationReview) {
-            await notifyOwner({
-              title: "Goblin escalation: document needs review",
-              content: `"${draft.title || v.filename}" — ${qc.qcNotes.join(" ")}`,
-            }).catch(() => {});
-          }
-        } catch (classifyErr) {
-          console.error("[ingest] classify/QC step failed (non-fatal):", classifyErr);
-        }
-
-        // 5c) Immutable v1 snapshot of the document's initial state.
-        await db
-          .snapshotDocumentVersion({
-            documentId,
-            changeNote: "Initial Goblin ingest",
-            changedBy: ctx.user.id,
-            changedBySource: "goblin",
-          })
-          .catch((e) => console.error("[ingest] snapshot failed (non-fatal):", e));
-
-        // 6) Score verifiability and potentially auto-approve admin uploads.
-        const verifResult = scoreVerifiability(draft);
-        const proposed = await db.findActorIdsByNames(draft.actorNames);
-        const enrichedDraft = { ...draft, _verifiability: verifResult };
-        await db.updateIngestJob(jobId, {
-          status: "drafted",
-          documentId,
-          draftJson: enrichedDraft as any,
-          proposedActors: proposed.map((p) => p.name),
-          storyId: storyId ?? null,
-        });
-        // 7) Auto-approve admin uploads that score above threshold.
-        if (verifResult.verdict === "auto_publish" && verifResult.score >= AUTO_PUBLISH_THRESHOLD) {
-          await db.updateDocument(documentId, {
-            reviewStatus: "approved",
-            publicStatus: true,
-            visibility: "public_preview",
-          });
-          await writeAudit({
-            actorUserId: ctx.user.id,
-            actorRole: ctx.user.role,
-            action: "document_approved",
-            targetType: "document",
-            targetId: documentId,
-            metadata: { via: "auto_publish", verifiabilityScore: verifResult.score, jobId },
-          });
-          await db.updateIngestJob(jobId, { status: "approved" });
-        }
-        return { jobId, documentId, draft: enrichedDraft, proposedActors: proposed, verifiability: verifResult };
+        return {
+          jobId: result.jobId,
+          documentId: result.documentId,
+          draft: result.draft,
+          proposedActors: result.proposedActors,
+          verifiability: result.verifiability,
+        };
       } catch (e: any) {
-        await db.updateIngestJob(jobId, {
-          status: "failed",
-          error: String(e?.message || e),
-        });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Ingest failed: ${e?.message || e}`,
@@ -3019,6 +2841,71 @@ const evidenceEngineRouter = router({
     }),
 });
 
+/* =============== Public API Keys (admin CRUD) ===============
+   Keys are shown ONCE at creation. Only the sha256 hash + prefix are stored. */
+const apiKeyRouter = router({
+  list: adminProcedure.query(async () => {
+    const rows = await db.listApiKeys();
+    // Never return the hash to the client.
+    return rows.map((r) => ({
+      id: r.id,
+      label: r.label,
+      keyPrefix: r.keyPrefix,
+      scope: r.scope,
+      lastUsedAt: r.lastUsedAt,
+      useCount: r.useCount,
+      revokedAt: r.revokedAt,
+      createdAt: r.createdAt,
+    }));
+  }),
+
+  create: adminProcedure
+    .input(
+      z.object({
+        label: z.string().min(1).max(160),
+        scope: z.enum(["read", "ingest"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const prefix = input.scope === "ingest" ? "rr_ingest_" : "rr_live_";
+      const rawKey = prefix + crypto.randomBytes(32).toString("hex");
+      const keyHash = crypto.createHash("sha256").update(rawKey).digest("hex");
+      const keyPrefix = rawKey.slice(0, 16);
+      const id = await db.createApiKey({
+        label: input.label,
+        keyHash,
+        keyPrefix,
+        scope: input.scope,
+        createdBy: ctx.user.id,
+      });
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "admin_role_changed",
+        targetType: "api_key",
+        targetId: id,
+        metadata: { event: "api_key_created", label: input.label, scope: input.scope, keyPrefix },
+      });
+      // rawKey is returned exactly once and never persisted in plaintext.
+      return { id, rawKey, keyPrefix, scope: input.scope, label: input.label };
+    }),
+
+  revoke: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await db.revokeApiKey(input.id);
+      await writeAudit({
+        actorUserId: ctx.user.id,
+        actorRole: ctx.user.role,
+        action: "admin_role_changed",
+        targetType: "api_key",
+        targetId: input.id,
+        metadata: { event: "api_key_revoked" },
+      });
+      return { success: true } as const;
+    }),
+});
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -3050,6 +2937,7 @@ export const appRouter = router({
   leaderboard: leaderboardRouter,
   operator: operatorRouter,
   evidenceEngine: evidenceEngineRouter,
+  apiKey: apiKeyRouter,
 });
 
 export type AppRouter = typeof appRouter;

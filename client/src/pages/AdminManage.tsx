@@ -14,6 +14,9 @@ import {
   Cpu,
   FolderGit2,
   Star,
+  KeyRound,
+  Copy,
+  ShieldAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,6 +160,9 @@ export default function AdminManagePage() {
             <TabsTrigger value="projects" className="gap-2">
               <FolderGit2 className="h-3.5 w-3.5" /> Projects
             </TabsTrigger>
+            <TabsTrigger value="apikeys" className="gap-2">
+              <KeyRound className="h-3.5 w-3.5" /> API Keys
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="timeline">
@@ -176,6 +182,9 @@ export default function AdminManagePage() {
           </TabsContent>
           <TabsContent value="projects">
             <ProjectsTab />
+          </TabsContent>
+          <TabsContent value="apikeys">
+            <ApiKeysTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -1664,6 +1673,224 @@ function ProjectsTab() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => deleteId && deleteMut.mutate({ id: deleteId })} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   API KEYS TAB — generate/list/revoke keys for the public REST API
+───────────────────────────────────────────────────────────────────────── */
+function ApiKeysTab() {
+  const utils = trpc.useUtils();
+  const { data: keys, isLoading, isError, error, refetch } = trpc.apiKey.list.useQuery();
+  const [label, setLabel] = useState("");
+  const [scope, setScope] = useState<"read" | "ingest">("read");
+  const [newKey, setNewKey] = useState<string | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<number | null>(null);
+
+  const createMut = trpc.apiKey.create.useMutation({
+    onSuccess: (res) => {
+      setNewKey(res.rawKey);
+      setLabel("");
+      utils.apiKey.list.invalidate();
+      toast.success("API key created — copy it now, it won't be shown again.");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const revokeMut = trpc.apiKey.revoke.useMutation({
+    onSuccess: () => {
+      utils.apiKey.list.invalidate();
+      setRevokeTarget(null);
+      toast.success("Key revoked.");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const apiBase = `${window.location.origin}/api/public`;
+
+  return (
+    <div className="space-y-6">
+      {/* Discovery endpoints */}
+      <div className="rounded-lg border border-border bg-card p-4 text-sm">
+        <p className="font-medium mb-2 flex items-center gap-2">
+          <KeyRound className="h-4 w-4" /> Public API
+        </p>
+        <p className="text-muted-foreground mb-3">
+          External agents authenticate with a key via <code className="text-foreground">x-api-key</code> or{" "}
+          <code className="text-foreground">Authorization: Bearer &lt;key&gt;</code>. Read keys can call every GET endpoint;
+          ingest keys add <code className="text-foreground">POST /ingest</code>. Ingested documents are queued for review — never
+          auto-published unless they clear the verifiability threshold.
+        </p>
+        <div className="grid gap-1 font-mono text-xs">
+          <a href={`${apiBase}/openapi.json`} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+            {apiBase}/openapi.json <span className="text-muted-foreground">(OpenAPI 3 — for Hermes)</span>
+          </a>
+          <a href={`${apiBase}/mcp.json`} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+            {apiBase}/mcp.json <span className="text-muted-foreground">(MCP manifest — for Codex/Claude)</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Create form */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <p className="font-medium mb-3">Generate a new key</p>
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+          <div className="flex-1">
+            <Label className="text-xs mb-1 block">Label</Label>
+            <Input
+              placeholder="e.g. Hermes prod, Codex sandbox"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+            />
+          </div>
+          <div className="w-full sm:w-44">
+            <Label className="text-xs mb-1 block">Scope</Label>
+            <Select value={scope} onValueChange={(v) => setScope(v as "read" | "ingest")}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="read">read (GET only)</SelectItem>
+                <SelectItem value="ingest">ingest (read + POST)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            onClick={() => label.trim() && createMut.mutate({ label: label.trim(), scope })}
+            disabled={!label.trim() || createMut.isPending}
+            className="gap-2"
+          >
+            {createMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            Generate
+          </Button>
+        </div>
+      </div>
+
+      {/* List */}
+      {isLoading ? (
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading keys…
+        </div>
+      ) : isError ? (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm">
+          <p className="font-medium text-destructive flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4" /> Failed to load API keys
+          </p>
+          <p className="text-muted-foreground mt-1">{error?.message ?? "Unknown error."}</p>
+          <Button size="sm" variant="outline" className="mt-3 bg-background" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </div>
+      ) : !keys || keys.length === 0 ? (
+        <p className="text-muted-foreground text-sm">No API keys yet.</p>
+      ) : (
+        <div className="rounded-lg border border-border overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2">Label</th>
+                <th className="px-3 py-2">Prefix</th>
+                <th className="px-3 py-2">Scope</th>
+                <th className="px-3 py-2">Used</th>
+                <th className="px-3 py-2">Last used</th>
+                <th className="px-3 py-2">Status</th>
+                <th className="px-3 py-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {keys.map((k) => (
+                <tr key={k.id} className="border-t border-border">
+                  <td className="px-3 py-2 font-medium">{k.label}</td>
+                  <td className="px-3 py-2 font-mono text-xs text-muted-foreground">{k.keyPrefix}…</td>
+                  <td className="px-3 py-2">
+                    <Badge variant={k.scope === "ingest" ? "default" : "secondary"}>{k.scope}</Badge>
+                  </td>
+                  <td className="px-3 py-2 tabular-nums">{k.useCount}</td>
+                  <td className="px-3 py-2 text-muted-foreground text-xs">
+                    {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleString() : "—"}
+                  </td>
+                  <td className="px-3 py-2">
+                    {k.revokedAt ? (
+                      <Badge variant="outline" className="text-destructive border-destructive/40">
+                        revoked
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-emerald-500 border-emerald-500/40">
+                        active
+                      </Badge>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {!k.revokedAt && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setRevokeTarget(k.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* One-time key reveal */}
+      <Dialog open={!!newKey} onOpenChange={(o) => !o && setNewKey(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-amber-500" /> Copy your API key now
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This is the only time the full key is shown. Store it securely — only its hash is kept on the server.
+          </p>
+          <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 p-3">
+            <code className="flex-1 break-all font-mono text-xs">{newKey}</code>
+            <Button
+              size="sm"
+              variant="outline"
+              className="bg-background"
+              onClick={() => {
+                if (newKey) navigator.clipboard.writeText(newKey);
+                toast.success("Copied to clipboard");
+              }}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setNewKey(null)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Revoke confirm */}
+      <AlertDialog open={revokeTarget !== null} onOpenChange={(o) => !o && setRevokeTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke this key?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Any agent using this key will immediately lose access. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => revokeTarget !== null && revokeMut.mutate({ id: revokeTarget })}
+            >
+              Revoke
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

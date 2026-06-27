@@ -384,7 +384,8 @@ export const ingestJobs = mysqlTable(
   "ingest_jobs",
   {
     id: int("id").autoincrement().primaryKey(),
-    userId: int("user_id").notNull(),
+    // Nullable: API-key ingests have no human user.
+    userId: int("user_id"),
     storyId: int("story_id"),
     documentId: int("document_id"),
     filename: varchar("filename", { length: 400 }).notNull(),
@@ -1144,3 +1145,36 @@ export const documentVersions = mysqlTable(
 );
 export type DocumentVersion = typeof documentVersions.$inferSelect;
 export type InsertDocumentVersion = typeof documentVersions.$inferInsert;
+
+
+/* ========== Public API keys (external integration: Codex / Hermes / MCP) ========== */
+/**
+ * API keys for the public REST API under /api/public/*. The raw key is shown ONCE
+ * at creation and never stored — only a sha256 hash + a short display prefix are kept.
+ * Scope gates capability: "read" can only GET; "ingest" can also POST documents into
+ * the Goblin pipeline. Revoking sets revokedAt; revoked keys fail auth.
+ */
+export const apiKeys = mysqlTable(
+  "api_keys",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    /** Human label, e.g. "Hermes prod", "Codex sandbox" */
+    label: varchar("label", { length: 160 }).notNull(),
+    /** sha256(rawKey) hex — the only stored form of the secret */
+    keyHash: varchar("key_hash", { length: 64 }).notNull().unique(),
+    /** First chars of the raw key for display, e.g. "rr_live_8f3a…" */
+    keyPrefix: varchar("key_prefix", { length: 24 }).notNull(),
+    scope: mysqlEnum("scope", ["read", "ingest"]).default("read").notNull(),
+    createdBy: int("created_by"),
+    lastUsedAt: timestamp("last_used_at"),
+    /** Total successful authenticated calls */
+    useCount: int("use_count").default(0).notNull(),
+    revokedAt: timestamp("revoked_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    hashIdx: index("api_keys_hash_idx").on(t.keyHash),
+  }),
+);
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type InsertApiKey = typeof apiKeys.$inferInsert;

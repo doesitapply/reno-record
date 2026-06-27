@@ -46,6 +46,8 @@ import {
   InsertFilingPackage,
   InsertDocumentVersion,
   DocumentRow,
+  apiKeys,
+  InsertApiKey,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -175,6 +177,7 @@ export async function listPublicDocuments(opts: {
   violationTagSlug?: string;
   sortBy?: "date_desc" | "date_asc";
   limit?: number;
+  offset?: number;
 }) {
   const db = await getDb();
   if (!db) return [];
@@ -217,12 +220,14 @@ export async function listPublicDocuments(opts: {
     filters.push(sql`${documents.id} IN (${sql.join(ids.map((id) => sql`${id}`), sql`, `)})`);
   }
   const orderBy = opts.sortBy === "date_asc" ? asc(documents.documentDate) : desc(documents.documentDate);
-  return db
+  const q = db
     .select()
     .from(documents)
     .where(and(...filters))
     .orderBy(orderBy)
     .limit(opts.limit ?? 200);
+  if (opts.offset && opts.offset > 0) return q.offset(opts.offset);
+  return q;
 }
 
 /** Returns counts per source_type, violation_tag, and case_tag for the public filter sidebar */
@@ -1816,4 +1821,65 @@ export async function listDocumentsForClassification(opts: {
     .where(and(...conds))
     .orderBy(asc(documents.id))
     .limit(opts.limit);
+}
+
+
+/* =============== Public API keys =============== */
+export async function createApiKey(data: {
+  label: string;
+  keyHash: string;
+  keyPrefix: string;
+  scope: "read" | "ingest";
+  createdBy?: number | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const r = await db.insert(apiKeys).values({
+    label: data.label,
+    keyHash: data.keyHash,
+    keyPrefix: data.keyPrefix,
+    scope: data.scope,
+    createdBy: data.createdBy ?? null,
+  });
+  // mysql2 returns insertId on the first element
+  const insertId = (r as any)[0]?.insertId ?? (r as any).insertId;
+  return Number(insertId);
+}
+
+export async function listApiKeys() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(apiKeys).orderBy(desc(apiKeys.createdAt));
+}
+
+/** Look up an active (non-revoked) key by its sha256 hash. Returns null if missing/revoked. */
+export async function getActiveApiKeyByHash(keyHash: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const r = await db
+    .select()
+    .from(apiKeys)
+    .where(eq(apiKeys.keyHash, keyHash))
+    .limit(1);
+  const row = r[0];
+  if (!row) return null;
+  if (row.revokedAt) return null;
+  return row;
+}
+
+export async function revokeApiKey(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(apiKeys).set({ revokedAt: new Date() }).where(eq(apiKeys.id, id));
+}
+
+/** Best-effort usage bump; never throws into the request path. */
+export async function touchApiKey(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(apiKeys)
+    .set({ lastUsedAt: new Date(), useCount: sql`${apiKeys.useCount} + 1` })
+    .where(eq(apiKeys.id, id))
+    .catch(() => {});
 }
