@@ -114,3 +114,14 @@
 - [x] HIGH CONFIDENCE badge when autoAcceptRecommended=true
 - [x] 0 TS errors, 108/108 tests
 - [ ] Checkpoint + deliver
+
+---
+
+## v7.5 — Show the professional failure narrative (in progress)
+
+- [ ] /accountability page: "The Accountability Gap" — role-by-role breakdown (judge, DA, defense counsel, agencies) with what they were supposed to do vs. what the archive documents
+- [ ] Home page: add "Built by the defendant" callout strip — explicit pro se narrative, forced-to-learn framing
+- [ ] Patterns page: add "Who Failed" section — each violation category mapped to the responsible professional
+- [ ] Nav: add Accountability link
+- [ ] App.tsx: register /accountability route
+- [ ] TypeScript clean, checkpoint + deliver

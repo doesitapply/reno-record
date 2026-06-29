@@ -589,19 +589,21 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Builder credit */}
-            <div className="rounded-lg border border-stone-800/50 bg-stone-900/20 p-4">
-              <p className="text-xs font-mono uppercase tracking-widest text-stone-600 mb-2">Built by</p>
-              <p className="text-sm font-bold text-stone-300">Cameron Church</p>
-              <p className="text-xs text-stone-500 mt-1">Systems Architect · Strategic Operator</p>
-              <p className="text-xs text-stone-600 mt-2 leading-relaxed">
-                This platform was designed and built pro se — no legal team, no dev team. The forensic
-                pipeline, the evidence archive, the violation tagging system, and the judicial audit
-                corpus were all engineered from scratch.
+            {/* Builder credit — pro se narrative */}
+            <div className="rounded-lg border border-red-900/40 bg-red-950/10 p-4">
+              <p className="text-xs font-mono uppercase tracking-widest text-red-600 mb-2">Built by the defendant</p>
+              <p className="text-sm font-bold text-stone-200">Cameron Church — Pro Se</p>
+              <p className="text-xs text-stone-500 mt-1">No attorney. No legal team. No dev team.</p>
+              <p className="text-xs text-stone-400 mt-3 leading-relaxed">
+                Every violation in this archive was identified by the person the system was supposed
+                to protect — not by any of the five attorneys assigned to his case, not by the court,
+                not by the prosecution. He taught himself constitutional law, civil procedure, and
+                forensic document analysis while fighting the system, then built the audit infrastructure
+                to prove what the professionals missed or ignored.
               </p>
-              <Link href="/request-audit">
-                <button className="mt-3 text-xs font-mono text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors">
-                  Hire for your case <ExternalLink className="w-3 h-3" />
+              <Link href="/accountability">
+                <button className="mt-3 text-xs font-mono text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors">
+                  See who failed and how <ExternalLink className="w-3 h-3" />
                 </button>
               </Link>
             </div>

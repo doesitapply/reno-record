@@ -37,6 +37,7 @@ const NAV_SECTIONS = [
     href: "/patterns",
     children: [
       { href: "/patterns", label: "Pattern Dashboard", sub: "137 violation signals across 14 tag types" },
+      { href: "/accountability", label: "The Accountability Gap", sub: "Who failed — duty vs. documented record" },
       { href: "/case-intelligence", label: "Case Intelligence", sub: "Plain English + violations + immunity map" },
       { href: "/judicial-pattern", label: "Judicial Pattern Audit", sub: "Comparative corpus — Breslow docket" },
       { href: "/request-audit", label: "Request a Case Audit", sub: "Have this system analyze your case" },
