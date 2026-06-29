@@ -2852,10 +2852,76 @@ const evidenceEngineRouter = router({
         targetId: input.documentId,
         metadata: { phase: "restore_version", ...res },
       });
-      return { success: true, ...res } as const;
+            return { success: true, ...res } as const;
+    }),
+
+  /**
+   * Admin: non-destructive AI suggestion for a document's date and record status.
+   * Runs classifyDocument + qcReview but does NOT write to the database.
+   * Returns the suggestion for the admin to accept, edit, or dismiss in the Review Queue UI.
+   */
+  suggestDocumentMetadata: adminProcedure
+    .input(z.object({ documentId: z.number() }))
+    .mutation(async ({ input }) => {
+      const doc = await db.getDocumentById(input.documentId);
+      if (!doc) throw new TRPCError({ code: "NOT_FOUND", message: "Document not found" });
+
+      // Best available text: stored metadata first, then try fetching from storage
+      let text = [doc.title, doc.description, doc.aiSummary].filter(Boolean).join("\n\n");
+      let textSource: "storage" | "metadata" = "metadata";
+      try {
+        if (doc.fileKey && doc.mimeType) {
+          const { storageGetSignedUrl } = await import("./storage");
+          const signedUrl = await storageGetSignedUrl(doc.fileKey).catch(() => null);
+          if (signedUrl) {
+            const resp = await fetch(signedUrl).catch(() => null);
+            if (resp && resp.ok) {
+              const bytes = Buffer.from(await resp.arrayBuffer());
+              const extracted = await extractText(bytes, doc.mimeType).catch(() => "");
+              if (extracted && extracted.length > text.length) {
+                text = extracted;
+                textSource = "storage";
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error("[suggestDocumentMetadata] storage fetch failed, using metadata:", e);
+      }
+
+      const classification = await classifyDocument({
+        filename: doc.title,
+        mimeType: doc.mimeType || "application/octet-stream",
+        text,
+      });
+      const qc = qcReview(classification);
+
+      const confidenceLabel = (n: number) =>
+        n >= 80 ? ("high" as const) : n >= 50 ? ("medium" as const) : ("low" as const);
+
+      return {
+        documentId: input.documentId,
+        // Date suggestion
+        suggestedDate: qc.filingStampDate,
+        dateSource: qc.dateSource,
+        dateConfidence: qc.dateConfidence,
+        dateConfidenceLabel: confidenceLabel(qc.dateConfidence),
+        dateSourceQuote: qc.dateSourceQuote,
+        // Record status suggestion
+        suggestedRecordStatus: qc.recordStatus,
+        recordStatusConfidence: qc.recordStatusConfidence,
+        recordStatusConfidenceLabel: confidenceLabel(qc.recordStatusConfidence),
+        recordStatusReason: qc.recordStatusReason,
+        // Supplementary
+        docketEntryNo: qc.docketEntryNo,
+        caseNumber: qc.caseNumber,
+        qcNotes: qc.qcNotes,
+        textSource,
+        // Advisory flag — admin still decides
+        autoAcceptRecommended: !qc.needsDateReview && !qc.needsClassificationReview,
+      } as const;
     }),
 });
-
 /* =============== Public API Keys (admin CRUD) ===============
    Keys are shown ONCE at creation. Only the sha256 hash + prefix are stored. */
 const apiKeyRouter = router({

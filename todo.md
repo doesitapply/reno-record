@@ -98,3 +98,19 @@
 - [x] Home page reframe: lead with consequence (days held), amber CTA strip (Search / Browse Evidence / Case Overview), gauges retained
 - [x] 108/108 tests passing, 0 TS errors
 - [ ] Checkpoint + deliver
+
+---
+
+## v7.4 — AI-powered extraction for Review Queue (COMPLETE)
+
+- [x] Backend: `suggestDocumentMetadata` adminProcedure — pulls doc text/metadata, fetches from storage if available, runs classifyDocument + qcReview, returns structured suggestion
+- [x] Returns: suggestedDate, dateConfidence, dateConfidenceLabel, dateSourceQuote, suggestedRecordStatus, recordStatusConfidence, recordStatusReason, docketEntryNo, caseNumber, qcNotes, textSource, autoAcceptRecommended
+- [x] Non-destructive: writes nothing to DB, admin decides
+- [x] Frontend: "AI Suggest" button per doc in Review Queue accordion (violet, Sparkles icon, loading spinner)
+- [x] Suggestion card: date + confidence badge + source quote, status + confidence + reason, QC notes, docket/case supplementary
+- [x] Apply to form button (pre-fills date + status + note fields with AI values)
+- [x] Dismiss button (hides card, shows trigger again)
+- [x] AI SUGGESTION READY badge on collapsed header when suggestion is active
+- [x] HIGH CONFIDENCE badge when autoAcceptRecommended=true
+- [x] 0 TS errors, 108/108 tests
+- [ ] Checkpoint + deliver

@@ -20,6 +20,10 @@ import {
   AlertCircle,
   CalendarCheck,
   FileSearch,
+  Sparkles,
+  ThumbsUp,
+  ThumbsDown,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1913,10 +1917,28 @@ function ApiKeysTab() {
 const RECORD_STATUS_OPTIONS = [
   { value: "on_record_state", label: "On Record — State" },
   { value: "on_record_federal", label: "On Record — Federal" },
-  { value: "off_record", label: "Off Record" },
-  { value: "contested", label: "Contested" },
+  { value: "supporting", label: "Supporting Material" },
+  { value: "unfiled_not_on_record", label: "Unfiled / Not on Record" },
   { value: "unclassified", label: "Unclassified" },
 ] as const;
+
+type AiSuggestion = {
+  documentId: number;
+  suggestedDate: string | null;
+  dateSource: string;
+  dateConfidence: number;
+  dateConfidenceLabel: "high" | "medium" | "low";
+  dateSourceQuote: string | null;
+  suggestedRecordStatus: string;
+  recordStatusConfidence: number;
+  recordStatusConfidenceLabel: "high" | "medium" | "low";
+  recordStatusReason: string;
+  docketEntryNo: string | null;
+  caseNumber: string | null;
+  qcNotes: string[];
+  textSource: "storage" | "metadata";
+  autoAcceptRecommended: boolean;
+};
 
 function ReviewQueueTab() {
   const utils = trpc.useUtils();
@@ -1926,18 +1948,39 @@ function ReviewQueueTab() {
       utils.evidenceEngine.reviewQueue.invalidate();
       toast.success(`Doc #${vars.documentId} updated`);
       setExpanded(null);
+      setSuggestions((prev) => { const next = { ...prev }; delete next[vars.documentId]; return next; });
     },
     onError: (e) => toast.error(e.message),
+  });
+  const suggestMut = trpc.evidenceEngine.suggestDocumentMetadata.useMutation({
+    onSuccess: (data) => {
+      setSuggestions((prev) => ({ ...prev, [data.documentId]: data as AiSuggestion }));
+      toast.success("AI suggestion ready");
+    },
+    onError: (e) => toast.error(`AI suggestion failed: ${e.message}`),
   });
 
   const [expanded, setExpanded] = useState<number | null>(null);
   const [forms, setForms] = useState<Record<number, { date: string; status: string; note: string }>>({});
+  const [suggestions, setSuggestions] = useState<Record<number, AiSuggestion>>({});
+  const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<number>>(new Set());
 
   function getForm(id: number) {
     return forms[id] ?? { date: "", status: "", note: "" };
   }
   function patchForm(id: number, patch: Partial<{ date: string; status: string; note: string }>) {
     setForms((prev) => ({ ...prev, [id]: { ...getForm(id), ...patch } }));
+  }
+  function acceptSuggestion(docId: number, s: AiSuggestion) {
+    patchForm(docId, {
+      date: s.suggestedDate ?? "",
+      status: s.suggestedRecordStatus,
+      note: `AI suggestion accepted. Date confidence: ${s.dateConfidence}%, status confidence: ${s.recordStatusConfidence}%. ${s.recordStatusReason}`,
+    });
+    toast.success("Suggestion applied — review fields and save to confirm");
+  }
+  function dismissSuggestion(docId: number) {
+    setDismissedSuggestions((prev) => new Set(Array.from(prev).concat(docId)));
   }
 
   if (isLoading) {
@@ -1984,12 +2027,24 @@ function ReviewQueueTab() {
     });
   }
 
+  const CONFIDENCE_COLORS = {
+    high: "text-emerald-400 border-emerald-400/50",
+    medium: "text-amber-400 border-amber-400/50",
+    low: "text-red-400 border-red-400/50",
+  };
+
   function DocRow({ doc }: { doc: (typeof queue)[number] }) {
     const isOpen = expanded === doc.id;
     const f = getForm(doc.id);
     const flags = { needsDate: !!doc.needsDateReview, needsClass: !!doc.needsClassificationReview };
+    const suggestion = suggestions[doc.id];
+    const isDismissed = dismissedSuggestions.has(doc.id);
+    const isSuggesting = suggestMut.isPending && suggestMut.variables?.documentId === doc.id;
+    const showSuggestion = suggestion && !isDismissed;
+
     return (
       <div className="paper-card overflow-hidden">
+        {/* Header row */}
         <button
           className="w-full flex items-start gap-3 p-4 text-left hover:bg-stone-900/40 transition-colors"
           onClick={() => setExpanded(isOpen ? null : doc.id)}
@@ -1999,18 +2054,17 @@ function ReviewQueueTab() {
             <div className="font-medium text-sm truncate">{doc.title}</div>
             <div className="flex flex-wrap gap-2 mt-1">
               {doc.needsDateReview && (
-                <Badge variant="outline" className="text-[10px] font-mono border-amber-400/50 text-amber-400">
-                  UNDATED
-                </Badge>
+                <Badge variant="outline" className="text-[10px] font-mono border-amber-400/50 text-amber-400">UNDATED</Badge>
               )}
               {doc.needsClassificationReview && (
-                <Badge variant="outline" className="text-[10px] font-mono border-blue-400/50 text-blue-400">
-                  NEEDS CLASSIFICATION
-                </Badge>
+                <Badge variant="outline" className="text-[10px] font-mono border-blue-400/50 text-blue-400">NEEDS CLASSIFICATION</Badge>
               )}
               {doc.recordStatus && (
-                <Badge variant="outline" className="text-[10px] font-mono text-muted-foreground">
-                  {doc.recordStatus}
+                <Badge variant="outline" className="text-[10px] font-mono text-muted-foreground">{doc.recordStatus}</Badge>
+              )}
+              {showSuggestion && (
+                <Badge variant="outline" className="text-[10px] font-mono border-violet-400/50 text-violet-400 gap-1">
+                  <Sparkles className="h-2.5 w-2.5" /> AI SUGGESTION READY
                 </Badge>
               )}
             </div>
@@ -2020,6 +2074,117 @@ function ReviewQueueTab() {
 
         {isOpen && (
           <div className="border-t border-border/40 p-4 space-y-4 bg-stone-950/30">
+
+            {/* AI Suggestion Card */}
+            {showSuggestion ? (
+              <div className="rounded-lg border border-violet-500/30 bg-violet-950/20 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-violet-400" />
+                    <span className="text-xs font-mono text-violet-400 uppercase tracking-widest">AI Suggestion</span>
+                    {suggestion.autoAcceptRecommended && (
+                      <Badge variant="outline" className="text-[9px] font-mono border-emerald-400/50 text-emerald-400">HIGH CONFIDENCE</Badge>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    source: {suggestion.textSource}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Date suggestion */}
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-mono text-amber-400 uppercase tracking-widest">Suggested Date</div>
+                    <div className="font-mono text-sm font-semibold">
+                      {suggestion.suggestedDate ?? <span className="text-muted-foreground italic">No date found</span>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={`text-[9px] font-mono ${CONFIDENCE_COLORS[suggestion.dateConfidenceLabel]}`}>
+                        {suggestion.dateConfidence}% {suggestion.dateConfidenceLabel}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground">{suggestion.dateSource}</span>
+                    </div>
+                    {suggestion.dateSourceQuote && (
+                      <p className="text-[10px] text-muted-foreground italic border-l-2 border-violet-500/40 pl-2 mt-1">
+                        &ldquo;{suggestion.dateSourceQuote}&rdquo;
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Status suggestion */}
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-mono text-blue-400 uppercase tracking-widest">Suggested Status</div>
+                    <div className="font-mono text-sm font-semibold">{suggestion.suggestedRecordStatus}</div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={`text-[9px] font-mono ${CONFIDENCE_COLORS[suggestion.recordStatusConfidenceLabel]}`}>
+                        {suggestion.recordStatusConfidence}% {suggestion.recordStatusConfidenceLabel}
+                      </Badge>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">{suggestion.recordStatusReason}</p>
+                  </div>
+                </div>
+
+                {/* QC Notes */}
+                {suggestion.qcNotes.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+                      <Info className="h-3 w-3" /> QC Notes
+                    </div>
+                    {suggestion.qcNotes.map((note, i) => (
+                      <p key={i} className="text-[10px] text-muted-foreground pl-4">{note}</p>
+                    ))}
+                  </div>
+                )}
+
+                {/* Supplementary */}
+                {(suggestion.docketEntryNo || suggestion.caseNumber) && (
+                  <div className="flex gap-4 text-[10px] font-mono text-muted-foreground">
+                    {suggestion.docketEntryNo && <span>Docket: {suggestion.docketEntryNo}</span>}
+                    {suggestion.caseNumber && <span>Case: {suggestion.caseNumber}</span>}
+                  </div>
+                )}
+
+                {/* Accept / Dismiss */}
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    className="bg-violet-600 hover:bg-violet-500 text-white gap-1.5"
+                    onClick={() => acceptSuggestion(doc.id, suggestion)}
+                  >
+                    <ThumbsUp className="h-3 w-3" /> Apply to form
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground gap-1.5"
+                    onClick={() => dismissSuggestion(doc.id)}
+                  >
+                    <ThumbsDown className="h-3 w-3" /> Dismiss
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* AI Suggest trigger */
+              <div className="flex items-center justify-between rounded-lg border border-dashed border-violet-500/30 p-3">
+                <div className="text-xs text-muted-foreground">
+                  Let AI analyze this document and suggest a date and record status.
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 border-violet-500/50 text-violet-400 hover:bg-violet-950/30 hover:text-violet-300 shrink-0 ml-3"
+                  disabled={isSuggesting}
+                  onClick={() => suggestMut.mutate({ documentId: doc.id })}
+                >
+                  {isSuggesting
+                    ? <Loader2 className="h-3 w-3 animate-spin" />
+                    : <Sparkles className="h-3 w-3" />}
+                  {isSuggesting ? "Analyzing…" : "AI Suggest"}
+                </Button>
+              </div>
+            )}
+
+            {/* Manual fields */}
             {flags.needsDate && (
               <div>
                 <Label className="text-xs font-mono text-amber-400 uppercase tracking-widest">Filing Date</Label>
