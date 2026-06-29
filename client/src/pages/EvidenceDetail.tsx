@@ -6,6 +6,9 @@ import SiteShell from "@/components/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
   FileText,
   Calendar,
@@ -18,6 +21,9 @@ import {
   ExternalLink,
   AlertTriangle,
   BookOpen,
+  History,
+  X,
+  RotateCcw,
 } from "lucide-react";
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -92,6 +98,9 @@ export default function EvidenceDetail() {
   const id = parseInt(params.id ?? "0", 10);
   const [pdfOpen, setPdfOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const { data: doc, isLoading } = trpc.document.byId.useQuery(
     { id },
@@ -105,6 +114,19 @@ export default function EvidenceDetail() {
     { documentId: id },
     { enabled: !!doc }
   );
+  const utils = trpc.useUtils();
+  const { data: versions = [], isLoading: versionsLoading } = trpc.evidenceEngine.versions.useQuery(
+    { documentId: id },
+    { enabled: !!doc && isAdmin && historyOpen }
+  );
+  const restoreVersion = trpc.evidenceEngine.restoreVersion.useMutation({
+    onSuccess: () => {
+      toast.success("Document restored to selected version");
+      setHistoryOpen(false);
+      utils.document.byId.invalidate({ id });
+    },
+    onError: (e) => toast.error(e.message),
+  });
 
   const pageTitle = doc
     ? `${doc.title} — The Reno Record`
@@ -584,6 +606,67 @@ export default function EvidenceDetail() {
                     <p className="text-xs text-muted-foreground">All public records</p>
                   </div>
                 </div>
+
+                {/* Version history — admin only */}
+                {isAdmin && (
+                  <div className="paper-card p-4">
+                    <button
+                      onClick={() => setHistoryOpen(v => !v)}
+                      className="w-full flex items-center justify-between text-sm font-mono text-muted-foreground hover:text-amber-400 transition-colors"
+                    >
+                      <span className="flex items-center gap-2">
+                        <History className="w-4 h-4" />
+                        Version History
+                      </span>
+                      <span className="text-xs opacity-60">{historyOpen ? "▲ hide" : "▼ show"}</span>
+                    </button>
+
+                    {historyOpen && (
+                      <div className="mt-4 space-y-2">
+                        {versionsLoading && (
+                          <p className="text-xs text-muted-foreground font-mono animate-pulse">Loading versions…</p>
+                        )}
+                        {!versionsLoading && versions.length === 0 && (
+                          <p className="text-xs text-muted-foreground font-mono">No version snapshots found.</p>
+                        )}
+                        {versions.map((v) => (
+                          <div
+                            key={v.versionNo}
+                            className="rounded border border-stone-800 bg-stone-900/40 p-3 space-y-1"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <span className="text-xs font-mono text-amber-400">v{v.versionNo}</span>
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  {new Date(v.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 px-2 text-xs text-stone-500 hover:text-amber-400"
+                                disabled={restoreVersion.isPending}
+                                onClick={() => {
+                                  if (confirm(`Restore to v${v.versionNo}? Current state will be snapshotted first.`)) {
+                                    restoreVersion.mutate({ documentId: id, versionNo: v.versionNo });
+                                  }
+                                }}
+                              >
+                                <RotateCcw className="w-3 h-3 mr-1" /> Restore
+                              </Button>
+                            </div>
+                            {v.changeNote && (
+                              <p className="text-xs text-stone-500 leading-snug">{v.changeNote}</p>
+                            )}
+                            <p className="text-[10px] font-mono text-stone-700">
+                              Source: {v.changedBySource ?? "system"}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

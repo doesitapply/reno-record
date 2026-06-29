@@ -17,6 +17,9 @@ import {
   KeyRound,
   Copy,
   ShieldAlert,
+  AlertCircle,
+  CalendarCheck,
+  FileSearch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,6 +166,9 @@ export default function AdminManagePage() {
             <TabsTrigger value="apikeys" className="gap-2">
               <KeyRound className="h-3.5 w-3.5" /> API Keys
             </TabsTrigger>
+            <TabsTrigger value="reviewqueue" className="gap-2 text-amber-400">
+              <AlertCircle className="h-3.5 w-3.5" /> Review Queue
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="timeline">
@@ -185,6 +191,9 @@ export default function AdminManagePage() {
           </TabsContent>
           <TabsContent value="apikeys">
             <ApiKeysTab />
+          </TabsContent>
+          <TabsContent value="reviewqueue">
+            <ReviewQueueTab />
           </TabsContent>
         </Tabs>
       </div>
@@ -1894,6 +1903,210 @@ function ApiKeysTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   REVIEW QUEUE TAB — UNDATED + needs-classification docs
+───────────────────────────────────────────────────────────────────────── */
+const RECORD_STATUS_OPTIONS = [
+  { value: "on_record_state", label: "On Record — State" },
+  { value: "on_record_federal", label: "On Record — Federal" },
+  { value: "off_record", label: "Off Record" },
+  { value: "contested", label: "Contested" },
+  { value: "unclassified", label: "Unclassified" },
+] as const;
+
+function ReviewQueueTab() {
+  const utils = trpc.useUtils();
+  const { data: docs, isLoading, error, refetch } = trpc.evidenceEngine.reviewQueue.useQuery();
+  const classifyMut = trpc.evidenceEngine.setClassification.useMutation({
+    onSuccess: (_, vars) => {
+      utils.evidenceEngine.reviewQueue.invalidate();
+      toast.success(`Doc #${vars.documentId} updated`);
+      setExpanded(null);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [forms, setForms] = useState<Record<number, { date: string; status: string; note: string }>>({});
+
+  function getForm(id: number) {
+    return forms[id] ?? { date: "", status: "", note: "" };
+  }
+  function patchForm(id: number, patch: Partial<{ date: string; status: string; note: string }>) {
+    setForms((prev) => ({ ...prev, [id]: { ...getForm(id), ...patch } }));
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground py-10">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading review queue…
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="py-10 text-center space-y-3">
+        <AlertCircle className="h-8 w-8 text-destructive mx-auto" />
+        <p className="text-muted-foreground text-sm">{error.message}</p>
+        <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+      </div>
+    );
+  }
+
+  const queue = docs ?? [];
+  const undated = queue.filter((d) => d.needsDateReview);
+  const unclassified = queue.filter((d) => d.needsClassificationReview && !d.needsDateReview);
+
+  if (queue.length === 0) {
+    return (
+      <div className="py-16 text-center space-y-3">
+        <CalendarCheck className="h-10 w-10 text-emerald-400 mx-auto" />
+        <p className="text-foreground font-medium">Review queue is clear</p>
+        <p className="text-muted-foreground text-sm">All documents have verified dates and classifications.</p>
+      </div>
+    );
+  }
+
+  function handleSave(docId: number, flags: { needsDate: boolean; needsClass: boolean }) {
+    const f = getForm(docId);
+    classifyMut.mutate({
+      documentId: docId,
+      recordStatus: (f.status || undefined) as any,
+      filingStampDate: flags.needsDate ? (f.date || null) : undefined,
+      dateSource: flags.needsDate ? (f.date ? "filing_stamp" : "undated") : undefined,
+      clearDateReview: flags.needsDate,
+      clearClassificationReview: flags.needsClass,
+      note: f.note || undefined,
+    });
+  }
+
+  function DocRow({ doc }: { doc: (typeof queue)[number] }) {
+    const isOpen = expanded === doc.id;
+    const f = getForm(doc.id);
+    const flags = { needsDate: !!doc.needsDateReview, needsClass: !!doc.needsClassificationReview };
+    return (
+      <div className="paper-card overflow-hidden">
+        <button
+          className="w-full flex items-start gap-3 p-4 text-left hover:bg-stone-900/40 transition-colors"
+          onClick={() => setExpanded(isOpen ? null : doc.id)}
+        >
+          <FileSearch className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-sm truncate">{doc.title}</div>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {doc.needsDateReview && (
+                <Badge variant="outline" className="text-[10px] font-mono border-amber-400/50 text-amber-400">
+                  UNDATED
+                </Badge>
+              )}
+              {doc.needsClassificationReview && (
+                <Badge variant="outline" className="text-[10px] font-mono border-blue-400/50 text-blue-400">
+                  NEEDS CLASSIFICATION
+                </Badge>
+              )}
+              {doc.recordStatus && (
+                <Badge variant="outline" className="text-[10px] font-mono text-muted-foreground">
+                  {doc.recordStatus}
+                </Badge>
+              )}
+            </div>
+          </div>
+          <span className="text-xs text-muted-foreground shrink-0">{isOpen ? "▲" : "▼"}</span>
+        </button>
+
+        {isOpen && (
+          <div className="border-t border-border/40 p-4 space-y-4 bg-stone-950/30">
+            {flags.needsDate && (
+              <div>
+                <Label className="text-xs font-mono text-amber-400 uppercase tracking-widest">Filing Date</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Enter the verified filing stamp date, or leave blank to mark as UNDATED and clear the flag.
+                </p>
+                <Input
+                  type="date"
+                  value={f.date}
+                  onChange={(e) => patchForm(doc.id, { date: e.target.value })}
+                  className="mt-1 max-w-xs"
+                />
+              </div>
+            )}
+            {flags.needsClass && (
+              <div>
+                <Label className="text-xs font-mono text-blue-400 uppercase tracking-widest">Record Status</Label>
+                <Select value={f.status} onValueChange={(v) => patchForm(doc.id, { status: v })}>
+                  <SelectTrigger className="mt-1 max-w-xs">
+                    <SelectValue placeholder="Select classification…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RECORD_STATUS_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div>
+              <Label className="text-xs font-mono text-muted-foreground uppercase tracking-widest">Note (optional)</Label>
+              <Textarea
+                value={f.note}
+                onChange={(e) => patchForm(doc.id, { note: e.target.value })}
+                placeholder="e.g. Date confirmed from filing stamp page 1"
+                rows={2}
+                className="mt-1"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                className="bg-amber-400 text-stone-950 hover:bg-amber-300"
+                disabled={classifyMut.isPending}
+                onClick={() => handleSave(doc.id, flags)}
+              >
+                {classifyMut.isPending
+                  ? <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  : <Check className="h-3 w-3 mr-1" />}
+                Save & clear flags
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setExpanded(null)}>Cancel</Button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="display-serif text-xl">Review Queue</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {queue.length} document{queue.length !== 1 ? "s" : ""} need attention
+          </p>
+        </div>
+      </div>
+
+      {undated.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-mono text-xs uppercase tracking-widest text-amber-400 flex items-center gap-2">
+            <AlertCircle className="h-3.5 w-3.5" /> Undated ({undated.length})
+          </h3>
+          {undated.map((d) => <DocRow key={d.id} doc={d} />)}
+        </div>
+      )}
+
+      {unclassified.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-mono text-xs uppercase tracking-widest text-blue-400 flex items-center gap-2">
+            <FileSearch className="h-3.5 w-3.5" /> Needs Classification ({unclassified.length})
+          </h3>
+          {unclassified.map((d) => <DocRow key={d.id} doc={d} />)}
+        </div>
+      )}
     </div>
   );
 }

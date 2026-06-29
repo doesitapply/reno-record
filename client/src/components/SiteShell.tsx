@@ -2,7 +2,7 @@ import { ReactNode, useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
   Menu, X, ScrollText, Shield, LogIn, User, LogOut,
-  ChevronDown, FileText, CreditCard,
+  ChevronDown, FileText, CreditCard, Search,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -275,6 +275,11 @@ export default function SiteShell({ children }: { children: ReactNode }) {
 
           {/* Desktop actions */}
           <div className="hidden lg:flex items-center gap-2">
+            <Link href="/search">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground px-2">
+                <Search className="h-4 w-4" />
+              </Button>
+            </Link>
             {isAdmin && (
               <Link href="/admin">
                 <Button variant="outline" size="sm" className="gap-1.5">

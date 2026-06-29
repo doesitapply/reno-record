@@ -1883,3 +1883,116 @@ export async function touchApiKey(id: number) {
     .where(eq(apiKeys.id, id))
     .catch(() => {});
 }
+
+/* =============== Global Search =============== */
+export async function globalSearch(q: string, limit = 20) {
+  const db = await getDb();
+  if (!db) return { documents: [], actors: [], timeline: [], violations: [] };
+  const pat = `%${q.trim()}%`;
+
+  const [docs, acts, events, vtags] = await Promise.all([
+    db
+      .select({
+        id: documents.id,
+        title: documents.title,
+        description: documents.description,
+        sourceType: documents.sourceType,
+        recordStatus: documents.recordStatus,
+        caseNumber: documents.caseNumber,
+        documentDate: documents.documentDate,
+        filingStampDate: documents.filingStampDate,
+      })
+      .from(documents)
+      .where(
+        and(
+          eq(documents.publicStatus, true),
+          eq(documents.reviewStatus, "approved"),
+          sql`${documents.deletedAt} IS NULL`,
+          or(
+            like(documents.title, pat),
+            like(documents.description, pat),
+            like(documents.actorNames, pat),
+            like(documents.caseNumber, pat),
+            like(sql`${documents}.extracted_text`, pat),
+          )!,
+        ),
+      )
+      .orderBy(desc(documents.filingStampDate))
+      .limit(limit),
+
+    db
+      .select({ id: actors.id, slug: actors.slug, name: actors.name, role: actors.role, agency: actors.agency })
+      .from(actors)
+      .where(
+        and(
+          eq(actors.publicStatus, true),
+          or(like(actors.name, pat), like(actors.role, pat), like(actors.agency, pat), like(actors.bio, pat))!,
+        ),
+      )
+      .limit(limit),
+
+    db
+      .select({ id: timelineEvents.id, title: timelineEvents.title, summary: timelineEvents.summary, eventDate: timelineEvents.eventDate, category: timelineEvents.category })
+      .from(timelineEvents)
+      .where(
+        and(
+          eq(timelineEvents.publicStatus, true),
+          or(like(timelineEvents.title, pat), like(timelineEvents.summary, pat))!,
+        ),
+      )
+      .orderBy(desc(timelineEvents.eventDate))
+      .limit(limit),
+
+    db
+      .select({ id: violationTags.id, slug: violationTags.slug, label: violationTags.label, description: violationTags.description })
+      .from(violationTags)
+      .where(or(like(violationTags.label, pat), like(violationTags.description, pat))!)
+      .limit(limit),
+  ]);
+
+  return { documents: docs, actors: acts, timeline: events, violations: vtags };
+}
+
+/* =============== Case Report =============== */
+export async function getCaseReport(storyId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const [story, docs, events, acts, prrs, vtags] = await Promise.all([
+    db.select().from(stories).where(eq(stories.id, storyId)).limit(1),
+    db.select({
+      id: documents.id,
+      title: documents.title,
+      sourceType: documents.sourceType,
+      recordStatus: documents.recordStatus,
+      caseNumber: documents.caseNumber,
+      documentDate: documents.documentDate,
+      filingStampDate: documents.filingStampDate,
+      description: documents.description,
+    })
+      .from(documents)
+      .where(and(eq(documents.publicStatus, true), eq(documents.reviewStatus, "approved"), sql`${documents.deletedAt} IS NULL`))
+      .orderBy(asc(documents.filingStampDate)),
+    db.select({ id: timelineEvents.id, title: timelineEvents.title, summary: timelineEvents.summary, eventDate: timelineEvents.eventDate, category: timelineEvents.category })
+      .from(timelineEvents)
+      .where(eq(timelineEvents.publicStatus, true))
+      .orderBy(asc(timelineEvents.eventDate)),
+    db.select({ id: actors.id, slug: actors.slug, name: actors.name, role: actors.role, agency: actors.agency })
+      .from(actors)
+      .where(eq(actors.publicStatus, true))
+      .orderBy(asc(actors.name)),
+    db.select().from(publicRecordsRequests).where(eq(publicRecordsRequests.publicStatus, true)).orderBy(desc(publicRecordsRequests.dateSent)),
+    db.select({
+      slug: violationTags.slug,
+      label: violationTags.label,
+      cnt: count(documentViolationTags.id),
+    })
+      .from(violationTags)
+      .leftJoin(documentViolationTags, eq(documentViolationTags.violationTagId, violationTags.id))
+      .groupBy(violationTags.slug, violationTags.label)
+      .orderBy(desc(count(documentViolationTags.id))),
+  ]);
+
+  if (!story[0]) return null;
+  return { story: story[0], documents: docs, timeline: events, actors: acts, prrs, violationCounts: vtags };
+}

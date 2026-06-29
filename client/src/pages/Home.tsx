@@ -259,15 +259,38 @@ export default function Home() {
                   Live Forensic Archive
                 </span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-stone-50 leading-tight mb-4">
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-stone-50 leading-tight mb-3">
                 The Reno Record
               </h1>
-              <p className="text-lg text-stone-400 leading-relaxed mb-2">
-                Autonomous forensic audit of the Second Judicial District Court, Washoe County, Nevada.
+              <p className="text-xl text-stone-300 font-semibold leading-snug mb-2">
+                A man has been held in the Washoe County system for{" "}
+                <span className="text-amber-400 tabular-nums">{daysSince} days</span> without a fair trial.
               </p>
-              <p className="text-sm text-stone-500 font-mono">
+              <p className="text-sm text-stone-500 leading-relaxed mb-4">
+                This archive documents every court filing, every procedural violation, every named actor —
+                automatically, in public, in real time. Built by the defendant. Powered by an AI forensic pipeline.
+              </p>
+              <p className="text-xs text-stone-600 font-mono mb-6">
                 State v. Church · CR23-0657 &nbsp;|&nbsp; Church v. Washoe County · 3:24-cv-00579-ART-CSD
               </p>
+              {/* Primary CTAs */}
+              <div className="flex flex-wrap gap-3">
+                <Link href="/search">
+                  <button className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-sm rounded px-4 py-2.5 transition-colors">
+                    <Search className="w-4 h-4" /> Search the Archive
+                  </button>
+                </Link>
+                <Link href="/evidence">
+                  <button className="inline-flex items-center gap-2 border border-stone-700 hover:border-stone-500 text-stone-300 text-sm rounded px-4 py-2.5 transition-colors">
+                    <FileText className="w-4 h-4" /> Browse Evidence
+                  </button>
+                </Link>
+                <Link href="/the-church-record">
+                  <button className="inline-flex items-center gap-2 border border-stone-700 hover:border-stone-500 text-stone-300 text-sm rounded px-4 py-2.5 transition-colors">
+                    <BookOpen className="w-4 h-4" /> Case Overview
+                  </button>
+                </Link>
+              </div>
             </div>
 
             {/* Gauge strip — all clickable */}

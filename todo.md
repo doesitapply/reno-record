@@ -86,3 +86,15 @@
 - [x] vitest: 16 tests — key auth, invalid/revoked, scope enforcement, doc+snapshot redaction, read endpoints, manifests (108/108 total)
 - [x] API_ACCESS.md usage docs
 - [ ] Checkpoint + deliver
+
+---
+
+## v7.3 — Show its own value (COMPLETE)
+
+- [x] Full-text search: globalSearch db helper (docs title/summary/extractedText + actors + timeline + violations), /search page, nav search icon
+- [x] UNDATED admin queue: Review Queue tab in AdminManage — accordion rows, inline date+status fix, clear flags, error+retry state
+- [x] Version history UI: drawer on EvidenceDetail showing snapshots, restore button (admin only)
+- [x] Case report export: /report/:storyId — formatted printable summary (violations, timeline, actors, PRRs, doc list), share link, print/PDF via browser
+- [x] Home page reframe: lead with consequence (days held), amber CTA strip (Search / Browse Evidence / Case Overview), gauges retained
+- [x] 108/108 tests passing, 0 TS errors
+- [ ] Checkpoint + deliver

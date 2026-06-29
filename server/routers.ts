@@ -1010,6 +1010,21 @@ const patternRouter = router({
     }),
 });
 
+/* =============== Search + Case Report =============== */
+const searchRouter = router({
+  global: publicProcedure
+    .input(z.object({ q: z.string().min(1).max(200), limit: z.number().int().min(1).max(50).optional() }))
+    .query(async ({ input }) => {
+      if (!input.q.trim()) return { documents: [], actors: [], timeline: [], violations: [] };
+      return db.globalSearch(input.q, input.limit ?? 20);
+    }),
+  caseReport: publicProcedure
+    .input(z.object({ storyId: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      return db.getCaseReport(input.storyId);
+    }),
+});
+
 /* =============== Docket Goblin (advisory only) =============== */
 const docketGoblinRouter = router({
   /**
@@ -2938,6 +2953,7 @@ export const appRouter = router({
   operator: operatorRouter,
   evidenceEngine: evidenceEngineRouter,
   apiKey: apiKeyRouter,
+  search: searchRouter,
 });
 
 export type AppRouter = typeof appRouter;
