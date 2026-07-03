@@ -12,11 +12,14 @@ import {
   Building2,
   ShieldAlert,
   Link2,
+  Newspaper,
+  RefreshCw,
 } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const CATEGORY_LABELS: Record<string, string> = {
   state_case: "State Case",
@@ -162,6 +165,15 @@ function ActorDetail({ slug }: { slug: string }) {
     { actorId: actor?.id ?? 0 },
     { enabled: !!actor?.id },
   );
+  const { data: newsData, isLoading: newsLoading, refetch: refetchNews } = trpc.actor.news.useQuery(
+    { actorId: actor?.id ?? 0, actorName: actor?.name ?? "" },
+    { enabled: !!actor?.id && !!actor?.name },
+  );
+  const refreshNewsMutation = trpc.actor.refreshNews.useMutation({
+    onSuccess: () => { void refetchNews(); },
+  });
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const isLoading = actorLoading || dossierLoading || rolesLoading || linkedDocsLoading;
 
@@ -504,6 +516,79 @@ function ActorDetail({ slug }: { slug: string }) {
                   </div>
                 </div>
               )}
+
+              {/* ── Live News Feed ── */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="eyebrow flex items-center gap-1.5">
+                    <Newspaper className="h-3.5 w-3.5" /> Media Coverage
+                  </div>
+                  {isAdmin && (
+                    <button
+                      onClick={() => refreshNewsMutation.mutate({ actorId: actor.id, actorName: actor.name })}
+                      disabled={refreshNewsMutation.isPending}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <RefreshCw className={`h-3 w-3 ${refreshNewsMutation.isPending ? "animate-spin" : ""}`} />
+                      Refresh
+                    </button>
+                  )}
+                </div>
+                <h2 className="display-serif text-2xl rule-amber">News &amp; public record</h2>
+                {newsLoading && (
+                  <div className="mt-5 space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="paper-card p-4 animate-pulse h-16 bg-muted/40" />
+                    ))}
+                  </div>
+                )}
+                {!newsLoading && (!newsData?.items || newsData.items.length === 0) && (
+                  <div className="mt-5 paper-card p-5 text-sm text-muted-foreground">
+                    No media coverage found in indexed sources. Coverage from local Nevada outlets
+                    (RGJ, Nevada Independent, Nevada Current, KRNV, KTVN) and national sources is
+                    checked automatically.
+                  </div>
+                )}
+                {newsData && newsData.items.length > 0 && (
+                  <div className="mt-5 space-y-3">
+                    {newsData.items.map((item) => (
+                      <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className="block">
+                        <div className="paper-card p-4 hover:-translate-y-0.5 transition-transform">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-mono text-xs text-muted-foreground">
+                                  {item.publishedAt ? new Date(item.publishedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "Unknown date"}
+                                </span>
+                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono uppercase ${
+                                  item.source === "google_news"
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                    : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-700"
+                                }`}>
+                                  {item.source}
+                                </span>
+                                {item.misconductFlag && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono uppercase bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                    <ShieldAlert className="h-2.5 w-2.5" /> Misconduct signal
+                                  </span>
+                                )}
+                              </div>
+                              <div className="font-medium mt-1 text-sm leading-snug">{item.headline}</div>
+                              {item.snippet && (
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.snippet}</p>
+                              )}
+                            </div>
+                            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-1" />
+                          </div>
+                        </div>
+                      </a>
+                    ))}
+                    <p className="text-xs text-muted-foreground pt-1">
+                      {newsData.count} result{newsData.count !== 1 ? "s" : ""} · Google News RSS + NewsAPI · Cache refreshes every 6 hours
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {/* Contradiction map — only shown for judicial actors with notes */}
               {actor.judicialActor && actor.notes && (

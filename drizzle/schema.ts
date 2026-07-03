@@ -1178,3 +1178,30 @@ export const apiKeys = mysqlTable(
 );
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type InsertApiKey = typeof apiKeys.$inferInsert;
+
+/* ========== Actor News Cache ========== */
+export const actorNewsCache = mysqlTable(
+  "actor_news_cache",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    actorId: int("actor_id").notNull(),
+    headline: varchar("headline", { length: 500 }).notNull(),
+    url: varchar("url", { length: 1000 }).notNull(),
+    source: varchar("source", { length: 200 }).notNull(),
+    /** "local" = Google News RSS local Nevada outlet | "national" = NewsAPI broader coverage */
+    sourceTier: mysqlEnum("source_tier", ["local", "national"]).default("national").notNull(),
+    publishedAt: timestamp("published_at"),
+    snippet: text("snippet"),
+    /** 0–100: relevance score from search query match */
+    relevanceScore: int("relevance_score").default(50).notNull(),
+    /** Whether this item contains misconduct/complaint/discipline keywords */
+    misconductFlag: boolean("misconduct_flag").default(false).notNull(),
+    fetchedAt: timestamp("fetched_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    actorIdx: index("actor_news_actor_idx").on(t.actorId),
+    publishedIdx: index("actor_news_published_idx").on(t.publishedAt),
+  }),
+);
+export type ActorNewsItem = typeof actorNewsCache.$inferSelect;
+export type InsertActorNewsItem = typeof actorNewsCache.$inferInsert;

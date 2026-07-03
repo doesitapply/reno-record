@@ -40,6 +40,7 @@ import { TIERS, CREDIT_PACKS } from "./stripe/products";
 import { hasTier, freeGoblinRemaining, tierLabel, hasGoblinCredits } from "./stripe/gating";
 import { scoreVerifiability, AUTO_PUBLISH_THRESHOLD } from "./goblinAutoPublish";
 import { runGoblinPipeline } from "./_pipeline";
+import * as newsFetcher from "./actorNewsFetcher";
 
 const isoDate = z
   .union([z.string(), z.date()])
@@ -880,12 +881,25 @@ const actorRouter = router({
       await db.updateActor(input.id, input.patch);
       return { ok: true };
     }),
-  adminDelete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
+    adminDelete: adminProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => {
     await db.deleteActor(input.id);
     return { ok: true };
   }),
+  /** Get cached news for an actor — auto-refreshes if stale (6h TTL) */
+  news: publicProcedure
+    .input(z.object({ actorId: z.number(), actorName: z.string() }))
+    .query(async ({ input }) => {
+      const items = await newsFetcher.getActorNews(input.actorId, input.actorName);
+      return { items, count: items.length };
+    }),
+  /** Admin: force-refresh news cache for an actor */
+  refreshNews: adminProcedure
+    .input(z.object({ actorId: z.number(), actorName: z.string() }))
+    .mutation(async ({ input }) => {
+      const inserted = await newsFetcher.refreshActorNews(input.actorId, input.actorName, true);
+      return { inserted, ok: true };
+    }),
 });
-
 /* =============== Public Records Requests router =============== */
 const PRR_STATUS = [
   "draft",

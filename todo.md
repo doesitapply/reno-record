@@ -117,11 +117,24 @@
 
 ---
 
-## v7.5 — Show the professional failure narrative (in progress)
+## v7.5 — Show the professional failure narrative (COMPLETE)
 
-- [ ] /accountability page: "The Accountability Gap" — role-by-role breakdown (judge, DA, defense counsel, agencies) with what they were supposed to do vs. what the archive documents
-- [ ] Home page: add "Built by the defendant" callout strip — explicit pro se narrative, forced-to-learn framing
-- [ ] Patterns page: add "Who Failed" section — each violation category mapped to the responsible professional
-- [ ] Nav: add Accountability link
-- [ ] App.tsx: register /accountability route
+- [x] /accountability page: "The Accountability Gap" — role-by-role breakdown (5 defense attorneys, 2 judges, DA, public defender, agencies) with duty vs. documented record, specific violation counts, pro se framing
+- [x] Home page: builder credit rewritten — explicit "Built by the defendant" red-border callout, "See who failed and how" CTA linking to /accountability
+- [x] Nav: Accountability Gap in The Pattern dropdown
+- [x] App.tsx: /accountability route registered
+- [x] 0 TS errors, 108/108 tests, checkpoint 54c2e7a2
+
+---
+
+## v7.6 — Actor misconduct intelligence + enhanced profiles
+
+- [ ] actor_news_cache table: actorId, headline, url, source, publishedAt, snippet, fetchedAt, relevanceScore
+- [ ] searchActorNews tRPC procedure: query local outlets (RGJ, KRNV, KTVN, 8NewsNow, Nevada Current, Nevada Independent) + general web for actor name + misconduct/complaint/discipline keywords
+- [ ] getMisconductProfile procedure: aggregate violation tags from archive + news cache + PRR involvement + document appearances
+- [ ] Admin: manual "Refresh News" trigger per actor
+- [ ] Public actor profile page /actors/:slug — full misconduct profile: role, case violations, external news, PRR involvement, linked documents
+- [ ] Actor list page enhanced: misconduct signal count badge per actor
+- [ ] News items marked with source credibility tier (local outlet vs. general web)
+- [ ] vitest: news cache schema, misconduct aggregation procedure
 - [ ] TypeScript clean, checkpoint + deliver
