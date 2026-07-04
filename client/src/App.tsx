@@ -36,6 +36,7 @@ import ProjectDetailPage from "./pages/ProjectDetail";
 import SearchPage from "./pages/Search";
 import CaseReportPage from "./pages/CaseReport";
 import AccountabilityPage from "./pages/Accountability";
+import MissingPredicateReport from "./pages/MissingPredicateReport";
 
 function Router() {
   return (
@@ -74,6 +75,7 @@ function Router() {
       <Route path="/search" component={SearchPage} />
       <Route path="/report/:storyId" component={CaseReportPage} />
       <Route path="/accountability" component={AccountabilityPage} />
+      <Route path="/missing-predicate" component={MissingPredicateReport} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

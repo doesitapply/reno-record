@@ -1205,3 +1205,53 @@ export const actorNewsCache = mysqlTable(
 );
 export type ActorNewsItem = typeof actorNewsCache.$inferSelect;
 export type InsertActorNewsItem = typeof actorNewsCache.$inferInsert;
+
+/* ========== Predicate Findings (Missing Predicate Report) ========== */
+export const predicateFindings = mysqlTable(
+  "predicate_findings",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    storyId: int("story_id").notNull(),
+    eventId: int("event_id"),
+    eventDate: timestamp("event_date"),
+    officialAct: varchar("official_act", { length: 500 }).notNull(),
+    actorName: varchar("actor_name", { length: 300 }),
+    predicateStatus: mysqlEnum("predicate_status", [
+      "located",
+      "partial",
+      "contradicted",
+      "not_located",
+      "off_record",
+      "needs_review",
+    ])
+      .default("needs_review")
+      .notNull(),
+    missingPredicate: text("missing_predicate"),
+    whyItMatters: text("why_it_matters"),
+    recommendedRequest: text("recommended_request"),
+    severityCategory: mysqlEnum("severity_category", [
+      "liberty",
+      "counsel",
+      "procedural",
+      "administrative",
+    ])
+      .default("procedural")
+      .notNull(),
+    severityScore: int("severity_score").default(5).notNull(),
+    confidence: int("confidence").default(50).notNull(),
+    sourceDocIds: json("source_doc_ids").$type<number[]>(),
+    sourceEventIds: json("source_event_ids").$type<number[]>(),
+    reportVersion: int("report_version").default(1).notNull(),
+    generatedAt: timestamp("generated_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  },
+  (t) => ({
+    storyIdx: index("predicate_story_idx").on(t.storyId),
+    statusIdx: index("predicate_status_idx").on(t.predicateStatus),
+    severityIdx: index("predicate_severity_idx").on(t.severityCategory, t.severityScore),
+    eventIdx: index("predicate_event_idx").on(t.eventId),
+  }),
+);
+export type PredicateFinding = typeof predicateFindings.$inferSelect;
+export type InsertPredicateFinding = typeof predicateFindings.$inferInsert;

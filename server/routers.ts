@@ -41,6 +41,9 @@ import { hasTier, freeGoblinRemaining, tierLabel, hasGoblinCredits } from "./str
 import { scoreVerifiability, AUTO_PUBLISH_THRESHOLD } from "./goblinAutoPublish";
 import { runGoblinPipeline } from "./_pipeline";
 import * as newsFetcher from "./actorNewsFetcher";
+import { analyzePredicates, persistPredicateFindings } from "./predicateAnalysisEngine";
+import { predicateFindings } from "../drizzle/schema";
+import { eq, and, desc, asc, sql } from "drizzle-orm";
 
 const isoDate = z
   .union([z.string(), z.date()])
@@ -3001,6 +3004,88 @@ const apiKeyRouter = router({
     }),
 });
 
+/* =============== Predicate router =============== */
+const predicateRouter = router({
+  generateReport: adminProcedure
+    .input(z.object({ storyId: z.number() }))
+    .mutation(async ({ input }) => {
+      const findings = await analyzePredicates(input.storyId);
+      // Determine next report version
+      const drizzleDb = await db.getDb();
+      if (!drizzleDb) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [versionRow] = await drizzleDb
+        .select({ maxVersion: sql<number>`COALESCE(MAX(${predicateFindings.reportVersion}), 0)` })
+        .from(predicateFindings)
+        .where(eq(predicateFindings.storyId, input.storyId));
+      const nextVersion = (versionRow?.maxVersion ?? 0) + 1;
+      await persistPredicateFindings(input.storyId, findings, nextVersion);
+      const notLocated = findings.filter((f) => f.predicateStatus === "not_located").length;
+      const partial = findings.filter((f) => f.predicateStatus === "partial").length;
+      const contradicted = findings.filter((f) => f.predicateStatus === "contradicted").length;
+      return {
+        total: findings.length,
+        notLocated,
+        partial,
+        contradicted,
+        reportVersion: nextVersion,
+      };
+    }),
+
+  getReport: publicProcedure
+    .input(
+      z.object({
+        storyId: z.number(),
+        statusFilter: z.enum(["located", "partial", "contradicted", "not_located", "off_record", "needs_review"]).optional(),
+        severityFilter: z.enum(["liberty", "counsel", "procedural", "administrative"]).optional(),
+        limit: z.number().min(1).max(200).default(100),
+        offset: z.number().min(0).default(0),
+      }),
+    )
+    .query(async ({ input }) => {
+      const drizzleDb = await db.getDb();
+      if (!drizzleDb) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const conditions = [eq(predicateFindings.storyId, input.storyId)];
+      if (input.statusFilter) conditions.push(eq(predicateFindings.predicateStatus, input.statusFilter));
+      if (input.severityFilter) conditions.push(eq(predicateFindings.severityCategory, input.severityFilter));
+      const rows = await drizzleDb
+        .select()
+        .from(predicateFindings)
+        .where(and(...conditions))
+        .orderBy(desc(predicateFindings.severityScore), asc(predicateFindings.eventDate))
+        .limit(input.limit)
+        .offset(input.offset);
+      return rows;
+    }),
+
+  getReportStats: publicProcedure
+    .input(z.object({ storyId: z.number() }))
+    .query(async ({ input }) => {
+      const drizzleDb = await db.getDb();
+      if (!drizzleDb) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const rows = await drizzleDb
+        .select()
+        .from(predicateFindings)
+        .where(eq(predicateFindings.storyId, input.storyId));
+      if (rows.length === 0) return null;
+      const byStatus: Record<string, number> = {};
+      const bySeverity: Record<string, number> = {};
+      for (const r of rows) {
+        byStatus[r.predicateStatus] = (byStatus[r.predicateStatus] ?? 0) + 1;
+        bySeverity[r.severityCategory] = (bySeverity[r.severityCategory] ?? 0) + 1;
+      }
+      const generatedAt = rows.reduce((latest, r) => {
+        return r.generatedAt > latest ? r.generatedAt : latest;
+      }, rows[0].generatedAt);
+      return {
+        total: rows.length,
+        byStatus,
+        bySeverity,
+        generatedAt,
+        reportVersion: rows[0].reportVersion,
+      };
+    }),
+});
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -3034,6 +3119,7 @@ export const appRouter = router({
   evidenceEngine: evidenceEngineRouter,
   apiKey: apiKeyRouter,
   search: searchRouter,
+  predicate: predicateRouter,
 });
 
 export type AppRouter = typeof appRouter;

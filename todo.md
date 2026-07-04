@@ -137,4 +137,19 @@
 - [ ] Actor list page enhanced: misconduct signal count badge per actor
 - [ ] News items marked with source credibility tier (local outlet vs. general web)
 - [ ] vitest: news cache schema, misconduct aggregation procedure
-- [ ] TypeScript clean, checkpoint + deliver
+- [x] TypeScript clean, checkpoint + deliver
+
+---
+
+## v7.7 — Missing Predicate Report (COMPLETE)
+
+- [x] predicate_findings table: storyId, eventId, eventDate, officialAct, actorName, predicateStatus (located/partial/contradicted/not_located/off_record/needs_review), missingPredicate, whyItMatters, recommendedRequest, severityCategory (liberty/counsel/procedural/administrative), severityScore, confidence, sourceDocIds (JSON), sourceEventIds (JSON), generatedAt, reportVersion
+- [x] predicateAnalysisEngine.ts: LLM-powered analysis — for each timeline event, determine expected predicate type, search linked docs/events, classify status, generate court-safe language
+- [x] generateMissingPredicateReport tRPC adminProcedure: runs analysis on all events for a story, upserts findings, returns structured report
+- [x] getPredicateReport tRPC publicProcedure: returns cached findings for a story
+- [x] /missing-predicate page: report table with date/act/actor/source/status/missing/why/request/confidence columns, severity filter chips, source links to evidence pages
+- [x] Print/PDF view: clean print stylesheet, court-safe header (case number, generated date, disclaimer)
+- [x] CSV export: all columns, downloadable
+- [x] Nav: add Missing Predicate Report to The Pattern dropdown
+- [x] vitest: report generation returns correct shape, severity ranking correct, language is court-safe (no inflammatory terms)
+- [x] TypeScript clean, checkpoint + deliver

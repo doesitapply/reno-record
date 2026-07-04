@@ -40,6 +40,7 @@ const NAV_SECTIONS = [
       { href: "/accountability", label: "The Accountability Gap", sub: "Who failed — duty vs. documented record" },
       { href: "/case-intelligence", label: "Case Intelligence", sub: "Plain English + violations + immunity map" },
       { href: "/judicial-pattern", label: "Judicial Pattern Audit", sub: "Comparative corpus — Breslow docket" },
+      { href: "/missing-predicate", label: "Missing Predicate Report", sub: "Official acts without locatable supporting documents" },
       { href: "/request-audit", label: "Request a Case Audit", sub: "Have this system analyze your case" },
     ],
   },
