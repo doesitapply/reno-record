@@ -50,6 +50,7 @@ const NAV_SECTIONS = [
     children: [
       { href: "/operator", label: "Artificially Educated", sub: "Cameron Church — systems architect" },
       { href: "/projects", label: "Project Catalog", sub: "AI automation, agents, legal tech" },
+      { href: "/api-surface-map", label: "API Surface Map", sub: "22 backend procedures without frontend UI" },
     ],
   },
 ];
