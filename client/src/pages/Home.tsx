@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 const COUNSEL_TIMELINE = [
   { name: "Cooper Brinson", role: "Alternate Public Defender", period: "Mar 2023 – Jan 17, 2024", exit: "Substituted out; left APD entirely" },
   { name: "Sydney McBride Hutt", role: "Alternate Public Defender", period: "Jan 17 – May 30, 2024", exit: "Declared conflict" },
+  { name: "Biray Dogan", role: "Alternate Public Defender", period: "Sep 2023 – Jun 2024", exit: "Substituted out" },
   { name: "Galen D. Carrico", role: "Conflict counsel", period: "Jun 24, 2024 – May 8, 2025", exit: "Moved to withdraw" },
   { name: "Samuel Figueroa", role: "Private counsel (retained)", period: "~Jun – Aug 2025", exit: 'Sought withdrawal in writing to court and DA' },
 ];
@@ -200,10 +201,10 @@ export default function Home() {
         <section>
           <SectionLabel>The Counsel Carousel</SectionLabel>
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-            Four Public Defenders and a Private Attorney. No Trial. No Substantive Motions.
+            Five Attorneys. Three Years. No Trial. No Substantive Motions.
           </h2>
           <p className="text-zinc-300 leading-relaxed mb-6">
-            Between March 2023 and the present, five attorneys have been assigned to or retained for this case. The docket does not reflect a single substantive motion filed on Church's behalf by any of them. Each attorney either declared a conflict, moved to withdraw, or was substituted out — in one case, the attorney left the public defender's office entirely.
+            Between March 2023 and the present, five attorneys have been assigned to or retained for this case. The docket does not reflect a single substantive motion filed on Church's behalf by any of them. Each attorney either declared a conflict, moved to withdraw, or was substituted out — in one case, the attorney left the public defender's office entirely. The last retained attorney, Samuel Figueroa, texted Church at 10:49 AM on the morning of an 11:00 AM hearing: "You have court at 11:00 A.M. I told you about this. Where are you? You need to be here in 10 minutes." Church missed the hearing. A no-bail bench warrant was issued the next day.
           </p>
 
           <div className="overflow-x-auto rounded-lg border border-white/10 mb-6">
@@ -246,13 +247,16 @@ export default function Home() {
             A Judge Cited "Micro-Focus" and Constitutional Arguments as Grounds for a Competency Evaluation
           </h2>
           <p className="text-zinc-300 leading-relaxed mb-4">
-            On December 5, 2024, a Young hearing was held before Judge Barry L. Breslow, Department 8, Second Judicial District Court. Church has audio recordings of this hearing.
+            On December 5, 2024, a Young hearing was held before Judge Barry L. Breslow, Department 8, Second Judicial District Court. A transcript of this hearing is in the record.
           </p>
           <p className="text-zinc-300 leading-relaxed mb-4">
-            According to Church's filings, three things happened at that hearing: his Faretta request to represent himself was bypassed without a formal ruling; a psychiatric competency evaluation was ordered under NRS 178.400 — with the stated basis being Church's "micro-focus" on his case and the quality of his constitutional arguments, not any medical evidence; and a blanket prohibition on pro se filings was issued.
+            The transcript confirms three things happened at that hearing: Church's Faretta request to represent himself was not formally ruled upon; a psychiatric competency evaluation was ordered under NRS 178.400 — the referral basis, as documented in the subsequent evaluation report, was that Church was "uncooperative and abusive to counsel, staff, and everyone at the court, from the judge, DA, staff, etc." — not any medical evidence; and a blanket prohibition on pro se filings was issued.
           </p>
           <p className="text-zinc-300 leading-relaxed mb-4">
-            NRS 178.400 requires "reasonable grounds" to believe a defendant may be incompetent. The standard is medical, not argumentative. No prior psychiatric evaluation existed. No medical professional had raised competency concerns. Two weeks later, on December 19, 2024, a no-bail bench warrant was issued. Church's address was on file with the court. The warrant was not served for four months.
+            NRS 178.400 requires "reasonable grounds" to believe a defendant may be incompetent. The standard is medical, not argumentative. No prior psychiatric evaluation existed. No medical professional had raised competency concerns. Two weeks later, on December 19, 2024, a no-bail bench warrant was issued.
+          </p>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            Two competency evaluations were subsequently conducted — both by evaluators employed by NaphCare, the private company contracted to provide medical services at Washoe County Jail. The first evaluator (April 2025) found Church incompetent and recommended inpatient treatment. The second evaluator (May 2025) found Church competent and recommended proceeding to trial. The second evaluator explicitly noted that Church "expressed frustration about wanting to represent himself in this case and feeling as though the issue of competency was raised due to his desire to represent himself." No competency hearing has been held. The case is stayed.
           </p>
           <Blockquote
             quote="Defendant has never been found incompetent by any medical or psychological professional. There is no documented history of mental illness. There is no record of Defendant being unable to communicate or assist in his own defense. In fact, Defendant has consistently engaged in litigation, drafted substantive motions, and filed constitutionally sound challenges — all of which the Court has either ignored or actively suppressed."
@@ -279,7 +283,7 @@ export default function Home() {
           </div>
 
           <p className="text-zinc-300 leading-relaxed mb-6">
-            This is the State's own description, in a court filing, of the resources deployed to execute a bench warrant on a non-violent property dispute case. The bench warrant had been sitting unserved for four months. Church's address was on file with the court. He was filing motions. He was in contact with his attorney.
+            This is the State's own description, in a court filing, of the resources deployed to execute a bench warrant on a non-violent property dispute case. The bench warrant had been sitting unserved for four months. A recorded call from February 21, 2025 — between Church and a US Marshal — confirms the Marshals had already been to Church's address and knew his location at that time. Church's address was on file with the court. He was filing motions. He was in contact with his attorney.
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
@@ -296,6 +300,30 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* SECTION 4b: THE EMAILS */}
+        <section>
+          <SectionLabel>The "Threats"</SectionLabel>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            The DA Called Them Threats. The Record Shows 31 Emails Citing Statutes and Case Law.
+          </h2>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            In the April 18, 2025 no-bail motion, DA Merchant characterized Church's correspondence as "insulting, threatening emails" and "demeaning and hateful phone calls." Merchant attached 31 emails as Exhibit 1. Those emails are in the record.
+          </p>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            The subject lines include: <span className="text-zinc-200 italic">"Transparency or a Circus Act? Accountability Questions for the Washoe County DA's Office,"</span> <span className="text-zinc-200 italic">"Mr. Hicks — Your 'Backlog' Isn't a Mystery. It's You,"</span> and <span className="text-zinc-200 italic">"Christopher Hicks Accountability Quiz: Policy and Transparency Questions."</span> The content cites Brady v. Maryland, NRS 239.0107, Valdez-Jimenez v. Eighth Jud. Dist. Ct., and the Eighth Amendment. Church signed each email: "Cameron Doyle Church, Citizen, Constitutionalist, Advocate for Accountability."
+          </p>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            One email alleges that Church's phone — seized at arrest — contained exculpatory video evidence that was subsequently destroyed. This allegation, if accurate, would constitute a Brady violation under Brady v. Maryland, 373 U.S. 83 (1963). The record does not reflect any response from the DA's office to this allegation.
+          </p>
+          <Blockquote
+            quote="My phone—seized during my arrest—contained exculpatory video evidence. That evidence was destroyed, violating Brady v. Maryland, 373 U.S. 83 (1963). This wasn't an accident; it was deliberate suppression of evidence critical to my defense."
+            attribution="Church, email to DA Hicks, December 2024 (Exhibit 1 to State's No-Bail Motion, CR23-0657)"
+          />
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            The DA's own exhibit — filed to support a no-bail hold — documents Church's legal arguments, his public records requests, and his Brady allegation. The record does not reflect any response to the Brady allegation.
+          </p>
         </section>
 
         {/* SECTION 5: THE COMPARATOR */}
