@@ -153,3 +153,19 @@
 - [x] Nav: add Missing Predicate Report to The Pattern dropdown
 - [x] vitest: report generation returns correct shape, severity ranking correct, language is court-safe (no inflammatory terms)
 - [x] TypeScript clean, checkpoint + deliver
+
+---
+
+## v7.8 — Admin Hub (COMPLETE)
+
+- [x] /admin-hub page: unified evidence CRUD overview (documents, timeline, actors, PRRs, agencies) in compact table rows with inline edit/delete
+- [x] Documents tab: list all 50 docs with title, date, status, record_status, inline edit fields, reclassify button, hard/soft delete
+- [x] Timeline tab: list all 80 events with date, description, category, actor, inline edit, delete
+- [x] Actors tab: list all 17 actors with name, role, slug, inline edit, delete — plus actor-document link manager
+- [x] PRRs tab: list all PRRs with title, status, date, inline edit, delete
+- [x] Agencies tab: list all agencies with name, type, actor roles — add actor role, edit agency
+- [x] Batch tools panel: batchClassify (clear undated queue), reclassify single doc, Goblin history per doc
+- [x] Wire: evidenceEngine.batchClassify, evidenceEngine.reclassify, adminEdit.inlineEdit, actorLink.addDocumentLink/addTimelineLink/removeDocumentLink, agency.addActorRole, agency.adminUpdate, docketGoblin.listForDocument
+- [x] Nav: add Admin Hub to admin nav
+- [x] Route: /admin-hub registered in App.tsx
+- [x] TypeScript clean, checkpoint + deliver

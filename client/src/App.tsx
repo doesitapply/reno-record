@@ -38,6 +38,7 @@ import CaseReportPage from "./pages/CaseReport";
 import AccountabilityPage from "./pages/Accountability";
 import MissingPredicateReport from "./pages/MissingPredicateReport";
 import ApiSurfaceMap from "./pages/ApiSurfaceMap";
+import AdminHub from "./pages/AdminHub";
 
 function Router() {
   return (
@@ -78,6 +79,7 @@ function Router() {
       <Route path="/accountability" component={AccountabilityPage} />
       <Route path="/missing-predicate" component={MissingPredicateReport} />
       <Route path="/api-surface-map" component={ApiSurfaceMap} />
+      <Route path="/admin-hub" component={AdminHub} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

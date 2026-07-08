@@ -2068,12 +2068,15 @@ const agencyRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      await db.addActorAgencyRole(input);
+            await db.addActorAgencyRole(input);
       await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "actor_agency_role", targetId: input.actorId, metadata: { agencyId: input.agencyId, title: input.title } });
       return { success: true };
     }),
+  /** Get all actor roles for a given agency */
+  getActors: publicProcedure
+    .input(z.object({ agencyId: z.number() }))
+    .query(async ({ input }) => db.getAgencyActors(input.agencyId)),
 });
-
 /* ========== Violation Tag Router (v4.0) ========== */
 const violationTagRouter = router({
   list: publicProcedure.query(async () => {
