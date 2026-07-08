@@ -1,631 +1,450 @@
 import { useSEO } from "@/hooks/useSEO";
 import { Link } from "wouter";
 import {
-  ArrowRight,
   FileText,
+  Clock,
   Users,
   AlertTriangle,
-  Clock,
-  Scale,
-  Activity,
-  BarChart3,
   Search,
-  Zap,
+  Scale,
   Shield,
-  Database,
-  ChevronRight,
-  ExternalLink,
-  Trophy,
+  MapPin,
+  Calendar,
   TrendingUp,
-  BookOpen,
   Gavel,
 } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { trpc } from "@/lib/trpc";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-/* ─── Utility ─────────────────────────────────────────────────── */
-function relTime(date: Date | string): string {
-  const d = new Date(date);
-  const diff = Date.now() - d.getTime();
-  const s = Math.floor(diff / 1000);
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
+const COUNSEL_TIMELINE = [
+  { name: "Cooper Brinson", role: "Alternate Public Defender", period: "Mar 2023 – Jan 17, 2024", exit: "Substituted out; left APD entirely" },
+  { name: "Sydney McBride Hutt", role: "Alternate Public Defender", period: "Jan 17 – May 30, 2024", exit: "Declared conflict" },
+  { name: "Galen D. Carrico", role: "Conflict counsel", period: "Jun 24, 2024 – May 8, 2025", exit: "Moved to withdraw" },
+  { name: "Samuel Figueroa", role: "Private counsel (retained)", period: "~Jun – Aug 2025", exit: 'Sought withdrawal in writing to court and DA' },
+];
 
-const ACTION_COLORS: Record<string, string> = {
-  document_ingested: "text-amber-400",
-  document_approved: "text-green-400",
-  document_uploaded: "text-sky-400",
-  story_submitted: "text-violet-400",
-  story_approved: "text-green-400",
-  review_request_submitted: "text-orange-400",
-  inline_edit: "text-stone-400",
-  visibility_changed: "text-stone-400",
-};
+const COMPARATOR = [
+  { label: "Alleged act", joyce: "Stabbing (violent felony)", church: "Moving a motorcycle (property dispute)" },
+  { label: "Initial bail", joyce: "$150,000", church: "$25,000 cash-only" },
+  { label: "Bail outcome", joyce: "Reduced to $500", church: "Revoked; $25,000 cash posted by mother" },
+  { label: "Case outcome", joyce: "Dismissed at preliminary hearing", church: "Pending — no trial after 3+ years" },
+  { label: "Prosecutor", joyce: "Amos Stege (Chief DDA)", church: "Aziz Merchant; Stege later intervenes" },
+];
 
-const ACTION_ICONS: Record<string, React.ElementType> = {
-  document_ingested: Zap,
-  document_approved: Shield,
-  document_uploaded: Database,
-  story_submitted: FileText,
-  story_approved: Shield,
-  review_request_submitted: Search,
-  inline_edit: Activity,
-};
+const STATUS_EVENTS = [
+  { date: "Dec 19, 2024", event: "No-bail bench warrant issued", color: "bg-red-500" },
+  { date: "Apr 17, 2025", event: "Warrant executed via US Marshals operation", color: "bg-orange-500" },
+  { date: "Apr 25, 2025", event: "Psychiatric evaluation ordered (NRS 178.400)", color: "bg-zinc-500" },
+  { date: "Jul 30, 2025", event: "Bail reinstated ($25,000); no-contact order with DA's office", color: "bg-zinc-500" },
+  { date: "Aug 21–22, 2025", event: "OSC hearing; second no-bail bench warrant issued", color: "bg-red-500" },
+  { date: "Jun 16, 2026", event: "Order Staying Case issued", color: "bg-amber-400" },
+  { date: "Jun 22, 2026", event: "Order Referring Disqualification Question", color: "bg-amber-400" },
+  { date: "Jul 7, 2026", event: "Most recent pro se filing (today)", color: "bg-green-500" },
+];
 
-/* ─── Clickable Gauge ─────────────────────────────────────────── */
-function Gauge({
-  value,
-  max,
-  label,
-  sublabel,
-  color = "amber",
-  href,
-  tooltip,
-}: {
-  value: number;
-  max: number;
-  label: string;
-  sublabel?: string;
-  color?: "amber" | "sky" | "green" | "red" | "violet" | "orange";
-  href: string;
-  tooltip?: string;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
-  const colors = {
-    amber:  { stroke: "#f59e0b", glow: "rgba(245,158,11,0.4)",  bg: "hover:bg-amber-950/30",  border: "hover:border-amber-700/50",  text: "text-amber-400" },
-    sky:    { stroke: "#38bdf8", glow: "rgba(56,189,248,0.4)",   bg: "hover:bg-sky-950/30",    border: "hover:border-sky-700/50",    text: "text-sky-400" },
-    green:  { stroke: "#4ade80", glow: "rgba(74,222,128,0.4)",   bg: "hover:bg-green-950/30",  border: "hover:border-green-700/50",  text: "text-green-400" },
-    red:    { stroke: "#f87171", glow: "rgba(248,113,113,0.4)",  bg: "hover:bg-red-950/30",    border: "hover:border-red-700/50",    text: "text-red-400" },
-    violet: { stroke: "#a78bfa", glow: "rgba(167,139,250,0.4)",  bg: "hover:bg-violet-950/30", border: "hover:border-violet-700/50", text: "text-violet-400" },
-    orange: { stroke: "#fb923c", glow: "rgba(251,146,60,0.4)",   bg: "hover:bg-orange-950/30", border: "hover:border-orange-700/50", text: "text-orange-400" },
-  };
-  const c = colors[color];
-  const r = 38;
-  const circ = 2 * Math.PI * r;
-  const dash = (pct / 100) * circ;
-
+function StatCard({ value, label, icon: Icon }: { value: string | number; label: string; icon: React.ElementType }) {
   return (
-    <Link href={href}>
-      <div
-        className={cn(
-          "relative flex flex-col items-center gap-2 p-3 rounded-lg border border-stone-800/60 cursor-pointer transition-all duration-200 group",
-          c.bg, c.border,
-          hovered && "scale-[1.03] shadow-lg"
-        )}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        title={tooltip}
-      >
-        <div className={cn(
-          "absolute top-2 right-2 transition-opacity duration-200",
-          hovered ? "opacity-100" : "opacity-0"
-        )}>
-          <ArrowRight className={cn("w-3 h-3", c.text)} />
-        </div>
-        <div className="relative w-24 h-24">
-          <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-            <circle cx="50" cy="50" r={r} fill="none" stroke="#292524" strokeWidth="8" />
-            <circle
-              cx="50" cy="50" r={r}
-              fill="none"
-              stroke={c.stroke}
-              strokeWidth="8"
-              strokeDasharray={`${dash} ${circ}`}
-              strokeLinecap="round"
-              style={{ filter: `drop-shadow(0 0 ${hovered ? "10px" : "6px"} ${c.glow})`, transition: "filter 0.2s" }}
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={cn("text-2xl font-black font-mono tabular-nums", c.text)}>
-              {value.toLocaleString()}
-            </span>
-          </div>
-        </div>
-        <div className="text-center">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-stone-400 group-hover:text-stone-200 transition-colors leading-tight">
-            {label}
-          </p>
-          {sublabel && (
-            <p className="text-[9px] font-mono text-stone-600 group-hover:text-stone-500 transition-colors mt-0.5">
-              {sublabel}
-            </p>
-          )}
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-/* ─── Live ticker ─────────────────────────────────────────────── */
-function LiveFeed({ items }: { items: any[] }) {
-  const visible = items.slice(0, 8);
-
-  if (!visible.length) {
-    return (
-      <div className="flex items-center gap-2 text-stone-600 text-xs font-mono py-4">
-        <Activity className="w-3.5 h-3.5 animate-pulse" />
-        <span>Monitoring archive activity…</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-1">
-      {visible.map((item: any, i: number) => {
-        const Icon = ACTION_ICONS[item.action] ?? Activity;
-        const colorClass = ACTION_COLORS[item.action] ?? "text-stone-400";
-        return (
-          <div
-            key={item.id}
-            className={cn(
-              "flex items-start gap-2.5 py-1.5 px-2 rounded transition-all",
-              i === 0 ? "bg-stone-800/60" : "hover:bg-stone-900/40",
-            )}
-          >
-            <Icon className={cn("w-3.5 h-3.5 mt-0.5 shrink-0", colorClass)} />
-            <span className="text-xs text-stone-300 flex-1 leading-relaxed">{item.label}</span>
-            <span className="text-[10px] text-stone-600 font-mono shrink-0 mt-0.5">
-              {relTime(item.createdAt)}
-            </span>
-          </div>
-        );
-      })}
+    <div className="flex flex-col items-center gap-1 p-4 rounded-lg bg-white/5 border border-white/10">
+      <Icon className="w-5 h-5 text-amber-400 mb-1" />
+      <span className="text-2xl font-bold text-white tabular-nums">{value}</span>
+      <span className="text-xs text-zinc-400 text-center leading-tight">{label}</span>
     </div>
   );
 }
 
-/* ─── System status dot ───────────────────────────────────────── */
-function StatusDot({ label, status }: { label: string; status: "online" | "standby" | "offline" }) {
-  const colors = {
-    online: "bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)]",
-    standby: "bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)]",
-    offline: "bg-stone-600",
-  };
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className={cn("w-2 h-2 rounded-full animate-pulse", colors[status])} />
-      <span className="text-xs font-mono text-stone-400">{label}</span>
+    <div className="flex items-center gap-2 mb-3">
+      <div className="h-px flex-1 bg-white/10" />
+      <span className="text-xs font-semibold tracking-widest uppercase text-zinc-500">{children}</span>
+      <div className="h-px flex-1 bg-white/10" />
     </div>
   );
 }
 
-/* ─── Main component ──────────────────────────────────────────── */
+function Blockquote({ quote, attribution }: { quote: string; attribution: string }) {
+  return (
+    <div className="my-6 border-l-4 border-amber-500 pl-5 py-2">
+      <p className="text-zinc-200 italic text-base leading-relaxed">"{quote}"</p>
+      <p className="mt-2 text-xs text-zinc-500 font-medium">— {attribution}</p>
+    </div>
+  );
+}
+
 export default function Home() {
   useSEO({
-    title: "The Reno Record — Forensic Accountability Archive",
+    title: "The Reno Record — State v. Cameron Doyle Church, CR23-0657",
     description:
-      "Live forensic audit of the Second Judicial District Court. Real-time pattern analysis, procedural violation tracking, and evidence archive for State v. Church (CR23-0657) and Church v. Washoe County (3:24-cv-00579).",
+      "A public records archive documenting State v. Cameron Doyle Church, CR23-0657. A rent dispute. A motorcycle. Three years. US Marshals. No trial.",
   });
 
-  const { data: stats } = trpc.patterns.siteStats.useQuery(undefined, { refetchInterval: 30_000 });
-  const { data: activity } = trpc.patterns.liveActivity.useQuery(
-    { limit: 15 },
-    { refetchInterval: 15_000 },
-  );
-  const { data: patternMetrics } = trpc.patterns.metrics.useQuery(undefined, {
-    refetchInterval: 60_000,
-  });
-
+  const { data: stats } = trpc.patterns.siteStats.useQuery(undefined, { refetchInterval: 60_000 });
+  const { data: patternMetrics } = trpc.patterns.metrics.useQuery(undefined, { refetchInterval: 120_000 });
   const s = stats as any;
   const pm = patternMetrics as any;
-
-  const daysSince = s?.daysSinceArrest ?? 0;
-  const docCount = s?.documents ?? 0;
-  const actorCount = s?.actors ?? 0;
-  const eventCount = s?.timelineEvents ?? 0;
-  const prrCount = s?.prrs ?? 0;
+  const topTags: Array<{ slug: string; label: string; count: number }> = (pm?.tagCounts ?? [])
+    .filter((t: any) => t.count > 0)
+    .slice(0, 6);
 
   return (
     <SiteShell>
-      <div className="min-h-screen bg-stone-950 text-stone-100">
+      {/* ─── HERO ─── */}
+      <section className="relative overflow-hidden bg-zinc-950 border-b border-white/10">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_rgba(245,158,11,0.08)_0%,_transparent_60%)] pointer-events-none" />
+        <div className="max-w-5xl mx-auto px-6 py-20 md:py-28">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold tracking-wide mb-6">
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            ACTIVE CASE — CR23-0657 · SECOND JUDICIAL DISTRICT · WASHOE COUNTY, NV
+          </div>
 
-        {/* ── HERO: Command Center Header ─────────────────────────── */}
-        <section className="relative border-b border-stone-800 overflow-hidden">
-          <div
-            className="absolute inset-0 opacity-[0.04]"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(245,158,11,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.5) 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
-            }}
+          <h1 className="text-4xl md:text-6xl font-black text-white leading-[1.05] tracking-tight mb-6">
+            A Rent Dispute.<br />
+            A Motorcycle.<br />
+            <span className="text-amber-400">Three Years. No Trial.</span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-zinc-300 max-w-2xl leading-relaxed mb-4">
+            In March 2023, a landlord-tenant dispute over unpaid rent became a Category C felony prosecution in Reno, Nevada. The case has been pending for over three years. There has been no trial.
+          </p>
+          <p className="text-base text-zinc-400 max-w-2xl leading-relaxed mb-10">
+            This archive documents what the record contains, what it does not contain, and where the gaps are. Every claim on this site is sourced to a document, a docket entry, or a court filing. The record is public. Read it.
+          </p>
+
+          <div className="flex flex-wrap gap-3">
+            <Link href="/evidence">
+              <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm transition-colors">
+                <FileText className="w-4 h-4" />
+                Browse the Archive
+              </button>
+            </Link>
+            <Link href="/timeline">
+              <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-semibold text-sm transition-colors border border-white/10">
+                <Clock className="w-4 h-4" />
+                View Timeline
+              </button>
+            </Link>
+            <Link href="/missing-predicate">
+              <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-semibold text-sm transition-colors border border-white/10">
+                <Search className="w-4 h-4" />
+                Predicate Report
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── LIVE STATS ─── */}
+      {s && (
+        <section className="bg-zinc-900 border-b border-white/10">
+          <div className="max-w-5xl mx-auto px-6 py-8">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <StatCard value={s.daysSinceArrest?.toLocaleString() ?? "—"} label="Days Since Arrest" icon={Calendar} />
+              <StatCard value={s.documents ?? 0} label="Documents Archived" icon={FileText} />
+              <StatCard value={s.timelineEvents ?? 0} label="Timeline Events" icon={Clock} />
+              <StatCard value={s.actors ?? 0} label="Named Actors" icon={Users} />
+              <StatCard value={s.prrs ?? 0} label="Records Requests" icon={Search} />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ─── LIVE NUMBERS ─── */}
+      {pm && (
+        <section className="bg-zinc-950 border-b border-white/10">
+          <div className="max-w-5xl mx-auto px-6 py-8">
+            <p className="text-xs font-semibold tracking-widest uppercase text-zinc-500 text-center mb-5">What the record shows</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {topTags.map((tag) => (
+                <Link key={tag.slug} href={`/patterns?tag=${tag.slug}`}>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all cursor-pointer group">
+                    <span className="text-zinc-300 text-sm group-hover:text-white transition-colors truncate pr-2">{tag.label}</span>
+                    <span className="text-amber-400 font-bold text-lg tabular-nums shrink-0">{tag.count}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <p className="text-center text-xs text-zinc-600 mt-3">Unique documents tagged per violation signal · <Link href="/patterns"><span className="text-amber-500 hover:text-amber-400 cursor-pointer">View full breakdown →</span></Link></p>
+          </div>
+        </section>
+      )}
+
+      {/* ─── MAIN NARRATIVE ─── */}
+      <div className="max-w-5xl mx-auto px-6 py-12 space-y-16">
+
+        {/* SECTION 1: THE ORIGIN */}
+        <section>
+          <SectionLabel>The Origin</SectionLabel>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            The Defense Theory Was in the Arrest Report
+          </h2>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            On March 10, 2023, a motorcycle was moved from a shared residence in Reno, Nevada. The registered owner, Brandon Pearson, filed a theft report. Cameron Church was arrested the following morning.
+          </p>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            The probable-cause declaration — written by the arresting officer, filed by the State — records that Church told law enforcement the motorcycle was collateral for unpaid rent owed to him by Pearson. This is not a defense invented later. It is in the State's own paperwork, from the night of the arrest.
+          </p>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            The Washoe County District Attorney charged the matter as Grand Larceny of a Motor Vehicle (NRS 205.228, Category C Felony) and Unlawful Taking of a Motor Vehicle (NRS 205.2715, Gross Misdemeanor). The legal question — whether holding collateral for unpaid rent constitutes theft — was never adjudicated. There has been no trial.
+          </p>
+          <Blockquote
+            quote="Cameron Church stole his roommate's motorcycle over a rent dispute."
+            attribution="DA Aziz Merchant, Motion for No Bail Hold, April 18, 2025 (CR23-0657)"
           />
-          <div className="absolute -top-32 -left-32 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+          <p className="text-zinc-400 text-sm leading-relaxed">
+            The DA's own framing confirms the nature of the dispute. The defense theory — motorcycle as collateral for unpaid rent — is documented in the State's own probable-cause declaration and has never been ruled upon by a court.
+          </p>
+        </section>
 
-          <div className="relative max-w-6xl mx-auto px-4 pt-16 pb-12">
-            {/* Status bar */}
-            <div className="flex flex-wrap items-center gap-4 mb-8">
-              <StatusDot label="ARCHIVE ONLINE" status="online" />
-              <StatusDot label="GOBLIN PIPELINE" status="online" />
-              <StatusDot label="JUDICIAL AUDIT" status="standby" />
-              <StatusDot label="FEDERAL CASE MONITOR" status="online" />
-              <div className="ml-auto text-xs font-mono text-stone-600 hidden md:block">
-                {new Date().toUTCString().replace(" GMT", " UTC")}
-              </div>
-            </div>
+        {/* SECTION 2: THE COUNSEL CAROUSEL */}
+        <section>
+          <SectionLabel>The Counsel Carousel</SectionLabel>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            Four Public Defenders and a Private Attorney. No Trial. No Substantive Motions.
+          </h2>
+          <p className="text-zinc-300 leading-relaxed mb-6">
+            Between March 2023 and the present, five attorneys have been assigned to or retained for this case. The docket does not reflect a single substantive motion filed on Church's behalf by any of them. Each attorney either declared a conflict, moved to withdraw, or was substituted out — in one case, the attorney left the public defender's office entirely.
+          </p>
 
-            {/* Main headline */}
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 border border-amber-800/40 bg-amber-950/30 rounded px-3 py-1 mb-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                <span className="text-xs font-mono text-amber-400 uppercase tracking-widest">
-                  Live Forensic Archive
-                </span>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-stone-50 leading-tight mb-3">
-                The Reno Record
-              </h1>
-              <p className="text-xl text-stone-300 font-semibold leading-snug mb-2">
-                A man has been held in the Washoe County system for{" "}
-                <span className="text-amber-400 tabular-nums">{daysSince} days</span> without a fair trial.
-              </p>
-              <p className="text-sm text-stone-500 leading-relaxed mb-4">
-                This archive documents every court filing, every procedural violation, every named actor —
-                automatically, in public, in real time. Built by the defendant. Powered by an AI forensic pipeline.
-              </p>
-              <p className="text-xs text-stone-600 font-mono mb-6">
-                State v. Church · CR23-0657 &nbsp;|&nbsp; Church v. Washoe County · 3:24-cv-00579-ART-CSD
-              </p>
-              {/* Primary CTAs */}
-              <div className="flex flex-wrap gap-3">
-                <Link href="/search">
-                  <button className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-sm rounded px-4 py-2.5 transition-colors">
-                    <Search className="w-4 h-4" /> Search the Archive
-                  </button>
-                </Link>
-                <Link href="/evidence">
-                  <button className="inline-flex items-center gap-2 border border-stone-700 hover:border-stone-500 text-stone-300 text-sm rounded px-4 py-2.5 transition-colors">
-                    <FileText className="w-4 h-4" /> Browse Evidence
-                  </button>
-                </Link>
-                <Link href="/the-church-record">
-                  <button className="inline-flex items-center gap-2 border border-stone-700 hover:border-stone-500 text-stone-300 text-sm rounded px-4 py-2.5 transition-colors">
-                    <BookOpen className="w-4 h-4" /> Case Overview
-                  </button>
-                </Link>
-              </div>
-            </div>
+          <div className="overflow-x-auto rounded-lg border border-white/10 mb-6">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/5">
+                  <th className="text-left px-4 py-3 text-zinc-400 font-semibold">Attorney</th>
+                  <th className="text-left px-4 py-3 text-zinc-400 font-semibold">Role</th>
+                  <th className="text-left px-4 py-3 text-zinc-400 font-semibold">Period</th>
+                  <th className="text-left px-4 py-3 text-zinc-400 font-semibold">Exit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COUNSEL_TIMELINE.map((row, i) => (
+                  <tr key={i} className={cn("border-b border-white/5", i % 2 === 0 ? "bg-transparent" : "bg-white/[0.02]")}>
+                    <td className="px-4 py-3 text-white font-medium">{row.name}</td>
+                    <td className="px-4 py-3 text-zinc-400">{row.role}</td>
+                    <td className="px-4 py-3 text-zinc-400 whitespace-nowrap">{row.period}</td>
+                    <td className="px-4 py-3 text-zinc-400">{row.exit}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-            {/* Gauge strip — all clickable */}
-            <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-              <Gauge
-                value={daysSince}
-                max={Math.max(daysSince * 1.5, 100)}
-                label="Days in System"
-                sublabel="Since arrest"
-                color="red"
-                href="/the-church-record"
-                tooltip="View the Church Record — full case overview and procedural history"
-              />
-              <Gauge
-                value={docCount}
-                max={Math.max(docCount * 1.5, 10)}
-                label="Evidence Files"
-                sublabel="AI-tagged docs"
-                color="amber"
-                href="/evidence"
-                tooltip="Browse the Evidence Archive — all ingested and tagged documents"
-              />
-              <Gauge
-                value={eventCount}
-                max={Math.max(eventCount * 1.5, 10)}
-                label="Timeline Events"
-                sublabel="State + federal"
-                color="sky"
-                href="/timeline"
-                tooltip="View the full case timeline — state and federal events"
-              />
-              <Gauge
-                value={actorCount}
-                max={Math.max(actorCount * 1.5, 10)}
-                label="Named Actors"
-                sublabel="On record"
-                color="violet"
-                href="/actors"
-                tooltip="Actor dossiers — judges, prosecutors, attorneys, officials"
-              />
-              <Gauge
-                value={prrCount}
-                max={Math.max(prrCount * 1.5, 5)}
-                label="Records Requests"
-                sublabel="NPRA filings"
-                color="green"
-                href="/public-records"
-                tooltip="Public records requests — filed, pending, and fulfilled"
-              />
-              <Gauge
-                value={(pm?.tagCounts ?? []).reduce((a: number, t: any) => a + (t.count ?? 0), 0)}
-                max={Math.max((pm?.tagCounts ?? []).reduce((a: number, t: any) => a + (t.count ?? 0), 0) * 1.5, 10)}
-                label="Violation Signals"
-                sublabel={`${pm?.tagCounts?.length ?? 0} tag types`}
-                color="orange"
-                href="/patterns"
-                tooltip="Pattern dashboard — all violation tag counts and evidence signals"
-              />
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            Throughout this period, Church filed his own motions — raising Faretta rights, speedy trial violations, competency order challenges, and ineffective assistance claims. Every pro se filing was stamped with a notation: <span className="font-mono text-amber-400 text-xs bg-amber-500/10 px-1.5 py-0.5 rounded">DFX: DEFENDANT REPRESENTED BY COUNSEL</span>. They were struck without ruling on the merits.
+          </p>
+
+          <Blockquote
+            quote="I want to withdraw, Mr. Church consents and wants to represent himself."
+            attribution="Samuel Figueroa, email to court and DA Merchant, August 12, 2025"
+          />
+        </section>
+
+        {/* SECTION 3: THE DECEMBER 5 PIVOT */}
+        <section>
+          <SectionLabel>The December 5 Pivot</SectionLabel>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            A Judge Cited "Micro-Focus" and Constitutional Arguments as Grounds for a Competency Evaluation
+          </h2>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            On December 5, 2024, a Young hearing was held before Judge Barry L. Breslow, Department 8, Second Judicial District Court. Church has audio recordings of this hearing.
+          </p>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            According to Church's filings, three things happened at that hearing: his Faretta request to represent himself was bypassed without a formal ruling; a psychiatric competency evaluation was ordered under NRS 178.400 — with the stated basis being Church's "micro-focus" on his case and the quality of his constitutional arguments, not any medical evidence; and a blanket prohibition on pro se filings was issued.
+          </p>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            NRS 178.400 requires "reasonable grounds" to believe a defendant may be incompetent. The standard is medical, not argumentative. No prior psychiatric evaluation existed. No medical professional had raised competency concerns. Two weeks later, on December 19, 2024, a no-bail bench warrant was issued. Church's address was on file with the court. The warrant was not served for four months.
+          </p>
+          <Blockquote
+            quote="Defendant has never been found incompetent by any medical or psychological professional. There is no documented history of mental illness. There is no record of Defendant being unable to communicate or assist in his own defense. In fact, Defendant has consistently engaged in litigation, drafted substantive motions, and filed constitutionally sound challenges — all of which the Court has either ignored or actively suppressed."
+            attribution="Church, Motion to Strike Competency Order, March 19, 2025 (CR23-0657)"
+          />
+        </section>
+
+        {/* SECTION 4: THE OPERATION */}
+        <section>
+          <SectionLabel>The Operation</SectionLabel>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+            US Marshals. A Vehicle Tracker. Weeks of Surveillance. A Ruse.
+          </h2>
+          <p className="text-zinc-400 text-sm mb-6 italic">The following is taken verbatim from the DA's own court filing.</p>
+
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6 mb-6">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertTriangle className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
+              <p className="text-amber-200 font-semibold text-sm">From DA Aziz Merchant, Motion for No Bail Hold, April 18, 2025 — filed in CR23-0657:</p>
             </div>
-            <p className="mt-2 text-[10px] font-mono text-stone-700 text-center">
-              ↑ Click any gauge to navigate to that section
-            </p>
+            <blockquote className="text-zinc-200 leading-relaxed italic border-l-4 border-amber-500 pl-4">
+              "law enforcement to include the federal US Marshall's Service, worked diligently to affect his capture with the use of a tracker on a vehicle associated with him and worked for weeks to pattern his movements. The first attempt to arrest him was unsuccessful, with the Defendant barricading himself in his house for days and refusing to come out. He was not captured willingly, but rather through a ruse that got him to eventually exit his home."
+            </blockquote>
+          </div>
+
+          <p className="text-zinc-300 leading-relaxed mb-6">
+            This is the State's own description, in a court filing, of the resources deployed to execute a bench warrant on a non-violent property dispute case. The bench warrant had been sitting unserved for four months. Church's address was on file with the court. He was filing motions. He was in contact with his attorney.
+          </p>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            {[
+              { icon: Shield, label: "US Marshals Service", sub: "Federal law enforcement deployed" },
+              { icon: MapPin, label: "Vehicle Tracker", sub: "Placed on associated vehicle" },
+              { icon: TrendingUp, label: "Weeks of Surveillance", sub: "To 'pattern his movements'" },
+              { icon: Search, label: "A Ruse", sub: "Deceptive operation to exit home" },
+            ].map(({ icon: Icon, label, sub }) => (
+              <div key={label} className="rounded-lg bg-white/5 border border-white/10 p-4 text-center">
+                <Icon className="w-5 h-5 text-amber-400 mx-auto mb-2" />
+                <p className="text-white text-sm font-semibold">{label}</p>
+                <p className="text-zinc-500 text-xs mt-1">{sub}</p>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* ── MAIN GRID ──────────────────────────────────────────── */}
-        <div className="max-w-6xl mx-auto px-4 py-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* SECTION 5: THE COMPARATOR */}
+        <section>
+          <SectionLabel>The Comparator</SectionLabel>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            The Man Who Stabbed Church Got His Charges Dismissed. Church's Bail Was $25,000 Cash-Only.
+          </h2>
+          <p className="text-zinc-300 leading-relaxed mb-6">
+            On April 10, 2023 — one month after Church's arrest — Richard Joyce stabbed Church. Joyce was charged in State v. Richard Joyce, RCR2023-122783. His bail was reduced from $150,000 to $500. His charges were dismissed at the preliminary hearing. Chief Deputy District Attorney Amos Stege prosecuted the Joyce case. He is not assigned to CR23-0657. On September 26, 2025, Stege filed a "Notice of Violation of Bail Conditions" in Church's case — attaching Church's email about a medical emergency as evidence of a "threat."
+          </p>
 
-          {/* LEFT: Live activity + pattern signals + what this is */}
-          <div className="lg:col-span-2 space-y-6">
-
-            {/* Live feed */}
-            <div className="rounded-lg border border-stone-800 bg-stone-900/40">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-stone-800">
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-mono uppercase tracking-widest text-stone-300">
-                    Live Archive Activity
-                  </span>
-                </div>
-                <span className="flex items-center gap-1.5 text-[10px] font-mono text-green-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                  LIVE
-                </span>
-              </div>
-              <div className="p-4">
-                <LiveFeed items={activity ?? []} />
-              </div>
-            </div>
-
-            {/* Pattern signals */}
-            <div className="rounded-lg border border-stone-800 bg-stone-900/40">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-stone-800">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-mono uppercase tracking-widest text-stone-300">
-                    Procedural Pattern Signals
-                  </span>
-                </div>
-                <Link href="/patterns" className="text-[10px] font-mono text-amber-400 hover:text-amber-300 flex items-center gap-1">
-                  Full analysis <ChevronRight className="w-3 h-3" />
-                </Link>
-              </div>
-              <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3">
-                {(() => {
-                  // Build a lookup: slug → { count, latestDocTitle, latestDocDate }
-                  type TagMeta = { count: number; latestDocTitle?: string | null; latestDocDate?: string | null };
-                  const tc: Record<string, TagMeta> = {};
-                  ((pm?.tagCounts ?? []) as { slug: string; count: number; latestDocTitle?: string | null; latestDocDate?: string | null }[]).forEach((t) => {
-                    tc[t.slug] = { count: t.count, latestDocTitle: t.latestDocTitle, latestDocDate: t.latestDocDate };
-                  });
-                  return [
-                    { label: "Faretta Violations",    slug: "faretta_self_representation",    cite: "Faretta v. California", color: "border-red-800/50 bg-red-950/20 text-red-300" },
-                    { label: "Speedy Trial Issues",   slug: "speedy_trial_delay",             cite: "6th Amendment",         color: "border-amber-800/50 bg-amber-950/20 text-amber-300" },
-                    { label: "Due Process Defects",   slug: "due_process_defect",             cite: "14th Amendment",        color: "border-orange-800/50 bg-orange-950/20 text-orange-300" },
-                    { label: "Warrant / Bail Defects",slug: "warrant_or_bail_defect",         cite: "4th Amendment",         color: "border-sky-800/50 bg-sky-950/20 text-sky-300" },
-                    { label: "Access to Courts",      slug: "access_to_courts_interference",  cite: "Due Process",           color: "border-violet-800/50 bg-violet-950/20 text-violet-300" },
-                    { label: "Competency Abuse",      slug: "competency_proceeding_abuse",    cite: "Pate v. Robinson",      color: "border-rose-800/50 bg-rose-950/20 text-rose-300" },
-                  ].map((sig) => {
-                    const meta = tc[sig.slug];
-                    const docTitle = meta?.latestDocTitle;
-                    const docDate = meta?.latestDocDate
-                      ? new Date(meta.latestDocDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
-                      : null;
-                    return (
-                      <div key={sig.slug} className="group relative">
-                        <Link href={`/patterns/tag/${sig.slug}`}>
-                          <div className={cn("rounded border p-3 cursor-pointer transition-all duration-150 hover:brightness-110 hover:scale-[1.02]", sig.color)}>
-                            <p className="text-2xl font-black tabular-nums mb-1">{meta?.count ?? 0}</p>
-                            <p className="text-xs font-mono leading-tight">{sig.label}</p>
-                            <p className="text-[10px] opacity-60 mt-1">{sig.cite}</p>
-                          </div>
-                        </Link>
-                        {/* Hover tooltip — most recently tagged document */}
-                        {docTitle && (
-                          <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50
-                                          w-56 rounded-md border border-stone-700 bg-stone-900 shadow-xl px-3 py-2
-                                          opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                            <p className="text-[10px] font-mono text-stone-500 uppercase tracking-widest mb-1">Latest tagged doc</p>
-                            <p className="text-xs text-stone-200 font-medium leading-snug line-clamp-2">{docTitle}</p>
-                            {docDate && (
-                              <p className="text-[10px] font-mono text-stone-500 mt-1">{docDate}</p>
-                            )}
-                            {/* Arrow */}
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0
-                                            border-l-4 border-r-4 border-t-4
-                                            border-l-transparent border-r-transparent border-t-stone-700" />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-            </div>
-
-            {/* What this is */}
-            <div className="rounded-lg border border-stone-800 bg-stone-900/40 p-5">
-              <h2 className="text-sm font-bold text-stone-200 mb-3 flex items-center gap-2">
-                <Scale className="w-4 h-4 text-amber-400" />
-                What This Is
-              </h2>
-              <div className="space-y-3 text-sm text-stone-400 leading-relaxed">
-                <p>
-                  The Reno Record is a <strong className="text-stone-200">live forensic accountability archive</strong> documenting
-                  systemic procedural violations in the Second Judicial District Court of Washoe County, Nevada.
-                  Built on an autonomous AI pipeline that ingests court documents, extracts violation signals,
-                  maps actors, and surfaces patterns — in real time, in public.
-                </p>
-                <p>
-                  The primary case is <strong className="text-stone-200">State v. Church (CR23-0657)</strong>, a pro se criminal
-                  matter with documented violations of Faretta rights, speedy trial guarantees, due process
-                  protections, and access-to-courts doctrine. The parallel federal case,{" "}
-                  <strong className="text-stone-200">Church v. Washoe County (3:24-cv-00579)</strong>, asserts §1983 claims
-                  against the county and named officials.
-                </p>
-                <p>
-                  Everything here is sourced from public records. Every claim is citation-anchored.
-                  The system does not assert guilt — it documents patterns and lets the record speak.
-                </p>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link href="/case-intelligence">
-                  <button className="inline-flex items-center gap-1.5 text-xs font-mono border border-amber-800/50 bg-amber-950/30 text-amber-400 hover:bg-amber-950/50 rounded px-3 py-1.5 transition-colors">
-                    Case Intelligence <ArrowRight className="w-3 h-3" />
-                  </button>
-                </Link>
-                <Link href="/timeline">
-                  <button className="inline-flex items-center gap-1.5 text-xs font-mono border border-stone-700 text-stone-400 hover:border-stone-600 rounded px-3 py-1.5 transition-colors">
-                    Full Timeline <ArrowRight className="w-3 h-3" />
-                  </button>
-                </Link>
-                <Link href="/evidence">
-                  <button className="inline-flex items-center gap-1.5 text-xs font-mono border border-stone-700 text-stone-400 hover:border-stone-600 rounded px-3 py-1.5 transition-colors">
-                    Evidence Archive <ArrowRight className="w-3 h-3" />
-                  </button>
-                </Link>
-              </div>
-            </div>
+          <div className="overflow-x-auto rounded-lg border border-white/10 mb-6">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/5">
+                  <th className="text-left px-4 py-3 text-zinc-400 font-semibold w-1/3"></th>
+                  <th className="text-left px-4 py-3 text-zinc-400 font-semibold">Richard Joyce (RCR2023-122783)</th>
+                  <th className="text-left px-4 py-3 text-amber-400 font-semibold">Cameron Church (CR23-0657)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARATOR.map((row, i) => (
+                  <tr key={i} className={cn("border-b border-white/5", i % 2 === 0 ? "bg-transparent" : "bg-white/[0.02]")}>
+                    <td className="px-4 py-3 text-zinc-400 font-medium">{row.label}</td>
+                    <td className="px-4 py-3 text-zinc-300">{row.joyce}</td>
+                    <td className="px-4 py-3 text-zinc-300">{row.church}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </section>
 
-          {/* RIGHT: Sidebar */}
-          <div className="space-y-6">
+        {/* SECTION 6: CURRENT STATUS */}
+        <section>
+          <SectionLabel>Current Record Status</SectionLabel>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            The Case Is Stayed. A Judge Is Being Reviewed. The Defendant Is Still Filing.
+          </h2>
 
-            {/* Service offer CTA */}
-            <div className="rounded-lg border border-amber-700/50 bg-gradient-to-br from-amber-950/40 to-stone-900/60 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Search className="w-4 h-4 text-amber-400" />
-                <span className="text-xs font-mono uppercase tracking-widest text-amber-400">
-                  Forensic Audit Services
-                </span>
-              </div>
-              <h3 className="text-base font-black text-stone-100 mb-2 leading-tight">
-                This system can audit your case.
-              </h3>
-              <p className="text-xs text-stone-400 leading-relaxed mb-4">
-                The same AI pipeline that built this archive — document ingest, violation tagging, actor mapping,
-                pattern analysis — is available for other cases. Upload your court documents. Get a structured
-                forensic dossier.
-              </p>
-              <div className="space-y-2 mb-4">
-                {[
-                  "Procedural violation extraction",
-                  "Actor and agency mapping",
-                  "Timeline reconstruction",
-                  "Immunity bypass analysis",
-                  "Pattern detection across filings",
-                ].map((item) => (
-                  <div key={item} className="flex items-center gap-2 text-xs text-stone-400">
-                    <span className="w-1 h-1 rounded-full bg-amber-400 shrink-0" />
-                    {item}
-                  </div>
-                ))}
-              </div>
-              <Link href="/request-audit">
-                <button className="w-full bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-sm rounded px-4 py-2.5 transition-colors flex items-center justify-center gap-2">
-                  Request a Case Audit
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </Link>
-            </div>
-
-            {/* Quick nav */}
-            <div className="rounded-lg border border-stone-800 bg-stone-900/40">
-              <div className="px-4 py-3 border-b border-stone-800">
-                <span className="text-xs font-mono uppercase tracking-widest text-stone-500">
-                  Archive Navigation
-                </span>
-              </div>
-              <div className="divide-y divide-stone-800/50">
-                {[
-                  { href: "/the-church-record", label: "The Church Record", sub: "Primary case overview", icon: FileText },
-                  { href: "/timeline", label: "Timeline", sub: `${eventCount} documented events`, icon: Clock },
-                  { href: "/evidence", label: "Evidence Archive", sub: `${docCount} public documents`, icon: Database },
-                  { href: "/actors", label: "Named Actors", sub: `${actorCount} individuals`, icon: Users },
-                  { href: "/patterns", label: "Pattern Analysis", sub: "Violation signal dashboard", icon: BarChart3 },
-                  { href: "/judicial-pattern", label: "Judicial Audit", sub: "Comparative corpus analysis", icon: Scale },
-                  { href: "/public-records", label: "Records Requests", sub: `${prrCount} NPRA filings`, icon: Search },
-                ].map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    <div className="flex items-center gap-3 px-4 py-3 hover:bg-stone-800/40 transition-colors cursor-pointer group">
-                      <item.icon className="w-4 h-4 text-stone-600 group-hover:text-amber-400 transition-colors shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-stone-300 group-hover:text-stone-100 transition-colors truncate">
-                          {item.label}
-                        </p>
-                        <p className="text-[10px] text-stone-600 font-mono truncate">{item.sub}</p>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-stone-700 group-hover:text-stone-400 transition-colors shrink-0" />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Case status */}
-            <div className="rounded-lg border border-stone-800 bg-stone-900/40 p-4">
-              <p className="text-xs font-mono uppercase tracking-widest text-stone-500 mb-3">Case Status</p>
-              <div className="space-y-3">
+          <div className="grid md:grid-cols-2 gap-3 mb-6">
+            {STATUS_EVENTS.map(({ date, event, color }) => (
+              <div key={date} className="flex items-start gap-3 p-4 rounded-lg bg-white/5 border border-white/10">
+                <div className={cn("w-2 h-2 rounded-full mt-1.5 shrink-0", color)} />
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-mono text-stone-400">CR23-0657</span>
-                    <span className="text-[10px] font-mono bg-amber-900/40 text-amber-400 border border-amber-800/40 rounded px-1.5 py-0.5">ACTIVE</span>
-                  </div>
-                  <p className="text-xs text-stone-500">State v. Church · Washoe County</p>
-                  <p className="text-[10px] text-stone-600 mt-0.5">Pro se · Dept. 6 · Judge Breslow</p>
-                </div>
-                <div className="border-t border-stone-800 pt-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-mono text-stone-400">3:24-cv-00579</span>
-                    <span className="text-[10px] font-mono bg-sky-900/40 text-sky-400 border border-sky-800/40 rounded px-1.5 py-0.5">RULE 59(e)</span>
-                  </div>
-                  <p className="text-xs text-stone-500">Church v. Washoe County · D. Nev.</p>
-                  <p className="text-[10px] text-stone-600 mt-0.5">§1983 · Judge Traum · Post-dismissal</p>
+                  <p className="text-xs text-zinc-500 font-mono mb-0.5">{date}</p>
+                  <p className="text-zinc-200 text-sm">{event}</p>
                 </div>
               </div>
-            </div>
+            ))}
+          </div>
 
-            {/* Builder credit — pro se narrative */}
-            <div className="rounded-lg border border-red-900/40 bg-red-950/10 p-4">
-              <p className="text-xs font-mono uppercase tracking-widest text-red-600 mb-2">Built by the defendant</p>
-              <p className="text-sm font-bold text-stone-200">Cameron Church — Pro Se</p>
-              <p className="text-xs text-stone-500 mt-1">No attorney. No legal team. No dev team.</p>
-              <p className="text-xs text-stone-400 mt-3 leading-relaxed">
-                Every violation in this archive was identified by the person the system was supposed
-                to protect — not by any of the five attorneys assigned to his case, not by the court,
-                not by the prosecution. He taught himself constitutional law, civil procedure, and
-                forensic document analysis while fighting the system, then built the audit infrastructure
-                to prove what the professionals missed or ignored.
-              </p>
-              <Link href="/accountability">
-                <button className="mt-3 text-xs font-mono text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors">
-                  See who failed and how <ExternalLink className="w-3 h-3" />
-                </button>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            Church continues to file pro se motions from the same address that has been on file with the court throughout the case. His most recent filings include a motion demanding the court identify "the operative legal authority governing this case" and "terminate custody-conditioned adjudication," and a "Master Structural Injury Motion" requesting written findings of fact and conclusions of law, or dismissal with prejudice if the court cannot explain its own record.
+          </p>
+          <p className="text-zinc-300 leading-relaxed">
+            The court has not issued written findings in response to any of these motions.
+          </p>
+        </section>
+
+        {/* SECTION 7: THE FEDERAL CASE */}
+        <section>
+          <SectionLabel>The Federal Case</SectionLabel>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            Church v. Breslow et al., 3:24-cv-00579-ART-CSD
+          </h2>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            A federal civil rights lawsuit is pending in the United States District Court for the District of Nevada. Named defendants include Judge Barry L. Breslow and other officials. The claims include violations of the First, Sixth, and Fourteenth Amendments, and claims under 42 U.S.C. § 1983.
+          </p>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            DA Merchant, who continues to prosecute CR23-0657, is named in the federal lawsuit. Church's September 2025 email to Merchant notes this directly:
+          </p>
+          <Blockquote
+            quote="Despite naming both you personally and your employer in a pending federal civil rights lawsuit (3:24-cv-00579-ART-CSD), you've somehow managed to maintain your role as prosecutor in my criminal case."
+            attribution="Church, email to DA Merchant, September 2025"
+          />
+          <p className="text-zinc-300 leading-relaxed">
+            The court has not addressed this conflict on the record in CR23-0657.
+          </p>
+        </section>
+
+        {/* SECTION 8: HOW TO HELP */}
+        <section>
+          <SectionLabel>How to Help</SectionLabel>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            This Record Is Public. So Is Your Ability to Act on It.
+          </h2>
+          <p className="text-zinc-300 leading-relaxed mb-6">
+            This archive exists because public scrutiny is a check on institutional behavior. You don't need to be an attorney, a journalist, or an activist to use it. You need to be someone who reads the record and decides what it means.
+          </p>
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            {[
+              { action: "Read the record", detail: "Browse the evidence archive. Read the actual documents. Form your own assessment.", href: "/evidence" },
+              { action: "Share this page", detail: "The more people who see this, the harder it is to ignore. Share the URL. Link to specific documents.", href: null },
+              { action: "Contact the court", detail: "Second Judicial District Court, Dept. 8. Public records are available. Docket entries are public.", href: null },
+              { action: "Contact the DA's office", detail: "Washoe County District Attorney. Case CR23-0657. The charging decision and prosecution conduct are matters of public record.", href: null },
+              { action: "File a public records request", detail: "Nevada Public Records Act (NRS 239) gives you the right to request court and agency records. The archive documents what has and hasn't been produced.", href: "/public-records" },
+              { action: "Follow the federal case", detail: "Church v. Breslow et al., 3:24-cv-00579-ART-CSD. PACER is public. The federal docket is searchable.", href: null },
+            ].map(({ action, detail, href }) => (
+              <div key={action} className="p-4 rounded-lg bg-white/5 border border-white/10">
+                {href ? (
+                  <Link href={href}><p className="text-amber-400 font-semibold text-sm mb-1 hover:text-amber-300 cursor-pointer">{action} →</p></Link>
+                ) : (
+                  <p className="text-white font-semibold text-sm mb-1">{action}</p>
+                )}
+                <p className="text-zinc-400 text-sm leading-relaxed">{detail}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 9: WHAT THIS SITE IS */}
+        <section className="rounded-xl border border-white/10 bg-white/5 p-8">
+          <SectionLabel>About This Archive</SectionLabel>
+          <h2 className="text-2xl font-bold text-white mb-4">This Is Not a Blog. This Is a Record.</h2>
+          <p className="text-zinc-300 leading-relaxed mb-4">
+            The Reno Record is a public archive of documents, timeline events, and procedural analysis from State v. Cameron Doyle Church, CR23-0657. Everything here is sourced to a document, a docket entry, a court filing, or a public record.
+          </p>
+          <p className="text-zinc-300 leading-relaxed mb-6">
+            This site does not make legal conclusions. It identifies what the record contains, what it does not contain, and where the gaps are. The Missing Predicate Report identifies official court actions that appear in the record without a locatable supporting document. The Judicial Pattern Audit compares this docket against comparable cases in the same court.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-3 mb-6">
+            {[
+              { href: "/evidence", icon: FileText, label: "Document Archive", desc: "All documents, searchable and classified" },
+              { href: "/timeline", icon: Clock, label: "Case Timeline", desc: "80+ events in chronological order" },
+              { href: "/missing-predicate", icon: Search, label: "Predicate Report", desc: "Court actions without locatable support" },
+              { href: "/actors", icon: Users, label: "Named Actors", desc: "Every named individual in the record" },
+              { href: "/accountability", icon: Scale, label: "Accountability", desc: "Violation tags by actor and category" },
+              { href: "/pattern", icon: Gavel, label: "Judicial Pattern", desc: "Comparative docket analysis" },
+            ].map(({ href, icon: Icon, label, desc }) => (
+              <Link key={href} href={href}>
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all cursor-pointer group">
+                  <Icon className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-white text-sm font-semibold group-hover:text-amber-400 transition-colors">{label}</p>
+                    <p className="text-zinc-500 text-xs mt-0.5">{desc}</p>
+                  </div>
+                </div>
               </Link>
-            </div>
+            ))}
           </div>
-        </div>
 
-        {/* ── BOTTOM STRIP ───────────────────────────────────────── */}
-        <div className="border-t border-stone-800 bg-stone-950">
-          <div className="max-w-6xl mx-auto px-4 py-6 flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-stone-600">
-            <div className="flex items-center gap-4">
-              <span>All records are public domain</span>
-              <span>·</span>
-              <span>No legal advice is provided</span>
-              <span>·</span>
-              <Link href="/privacy" className="hover:text-stone-400 transition-colors">Privacy Policy</Link>
-            </div>
-            <div className="flex items-center gap-2 text-stone-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span>System operational</span>
-            </div>
-          </div>
-        </div>
+          <p className="text-zinc-500 text-xs leading-relaxed border-t border-white/10 pt-4">
+            <strong className="text-zinc-400">Disclaimer:</strong> The Reno Record is a public records archive. All information presented on this site is sourced to documents in the public record, court filings, or official docket entries. Nothing on this site constitutes legal advice, legal conclusions, or findings of fact. Characterizations of procedural events are record-integrity observations, not legal determinations. The reviewed record does not locate supporting predicates for certain events noted herein; the record should be consulted directly for verification.
+          </p>
+        </section>
+
       </div>
     </SiteShell>
   );

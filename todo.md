@@ -169,3 +169,20 @@
 - [x] Nav: add Admin Hub to admin nav
 - [x] Route: /admin-hub registered in App.tsx
 - [x] TypeScript clean, checkpoint + deliver
+
+---
+
+## v7.9 — Landing Page Rebuild (COMPLETE)
+
+- [x] Pull live case facts, top violations, timeline highlights, actor list, PRR count from DB
+- [x] Write cover story copy: what happened, why it matters, cited laws/rules
+- [x] Write backstory copy: who Cameron is, what they tried to do, what backfired
+- [x] Section: Key embarrassments — cited, sourced, court-safe language
+- [x] Section: The Numbers — days held, docs filed, violations logged, PRRs ignored
+- [x] Section: What the record shows — top 5 violation tags with authority citations
+- [x] Section: How to help / what to do with this information
+- [x] No duplicate violations — deduplicate by tag type in display
+- [x] All factual claims cite authority (rule, statute, case, or docket entry)
+- [x] Shareable meta tags (og:title, og:description, og:image)
+- [x] Mobile-first, fast, no layout jank
+- [x] TypeScript clean, checkpoint + deliver
