@@ -1390,3 +1390,179 @@ describe("v3.8 — Admin hard-delete guardrails", () => {
     ).rejects.toBeInstanceOf(TRPCError);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// v7.10 — Event-level violation tag CRUD + predicate engine non-overwrite logic
+// ─────────────────────────────────────────────────────────────────────────────
+import { deriveViolationSlugsForTest } from "./predicateAnalysisEngine";
+
+describe("v7.10 — Event violation tag tRPC procedures", () => {
+  const adminCtx = makeCtx({ ...baseUser, role: "admin" });
+  const publicCtx = makeCtx(null);
+
+  beforeEach(() => { vi.restoreAllMocks(); });
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it("violationTag.getEventTags returns tags for an event (public)", async () => {
+    const mockTags = [
+      {
+        id: 1,
+        timelineEventId: 100,
+        violationTagId: 4,
+        sourceQuote: "Phone destroyed",
+        sourceCitation: "Brady v. Maryland",
+        confidence: 90,
+        addedBy: "human",
+        createdAt: new Date(),
+        tagSlug: "brady_discovery_issue",
+        tagLabel: "Brady / Discovery Issue",
+        tagCategory: "discovery",
+      },
+    ];
+    vi.spyOn(db, "getTimelineEventViolationTags").mockResolvedValue(mockTags as any);
+    const caller = appRouter.createCaller(makeCtx(null));
+    const result = await caller.violationTag.getEventTags({ timelineEventId: 100 });
+    expect(result).toHaveLength(1);
+    expect(result[0].tagSlug).toBe("brady_discovery_issue");
+  });
+
+  it("violationTag.addToEvent requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(
+      caller.violationTag.addToEvent({
+        timelineEventId: 100,
+        violationTagId: 4,
+        sourceQuote: "test quote here",
+        sourceCitation: "test citation",
+        confidence: 80,
+      }),
+    ).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("violationTag.addToEvent succeeds for admin", async () => {
+    vi.spyOn(db, "addTimelineEventViolationTag").mockResolvedValue({ id: 99 } as any);
+    const adminCaller = appRouter.createCaller(adminCtx);
+    const result = await adminCaller.violationTag.addToEvent({
+      timelineEventId: 100,
+      violationTagId: 4,
+      sourceQuote: "Phone destroyed at arrest",
+      sourceCitation: "Brady v. Maryland, 373 U.S. 83 (1963)",
+      confidence: 90,
+    });
+    expect(result.id).toBe(99);
+    expect(db.addTimelineEventViolationTag).toHaveBeenCalledWith(
+      expect.objectContaining({ timelineEventId: 100, violationTagId: 4, addedBy: "human" }),
+    );
+  });
+
+  it("violationTag.removeFromEvent requires admin role", async () => {
+    const caller = appRouter.createCaller(makeCtx(baseUser));
+    await expect(
+      caller.violationTag.removeFromEvent({ id: 1 }),
+    ).rejects.toBeInstanceOf(TRPCError);
+  });
+
+  it("violationTag.removeFromEvent succeeds for admin", async () => {
+    vi.spyOn(db, "removeTimelineEventViolationTag").mockResolvedValue(undefined as any);
+    const adminCaller = appRouter.createCaller(adminCtx);
+    await expect(adminCaller.violationTag.removeFromEvent({ id: 1 })).resolves.toEqual({ success: true });
+  });
+
+  it("violationTag.getEventTagCounts returns deduplicated event counts (public)", async () => {
+    const mockCounts = [
+      { tagSlug: "speedy_trial_delay", tagLabel: "Speedy Trial / Delay", tagCategory: "constitutional", eventCount: 5 },
+      { tagSlug: "brady_discovery_issue", tagLabel: "Brady / Discovery Issue", tagCategory: "discovery", eventCount: 2 },
+    ];
+    vi.spyOn(db, "getAllEventViolationTagCounts").mockResolvedValue(mockCounts as any);
+    const caller = appRouter.createCaller(makeCtx(null));
+    const result = await caller.violationTag.getEventTagCounts();
+    expect(result).toHaveLength(2);
+    expect(result[0].tagSlug).toBe("speedy_trial_delay");
+    expect(result[0].eventCount).toBe(5);
+  });
+});
+
+describe("v7.10 — Predicate engine non-overwrite logic (deriveViolationSlugs)", () => {
+  it("returns empty array for located findings", () => {
+    const slugs = deriveViolationSlugsForTest({
+      predicateStatus: "located",
+      severityCategory: "procedural",
+      severityScore: 8,
+      confidence: 90,
+    } as any);
+    expect(slugs).toHaveLength(0);
+  });
+
+  it("returns empty array for off_record findings", () => {
+    const slugs = deriveViolationSlugsForTest({
+      predicateStatus: "off_record",
+      severityCategory: "liberty",
+      severityScore: 5,
+      confidence: 70,
+    } as any);
+    expect(slugs).toHaveLength(0);
+  });
+
+  it("maps liberty + not_located to warrant_or_bail_defect", () => {
+    const slugs = deriveViolationSlugsForTest({
+      predicateStatus: "not_located",
+      severityCategory: "liberty",
+      severityScore: 7,
+      confidence: 75,
+    } as any);
+    expect(slugs).toContain("warrant_or_bail_defect");
+  });
+
+  it("maps counsel + not_located to faretta_self_representation", () => {
+    const slugs = deriveViolationSlugsForTest({
+      predicateStatus: "not_located",
+      severityCategory: "counsel",
+      severityScore: 6,
+      confidence: 80,
+    } as any);
+    expect(slugs).toContain("faretta_self_representation");
+  });
+
+  it("maps procedural + high severity + not_located to speedy_trial_delay AND due_process_defect", () => {
+    const slugs = deriveViolationSlugsForTest({
+      predicateStatus: "not_located",
+      severityCategory: "procedural",
+      severityScore: 8,
+      confidence: 85,
+    } as any);
+    expect(slugs).toContain("speedy_trial_delay");
+    expect(slugs).toContain("due_process_defect");
+  });
+
+  it("does NOT add speedy_trial_delay for procedural + low severity", () => {
+    const slugs = deriveViolationSlugsForTest({
+      predicateStatus: "not_located",
+      severityCategory: "procedural",
+      severityScore: 3,
+      confidence: 60,
+    } as any);
+    expect(slugs).not.toContain("speedy_trial_delay");
+    expect(slugs).toContain("due_process_defect");
+  });
+
+  it("adds record_integrity_issue for contradicted findings", () => {
+    const slugs = deriveViolationSlugsForTest({
+      predicateStatus: "contradicted",
+      severityCategory: "administrative",
+      severityScore: 5,
+      confidence: 70,
+    } as any);
+    expect(slugs).toContain("record_integrity_issue");
+  });
+
+  it("deduplicates slugs when category already maps to record_integrity_issue and status is contradicted", () => {
+    const slugs = deriveViolationSlugsForTest({
+      predicateStatus: "contradicted",
+      severityCategory: "administrative",
+      severityScore: 5,
+      confidence: 70,
+    } as any);
+    const count = slugs.filter((s: string) => s === "record_integrity_issue").length;
+    expect(count).toBe(1);
+  });
+});

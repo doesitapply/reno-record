@@ -16,8 +16,57 @@
 
 import { invokeLLM } from "./_core/llm";
 import { getDb } from "./db";
+import {
+  getTimelineEventViolationTags,
+  getViolationTagBySlug,
+  addTimelineEventViolationTag,
+} from "./db";
 import { predicateFindings, timelineEvents, documents, documentViolationTags, violationTags } from "../drizzle/schema";
 import { eq, and, inArray } from "drizzle-orm";
+
+/**
+ * Maps predicate severity categories + status patterns to violation tag slugs.
+ * Used by the engine write-back to auto-tag events — additive only, never overwrites human tags.
+ */
+const PREDICATE_TO_VIOLATION_SLUGS: Record<string, string[]> = {
+  // Liberty-category findings with missing predicates → bail/warrant defect
+  liberty: ["warrant_or_bail_defect"],
+  // Counsel-category → Faretta / self-rep
+  counsel: ["faretta_self_representation"],
+  // Procedural → due process defect
+  procedural: ["due_process_defect"],
+  // Administrative → record integrity
+  administrative: ["record_integrity_issue"],
+};
+
+/** Derive violation slugs from a finding based on severity + status */
+function deriveViolationSlugs(finding: PredicateFindingResult): string[] {
+  const slugs: string[] = [];
+
+  // Only auto-tag when predicate is actually missing or contradicted
+  if (finding.predicateStatus === "located" || finding.predicateStatus === "off_record") {
+    return [];
+  }
+
+  const base = PREDICATE_TO_VIOLATION_SLUGS[finding.severityCategory] ?? [];
+  slugs.push(...base);
+
+  // Speedy trial: procedural + high severity + not_located
+  if (
+    finding.severityCategory === "procedural" &&
+    finding.severityScore >= 6 &&
+    finding.predicateStatus === "not_located"
+  ) {
+    slugs.push("speedy_trial_delay");
+  }
+
+  // Contradicted findings → record integrity
+  if (finding.predicateStatus === "contradicted") {
+    if (!slugs.includes("record_integrity_issue")) slugs.push("record_integrity_issue");
+  }
+
+  return Array.from(new Set(slugs));
+}
 
 export type PredicateStatus =
   | "located"
@@ -337,6 +386,7 @@ Return ONLY the JSON array. No preamble, no explanation.`;
 /**
  * Persist findings to the predicate_findings table.
  * Deletes existing findings for the story before inserting new ones.
+ * Also writes event-level violation tags (additive, non-destructive — never overwrites human tags).
  */
 export async function persistPredicateFindings(
   storyId: number,
@@ -376,4 +426,66 @@ export async function persistPredicateFindings(
       })),
     );
   }
+
+  // Write-back: auto-tag events with derived violation tags.
+  // CRITICAL: additive only — never overwrite human-applied tags.
+  // If a human has already tagged an event with a given violation, skip it.
+  const tagWriteErrors: string[] = [];
+  for (const finding of findings) {
+    const slugsToApply = deriveViolationSlugs(finding);
+    if (slugsToApply.length === 0) continue;
+
+    // Load existing human tags for this event
+    let existingTags: Awaited<ReturnType<typeof getTimelineEventViolationTags>>;
+    try {
+      existingTags = await getTimelineEventViolationTags(finding.eventId);
+    } catch {
+      continue; // Skip if lookup fails — don't block the persist
+    }
+
+    const humanTaggedViolationIds = new Set(
+      existingTags
+        .filter((t) => t.addedBy === "human")
+        .map((t) => t.violationTagId),
+    );
+
+    for (const slug of slugsToApply) {
+      try {
+        const tag = await getViolationTagBySlug(slug);
+        if (!tag) continue;
+
+        // Skip if a human has already tagged this event with this violation
+        if (humanTaggedViolationIds.has(tag.id)) {
+          console.log(
+            `[PredicateEngine] Skipping engine tag (human precedence): event=${finding.eventId} slug=${slug}`,
+          );
+          continue;
+        }
+
+        // Check if engine already tagged this event+violation (idempotent)
+        const alreadyEngineTagged = existingTags.some(
+          (t) => t.violationTagId === tag.id && t.addedBy === "predicate_engine",
+        );
+        if (alreadyEngineTagged) continue;
+
+        await addTimelineEventViolationTag({
+          timelineEventId: finding.eventId,
+          violationTagId: tag.id,
+          sourceQuote: finding.missingPredicate ?? finding.officialAct,
+          sourceCitation: `Predicate Analysis Engine v${reportVersion} — ${finding.predicateStatus} (confidence: ${finding.confidence}%). ${finding.recommendedRequest ?? ""}`.trim(),
+          confidence: finding.confidence,
+          addedBy: "predicate_engine",
+        });
+      } catch (err) {
+        tagWriteErrors.push(`event=${finding.eventId} slug=${slug}: ${String(err)}`);
+      }
+    }
+  }
+
+  if (tagWriteErrors.length > 0) {
+    console.warn(`[PredicateEngine] ${tagWriteErrors.length} tag write-back error(s):`, tagWriteErrors);
+  }
 }
+
+/** Test-only export — allows vitest to exercise the slug derivation logic without running the full engine */
+export { deriveViolationSlugs as deriveViolationSlugsForTest };

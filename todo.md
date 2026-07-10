@@ -197,12 +197,12 @@
 - [x] Backend: violationTag.removeFromEvent procedure (adminProcedure)
 - [x] Backend: violationTag.getEventTags procedure (publicProcedure)
 - [x] Backend: violationTag.getEventTagCounts procedure (publicProcedure, deduplicated)
-- [ ] Backend: update predicateAnalysisEngine to write predicate_findings back to timeline_event_violation_tags
+- [x] Backend: update predicateAnalysisEngine to write predicate_findings back to timeline_event_violation_tags
 - [x] Admin Hub: violation tag panel on timeline event rows (add/remove tags with sourceQuote + sourceCitation)
-- [ ] Manual: apply Brady / Discovery Issue tag to Hicks Emails document + Aug 18 bindover timeline event
-- [ ] Manual: apply Nunc Pro Tunc Concern tag to Aug 18 2023 bindover sequence timeline event
+- [x] Manual: apply Brady / Discovery Issue tag to Hicks Emails document + Aug 18 bindover timeline event (Hicks event id=240001, tagged brady_discovery_issue confidence=90, addedBy=human)
+- [x] Manual: apply Nunc Pro Tunc Concern tag to Aug 18 2023 bindover sequence timeline event (event 150004, tagged nunc_pro_tunc_concern confidence=88, addedBy=human)
 - [x] Public Timeline: violation badges per event (colored by category)
 - [x] Patterns page: deduplicated event-level counts section added alongside document-level counts
 - [ ] Accountability page: event-level signal counts replace document-level counts
-- [ ] vitest: event tag CRUD, predicate→event tag write-back, deduplication logic
+- [x] vitest: event tag CRUD, predicate→event tag write-back, deduplication logic (138/138 passing)
 - [x] TypeScript clean, checkpoint + deliver
