@@ -64,6 +64,7 @@ import {
   History,
   X,
   Save,
+  Tag,
 } from "lucide-react";
 
 // ─── Shared helpers ────────────────────────────────────────────────────────
@@ -123,6 +124,111 @@ function FieldRow({ label, children }: { label: string; children: React.ReactNod
     <div className="grid grid-cols-[140px_1fr] items-start gap-2">
       <Label className="text-xs text-zinc-500 pt-2">{label}</Label>
       <div>{children}</div>
+    </div>
+  );
+}
+
+// ─── Event Violation Tag Panel (v7.10) ────────────────────────────────────
+
+function EventTagPanel({ eventId }: { eventId: number }) {
+  const utils = trpc.useUtils();
+  const { data: tags = [], isLoading } = trpc.violationTag.getEventTags.useQuery({ timelineEventId: eventId });
+  const { data: allTags = [] } = trpc.violationTag.list.useQuery();
+  const [showAdd, setShowAdd] = useState(false);
+  const [addForm, setAddForm] = useState({ violationTagId: "", sourceQuote: "", sourceCitation: "", confidence: "100" });
+
+  const addMut = trpc.violationTag.addToEvent.useMutation({
+    onSuccess: () => {
+      toast.success("Tag applied to event");
+      utils.violationTag.getEventTags.invalidate({ timelineEventId: eventId });
+      setShowAdd(false);
+      setAddForm({ violationTagId: "", sourceQuote: "", sourceCitation: "", confidence: "100" });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const removeMut = trpc.violationTag.removeFromEvent.useMutation({
+    onSuccess: () => {
+      toast.success("Tag removed");
+      utils.violationTag.getEventTags.invalidate({ timelineEventId: eventId });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const categoryColor = (cat: string) => {
+    if (cat === "constitutional") return "bg-red-900/30 text-red-300 border-red-800/40";
+    if (cat === "procedural") return "bg-amber-900/30 text-amber-300 border-amber-800/40";
+    if (cat === "discovery") return "bg-blue-900/30 text-blue-300 border-blue-800/40";
+    if (cat === "judicial_conduct") return "bg-purple-900/30 text-purple-300 border-purple-800/40";
+    if (cat === "prosecutorial_conduct") return "bg-orange-900/30 text-orange-300 border-orange-800/40";
+    return "bg-zinc-800/60 text-zinc-400 border-zinc-700/40";
+  };
+
+  return (
+    <div className="px-3 pb-3 pt-1">
+      <div className="rounded-md border border-zinc-800 bg-zinc-950/60 p-2.5 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Violation Tags ({tags.length})</span>
+          <button onClick={() => setShowAdd(v => !v)} className="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-200 transition-colors">
+            <Plus className="w-3 h-3" /> Add Tag
+          </button>
+        </div>
+
+        {isLoading && <div className="text-[10px] text-zinc-600">Loading…</div>}
+
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {tags.map((t: any) => (
+              <div key={t.id} className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-medium ${categoryColor(t.tagCategory)}`}>
+                <span>{t.tagLabel}</span>
+                {t.confidence < 100 && <span className="opacity-60">({t.confidence}%)</span>}
+                <button onClick={() => removeMut.mutate({ id: t.id })} className="ml-0.5 opacity-50 hover:opacity-100 transition-opacity" title="Remove tag">
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tags.length === 0 && !isLoading && (
+          <p className="text-[10px] text-zinc-700 italic">No violation tags applied to this event.</p>
+        )}
+
+        {showAdd && (
+          <div className="mt-2 space-y-2 border-t border-zinc-800 pt-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-[10px] text-zinc-500 mb-1 block">Violation Tag</Label>
+                <Select value={addForm.violationTagId} onValueChange={v => setAddForm(f => ({ ...f, violationTagId: v }))}>
+                  <SelectTrigger className="h-7 text-[10px] bg-zinc-900 border-zinc-700"><SelectValue placeholder="Select tag…" /></SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-zinc-700 max-h-48">
+                    {allTags.map((t: any) => (
+                      <SelectItem key={t.id} value={String(t.id)} className="text-[10px]">{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px] text-zinc-500 mb-1 block">Confidence %</Label>
+                <Input type="number" min="0" max="100" value={addForm.confidence} onChange={e => setAddForm(f => ({ ...f, confidence: e.target.value }))} className="h-7 text-[10px] bg-zinc-900 border-zinc-700" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-[10px] text-zinc-500 mb-1 block">Source Quote <span className="text-red-500">*</span></Label>
+              <Input value={addForm.sourceQuote} onChange={e => setAddForm(f => ({ ...f, sourceQuote: e.target.value }))} placeholder="Verbatim quote from record supporting this tag…" className="h-7 text-[10px] bg-zinc-900 border-zinc-700" />
+            </div>
+            <div>
+              <Label className="text-[10px] text-zinc-500 mb-1 block">Citation (optional)</Label>
+              <Input value={addForm.sourceCitation} onChange={e => setAddForm(f => ({ ...f, sourceCitation: e.target.value }))} placeholder="e.g. RT 12:4-9, Dec 5 2024" className="h-7 text-[10px] bg-zinc-900 border-zinc-700" />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setShowAdd(false)} className="text-[10px] h-6 px-2">Cancel</Button>
+              <Button size="sm" onClick={() => addMut.mutate({ timelineEventId: eventId, violationTagId: Number(addForm.violationTagId), sourceQuote: addForm.sourceQuote, sourceCitation: addForm.sourceCitation || undefined, confidence: Number(addForm.confidence) })} disabled={addMut.isPending || !addForm.violationTagId || addForm.sourceQuote.length < 5} className="text-[10px] h-6 px-2 gap-1">
+                {addMut.isPending ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Plus className="w-2.5 h-2.5" />} Apply
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -415,6 +521,7 @@ function TimelineTab() {
   const [editForm, setEditForm] = useState<Record<string, string>>({});
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState({ eventDate: "", title: "", description: "", category: "other" as (typeof TIMELINE_CATEGORIES)[number], actorNames: "" });
+  const [expandedTagEventId, setExpandedTagEventId] = useState<number | null>(null);
 
   const updateMut = trpc.timeline.adminUpdate.useMutation({
     onSuccess: () => { toast.success("Event updated"); utils.timeline.adminList.invalidate(); setEditId(null); },
@@ -484,21 +591,31 @@ function TimelineTab() {
             </thead>
             <tbody>
               {filtered.map((ev, i) => (
-                <tr key={ev.id} className={`border-b border-zinc-800/60 hover:bg-zinc-800/20 transition-colors ${i % 2 === 0 ? "" : "bg-zinc-900/20"}`}>
-                  <td className="px-3 py-2 font-mono text-zinc-400">{ev.eventDate ? new Date(ev.eventDate).toLocaleDateString() : "—"}</td>
-                  <td className="px-3 py-2">
-                    <p className="text-zinc-200 line-clamp-1">{(ev as any).title}</p>
-                    {(ev as any).summary && <p className="text-zinc-600 text-[10px] line-clamp-1 mt-0.5">{(ev as any).summary}</p>}
-                  </td>
-                  <td className="px-3 py-2"><span className="text-[10px] text-zinc-500 font-mono">{((ev as any).category ?? "other").replace(/_/g, " ")}</span></td>
-                  <td className="px-3 py-2 text-zinc-500 text-[10px] line-clamp-1">{((ev as any).actors ?? []).join(", ") || "—"}</td>
-                  <td className="px-3 py-2">
-                    <div className="flex items-center gap-1 justify-end">
-                      <button onClick={() => { setEditId((ev as any).id); setEditForm({ title: (ev as any).title, description: (ev as any).summary ?? "", category: (ev as any).category ?? "other", actorNames: ((ev as any).actors ?? []).join(", "), eventDate: (ev as any).eventDate ? new Date((ev as any).eventDate).toISOString().split("T")[0] : "" }); }} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => setDeleteId((ev as any).id)} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
-                  </td>
-                </tr>
+                <>
+                  <tr key={ev.id} className={`border-b border-zinc-800/60 hover:bg-zinc-800/20 transition-colors ${i % 2 === 0 ? "" : "bg-zinc-900/20"}`}>
+                    <td className="px-3 py-2 font-mono text-zinc-400">{ev.eventDate ? new Date(ev.eventDate).toLocaleDateString() : "—"}</td>
+                    <td className="px-3 py-2">
+                      <p className="text-zinc-200 line-clamp-1">{(ev as any).title}</p>
+                      {(ev as any).summary && <p className="text-zinc-600 text-[10px] line-clamp-1 mt-0.5">{(ev as any).summary}</p>}
+                    </td>
+                    <td className="px-3 py-2"><span className="text-[10px] text-zinc-500 font-mono">{((ev as any).category ?? "other").replace(/_/g, " ")}</span></td>
+                    <td className="px-3 py-2 text-zinc-500 text-[10px] line-clamp-1">{((ev as any).actors ?? []).join(", ") || "—"}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-1 justify-end">
+                        <button onClick={() => setExpandedTagEventId(expandedTagEventId === (ev as any).id ? null : (ev as any).id)} className={`p-1 rounded hover:bg-zinc-700 transition-colors ${expandedTagEventId === (ev as any).id ? "text-amber-400" : "text-zinc-500 hover:text-amber-400"}`} title="Violation tags"><Tag className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => { setEditId((ev as any).id); setEditForm({ title: (ev as any).title, description: (ev as any).summary ?? "", category: (ev as any).category ?? "other", actorNames: ((ev as any).actors ?? []).join(", "), eventDate: (ev as any).eventDate ? new Date((ev as any).eventDate).toISOString().split("T")[0] : "" }); }} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => setDeleteId((ev as any).id)} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                  {expandedTagEventId === (ev as any).id && (
+                    <tr key={`tags-${ev.id}`} className="border-b border-zinc-800/60 bg-zinc-900/40">
+                      <td colSpan={5}>
+                        <EventTagPanel eventId={(ev as any).id} />
+                      </td>
+                    </tr>
+                  )}
+                </>
               ))}
             </tbody>
           </table>

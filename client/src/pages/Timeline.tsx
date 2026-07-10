@@ -32,6 +32,29 @@ function ShareBar({ url, title }: { url: string; title: string }) {
   );
 }
 
+function EventViolationTags({ eventId }: { eventId: number }) {
+  const { data: tags = [] } = trpc.violationTag.getEventTags.useQuery({ timelineEventId: eventId });
+  if (!tags.length) return null;
+  const categoryColor = (cat: string) => {
+    if (cat === "constitutional") return "border-red-500/50 text-red-400";
+    if (cat === "procedural") return "border-amber-500/50 text-amber-400";
+    if (cat === "discovery") return "border-blue-500/50 text-blue-400";
+    if (cat === "judicial_conduct") return "border-purple-500/50 text-purple-400";
+    if (cat === "prosecutorial_conduct") return "border-orange-500/50 text-orange-400";
+    return "border-border text-muted-foreground";
+  };
+  return (
+    <div className="mt-3 flex flex-wrap gap-1.5">
+      {tags.map((t: any) => (
+        <Badge key={t.id} variant="outline" className={`font-mono uppercase text-[9px] gap-1 ${categoryColor(t.tagCategory)}`}>
+          {t.tagLabel}
+          {t.confidence < 100 && <span className="opacity-60">·{t.confidence}%</span>}
+        </Badge>
+      ))}
+    </div>
+  );
+}
+
 type CaseFilter = "all" | "state_case" | "federal_case";
 
 const CASE_FILTERS: { value: CaseFilter; label: string; icon: React.ReactNode; sub: string }[] = [
@@ -248,6 +271,7 @@ export default function TimelinePage() {
                           ))}
                         </div>
                       )}
+                      <EventViolationTags eventId={ev.id} />
                     </div>
                   </article>
                 );

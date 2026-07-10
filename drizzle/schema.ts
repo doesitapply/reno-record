@@ -1255,3 +1255,30 @@ export const predicateFindings = mysqlTable(
 );
 export type PredicateFinding = typeof predicateFindings.$inferSelect;
 export type InsertPredicateFinding = typeof predicateFindings.$inferInsert;
+
+/* ========== Timeline Event Violation Tags (v7.10 — event-level tagging) ========== */
+export const timelineEventViolationTags = mysqlTable(
+  "timeline_event_violation_tags",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    timelineEventId: int("timeline_event_id").notNull(),
+    violationTagId: int("violation_tag_id").notNull(),
+    /** Direct quote from the source document or transcript supporting this tag */
+    sourceQuote: text("source_quote").notNull(),
+    /** Citation: document title, page number, docket entry, transcript line, etc. */
+    sourceCitation: varchar("source_citation", { length: 300 }),
+    /** 0–100 confidence; 100 = human-verified, <100 = AI-suggested */
+    confidence: int("confidence").default(100).notNull(),
+    /** 'human' | 'goblin' | 'predicate_engine' */
+    addedBy: mysqlEnum("added_by", ["human", "goblin", "predicate_engine"]).default("human").notNull(),
+    addedByUserId: int("added_by_user_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    eventIdx: index("tevt_event_idx").on(t.timelineEventId),
+    tagIdx: index("tevt_tag_idx").on(t.violationTagId),
+    uniqueEventTag: index("tevt_unique_event_tag").on(t.timelineEventId, t.violationTagId),
+  }),
+);
+export type TimelineEventViolationTag = typeof timelineEventViolationTags.$inferSelect;
+export type InsertTimelineEventViolationTag = typeof timelineEventViolationTags.$inferInsert;

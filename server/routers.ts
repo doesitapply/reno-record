@@ -2131,6 +2131,38 @@ const violationTagRouter = router({
       await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "violation_tag", targetId: 0, metadata: { action: "create", slug: input.slug } });
       return { success: true };
     }),
+  // ---- Event-level tagging (v7.10) ----
+  getEventTags: publicProcedure
+    .input(z.object({ timelineEventId: z.number() }))
+    .query(async ({ input }) => {
+      return db.getTimelineEventViolationTags(input.timelineEventId);
+    }),
+  addToEvent: adminProcedure
+    .input(
+      z.object({
+        timelineEventId: z.number(),
+        violationTagId: z.number(),
+        sourceQuote: z.string().min(5),
+        sourceCitation: z.string().optional(),
+        confidence: z.number().min(0).max(100).default(100),
+        addedBy: z.enum(["human", "goblin", "predicate_engine"]).default("human"),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const result = await db.addTimelineEventViolationTag({ ...input, addedByUserId: ctx.user.id });
+      await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "timeline_event_violation_tag", targetId: input.timelineEventId, metadata: { action: "tag_added", violationTagId: input.violationTagId, confidence: input.confidence } });
+      return result;
+    }),
+  removeFromEvent: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      await db.removeTimelineEventViolationTag(input.id);
+      await writeAudit({ actorUserId: ctx.user.id, actorRole: ctx.user.role, action: "inline_edit", targetType: "timeline_event_violation_tag", targetId: input.id, metadata: { action: "tag_removed" } });
+      return { success: true };
+    }),
+  getEventTagCounts: publicProcedure.query(async () => {
+    return db.getAllEventViolationTagCounts();
+  }),
 });
 
 /* ========== Actor Link Router (v4.0) ========== */

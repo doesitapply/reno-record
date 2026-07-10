@@ -27,6 +27,7 @@ export default function PatternsPage() {
   });
   const m = trpc.patterns.metrics.useQuery();
   const d = m.data ?? ({} as any);
+  const { data: eventTagCounts = [] } = trpc.violationTag.getEventTagCounts.useQuery();
 
   const groups: PatternGroup[] = [
     {
@@ -176,6 +177,32 @@ export default function PatternsPage() {
                 </div>
               </div>
             ))}
+            {/* v7.10: event-level violation tag counts (deduplicated — 1 event = 1 count) */}
+            {eventTagCounts.length > 0 && (
+              <div>
+                <div className="eyebrow">Event-level signals (v7.10)</div>
+                <h2 className="display-serif text-2xl mt-2 rule-amber">Procedural concerns by docket event</h2>
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-3xl">
+                  Each count represents a distinct docket event tagged with this violation type — not a document count.
+                  This eliminates inflation from multi-document packs covering the same event.
+                </p>
+                <div className="mt-5 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(eventTagCounts as Array<{ tagSlug: string; tagLabel: string; tagCategory: string; eventCount: number }>).map((t) => (
+                    <Link key={t.tagSlug} href={`/patterns/tag/${t.tagSlug}`} className="block group">
+                      <MetricCard
+                        m={{
+                          label: t.tagLabel,
+                          value: t.eventCount,
+                          tone: t.eventCount > 3 ? "alarm" : t.eventCount > 0 ? "warning" : "neutral",
+                          hint: t.tagCategory.replace(/_/g, " "),
+                        }}
+                        clickable
+                      />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* v4.0: violation tag evidence signals from document taxonomy */}
             {(d.tagCounts?.length ?? 0) > 0 && (
               <div>

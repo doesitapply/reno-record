@@ -186,3 +186,23 @@
 - [x] Shareable meta tags (og:title, og:description, og:image)
 - [x] Mobile-first, fast, no layout jank
 - [x] TypeScript clean, checkpoint + deliver
+
+---
+
+## v7.10 — Event-Level Violation Tagging (in progress)
+
+- [x] Schema: add timelineEventViolationTags table (mirrors documentViolationTags, FK to timeline_events + violation_tags)
+- [x] Migration: generate SQL via drizzle-kit, apply via webdev_execute_sql
+- [x] Backend: violationTag.addToEvent procedure (adminProcedure)
+- [x] Backend: violationTag.removeFromEvent procedure (adminProcedure)
+- [x] Backend: violationTag.getEventTags procedure (publicProcedure)
+- [x] Backend: violationTag.getEventTagCounts procedure (publicProcedure, deduplicated)
+- [ ] Backend: update predicateAnalysisEngine to write predicate_findings back to timeline_event_violation_tags
+- [x] Admin Hub: violation tag panel on timeline event rows (add/remove tags with sourceQuote + sourceCitation)
+- [ ] Manual: apply Brady / Discovery Issue tag to Hicks Emails document + Aug 18 bindover timeline event
+- [ ] Manual: apply Nunc Pro Tunc Concern tag to Aug 18 2023 bindover sequence timeline event
+- [x] Public Timeline: violation badges per event (colored by category)
+- [x] Patterns page: deduplicated event-level counts section added alongside document-level counts
+- [ ] Accountability page: event-level signal counts replace document-level counts
+- [ ] vitest: event tag CRUD, predicate→event tag write-back, deduplication logic
+- [x] TypeScript clean, checkpoint + deliver

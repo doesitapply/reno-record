@@ -48,6 +48,8 @@ import {
   DocumentRow,
   apiKeys,
   InsertApiKey,
+  timelineEventViolationTags,
+  InsertTimelineEventViolationTag,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -1061,6 +1063,59 @@ export async function removeDocumentViolationTag(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
   await db.delete(documentViolationTags).where(eq(documentViolationTags.id, id));
+}
+
+/* ================= Timeline Event Violation Tags (v7.10) ================= */
+export async function getTimelineEventViolationTags(timelineEventId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      id: timelineEventViolationTags.id,
+      timelineEventId: timelineEventViolationTags.timelineEventId,
+      violationTagId: timelineEventViolationTags.violationTagId,
+      sourceQuote: timelineEventViolationTags.sourceQuote,
+      sourceCitation: timelineEventViolationTags.sourceCitation,
+      confidence: timelineEventViolationTags.confidence,
+      addedBy: timelineEventViolationTags.addedBy,
+      createdAt: timelineEventViolationTags.createdAt,
+      tagSlug: violationTags.slug,
+      tagLabel: violationTags.label,
+      tagCategory: violationTags.category,
+    })
+    .from(timelineEventViolationTags)
+    .innerJoin(violationTags, eq(timelineEventViolationTags.violationTagId, violationTags.id))
+    .where(eq(timelineEventViolationTags.timelineEventId, timelineEventId))
+    .orderBy(asc(violationTags.category));
+}
+export async function addTimelineEventViolationTag(data: InsertTimelineEventViolationTag) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const [result] = await db.insert(timelineEventViolationTags).values(data).$returningId();
+  return result;
+}
+export async function removeTimelineEventViolationTag(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.delete(timelineEventViolationTags).where(eq(timelineEventViolationTags.id, id));
+}
+/** Get all event-level violation tags with event info — used for deduplication counts */
+export async function getAllEventViolationTagCounts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      tagSlug: violationTags.slug,
+      tagLabel: violationTags.label,
+      tagCategory: violationTags.category,
+      eventCount: count(timelineEventViolationTags.timelineEventId),
+    })
+    .from(timelineEventViolationTags)
+    .innerJoin(violationTags, eq(timelineEventViolationTags.violationTagId, violationTags.id))
+    .innerJoin(timelineEvents, eq(timelineEventViolationTags.timelineEventId, timelineEvents.id))
+    .where(eq(timelineEvents.publicStatus, true))
+    .groupBy(violationTags.slug, violationTags.label, violationTags.category)
+    .orderBy(desc(count(timelineEventViolationTags.timelineEventId)));
 }
 
 /* ================= Actor Agency Roles (v4.0) ================= */
