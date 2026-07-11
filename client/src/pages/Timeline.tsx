@@ -1,7 +1,7 @@
 import { useSEO } from "@/hooks/useSEO";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Link } from "wouter";
-import { FileText, Copy, Check, Twitter, Scale, Landmark } from "lucide-react";
+import { FileText, Copy, Check, Twitter, Scale, Landmark, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import SiteShell from "@/components/SiteShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,18 @@ function EventViolationTags({ eventId }: { eventId: number }) {
   );
 }
 
+const NARRATIVE_DELIMITER = "[WHAT WAS REALLY HAPPENING]";
+
+function parseEventSummary(summary: string | null | undefined): { official: string; narrative: string | null } {
+  if (!summary) return { official: "", narrative: null };
+  const idx = summary.indexOf(NARRATIVE_DELIMITER);
+  if (idx === -1) return { official: summary, narrative: null };
+  return {
+    official: summary.slice(0, idx).trim(),
+    narrative: summary.slice(idx + NARRATIVE_DELIMITER.length).trim(),
+  };
+}
+
 type CaseFilter = "all" | "state_case" | "federal_case";
 
 const CASE_FILTERS: { value: CaseFilter; label: string; icon: React.ReactNode; sub: string }[] = [
@@ -84,6 +96,112 @@ function getEventCaseTag(category: string): CaseFilter | null {
   if (category === "state_case") return "state_case";
   if (category === "federal_case") return "federal_case";
   return null;
+}
+
+function EventCard({ ev }: { ev: any }) {
+  const [showNarrative, setShowNarrative] = useState(false);
+  const evCase = getEventCaseTag(ev.category);
+  const dotColor =
+    evCase === "state_case"
+      ? "bg-amber-500"
+      : evCase === "federal_case"
+      ? "bg-blue-500"
+      : "bg-[var(--amber)]";
+  const { official, narrative } = useMemo(() => parseEventSummary(ev.summary), [ev.summary]);
+
+  return (
+    <article key={ev.id} className="relative pl-6 pb-8 last:pb-0">
+      <span
+        className={cn(
+          "absolute -left-[7px] top-2 h-3 w-3 rounded-full ring-4 ring-background",
+          dotColor,
+        )}
+      />
+      <div className="paper-card p-5">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+            {new Date(ev.eventDate).toLocaleDateString(undefined, {
+              year: "numeric",
+              month: "short",
+              day: "2-digit",
+            })}
+          </span>
+          {evCase === "state_case" && (
+            <Badge variant="outline" className="font-mono uppercase text-[10px] border-amber-500/50 text-amber-400 gap-1">
+              <Scale className="h-2.5 w-2.5" /> State
+            </Badge>
+          )}
+          {evCase === "federal_case" && (
+            <Badge variant="outline" className="font-mono uppercase text-[10px] border-blue-500/50 text-blue-400 gap-1">
+              <Landmark className="h-2.5 w-2.5" /> Federal
+            </Badge>
+          )}
+          <Badge
+            variant={ev.status === "confirmed" ? "default" : "secondary"}
+            className="font-mono uppercase text-[10px]"
+          >
+            {ev.status}
+          </Badge>
+          {ev.caseNumber && (
+            <Badge variant="outline" className="font-mono uppercase text-[10px]">
+              {ev.caseNumber}
+            </Badge>
+          )}
+          {narrative && (
+            <button
+              onClick={() => setShowNarrative((v) => !v)}
+              className={cn(
+                "ml-auto flex items-center gap-1 font-mono uppercase text-[10px] tracking-widest px-2 py-0.5 rounded border transition-colors",
+                showNarrative
+                  ? "border-red-500/60 text-red-400 bg-red-500/10"
+                  : "border-border text-muted-foreground hover:border-red-500/50 hover:text-red-400",
+              )}
+            >
+              {showNarrative ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              {showNarrative ? "Official record" : "What really happened"}
+            </button>
+          )}
+        </div>
+        <h3 className="mt-2 display-serif text-xl">{ev.title}</h3>
+
+        {/* Official summary */}
+        {!showNarrative && official && (
+          <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{official}</p>
+        )}
+
+        {/* Narrative layer */}
+        {showNarrative && narrative && (
+          <div className="mt-3 rounded-md border border-red-500/30 bg-red-500/5 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-red-400 shrink-0" />
+              <span className="font-mono text-[10px] uppercase tracking-widest text-red-400 font-semibold">
+                What was really happening
+              </span>
+            </div>
+            <p className="text-sm text-foreground/90 leading-relaxed">{narrative}</p>
+          </div>
+        )}
+
+        {(ev.actors ?? []).length > 0 && (
+          <div className="mt-3 text-xs text-muted-foreground font-mono uppercase tracking-widest">
+            Actors: {(ev.actors ?? []).join(" · ")}
+          </div>
+        )}
+        {(ev.sourceDocuments ?? []).length > 0 && (
+          <div className="mt-3 flex gap-2 flex-wrap">
+            {(ev.sourceDocuments ?? []).map((id: any) => (
+              <Link key={id} href={`/evidence/${id}`}>
+                <Badge variant="outline" className="gap-1.5 font-mono uppercase text-[10px]">
+                  <FileText className="h-3 w-3" /> Source #{id}
+                </Badge>
+              </Link>
+            ))}
+          </div>
+        )}
+        <EventViolationTags eventId={ev.id} />
+      </div>
+    </article>
+  );
 }
 
 export default function TimelinePage() {
@@ -202,80 +320,9 @@ export default function TimelinePage() {
                   No approved events for this filter yet.
                 </div>
               )}
-              {displayEvents.map((ev) => {
-                const evCase = getEventCaseTag(ev.category);
-                const dotColor =
-                  evCase === "state_case"
-                    ? "bg-amber-500"
-                    : evCase === "federal_case"
-                    ? "bg-blue-500"
-                    : "bg-[var(--amber)]";
-                return (
-                  <article key={ev.id} className="relative pl-6 pb-8 last:pb-0">
-                    <span
-                      className={cn(
-                        "absolute -left-[7px] top-2 h-3 w-3 rounded-full ring-4 ring-background",
-                        dotColor,
-                      )}
-                    />
-                    <div className="paper-card p-5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                          {new Date(ev.eventDate).toLocaleDateString(undefined, {
-                            year: "numeric",
-                            month: "short",
-                            day: "2-digit",
-                          })}
-                        </span>
-                        {evCase === "state_case" && (
-                          <Badge variant="outline" className="font-mono uppercase text-[10px] border-amber-500/50 text-amber-400 gap-1">
-                            <Scale className="h-2.5 w-2.5" /> State
-                          </Badge>
-                        )}
-                        {evCase === "federal_case" && (
-                          <Badge variant="outline" className="font-mono uppercase text-[10px] border-blue-500/50 text-blue-400 gap-1">
-                            <Landmark className="h-2.5 w-2.5" /> Federal
-                          </Badge>
-                        )}
-                        <Badge
-                          variant={ev.status === "confirmed" ? "default" : "secondary"}
-                          className="font-mono uppercase text-[10px]"
-                        >
-                          {ev.status}
-                        </Badge>
-                        {ev.caseNumber && (
-                          <Badge variant="outline" className="font-mono uppercase text-[10px]">
-                            {ev.caseNumber}
-                          </Badge>
-                        )}
-                      </div>
-                      <h3 className="mt-2 display-serif text-xl">{ev.title}</h3>
-                      {ev.summary && (
-                        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                          {ev.summary}
-                        </p>
-                      )}
-                      {(ev.actors ?? []).length > 0 && (
-                        <div className="mt-3 text-xs text-muted-foreground font-mono uppercase tracking-widest">
-                          Actors: {(ev.actors ?? []).join(" · ")}
-                        </div>
-                      )}
-                      {(ev.sourceDocuments ?? []).length > 0 && (
-                        <div className="mt-3 flex gap-2 flex-wrap">
-                          {(ev.sourceDocuments ?? []).map((id) => (
-                            <Link key={id} href={`/evidence/${id}`}>
-                              <Badge variant="outline" className="gap-1.5 font-mono uppercase text-[10px]">
-                                <FileText className="h-3 w-3" /> Source #{id}
-                              </Badge>
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                      <EventViolationTags eventId={ev.id} />
-                    </div>
-                  </article>
-                );
-              })}
+              {displayEvents.map((ev) => (
+                <EventCard key={ev.id} ev={ev} />
+              ))}
             </div>
           </div>
 
@@ -290,7 +337,7 @@ export default function TimelinePage() {
                   <div>
                     <div className="text-sm font-semibold">CR23-0657</div>
                     <div className="text-xs text-muted-foreground">Washoe County District Court · Dept. 8</div>
-                    <div className="text-xs text-amber-400 mt-1 font-mono uppercase tracking-widest">Pending · No trial date</div>
+                    <div className="text-xs text-amber-400 mt-1 font-mono uppercase tracking-widest">Stayed · Disqualification pending Dept. 6</div>
                   </div>
                 </div>
                 <div className="border-t border-border" />

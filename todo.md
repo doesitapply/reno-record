@@ -206,3 +206,24 @@
 - [ ] Accountability page: event-level signal counts replace document-level counts
 - [x] vitest: event tag CRUD, predicate→event tag write-back, deduplication logic (138/138 passing)
 - [x] TypeScript clean, checkpoint + deliver
+
+---
+
+## v7.12 — Interactive UI + Timeline Polish + Narrative Layer
+
+- [ ] Homepage: make all metric cards (days detained, motions filed, motions answered, etc.) clickable links to filtered archive/timeline/predicate views
+- [ ] Homepage: make pattern gauge chips clickable (link to Patterns page filtered by category)
+- [ ] Patterns page: make all tag count rows clickable (link to archive filtered by that violation tag)
+- [ ] Patterns page: make chart bars/segments clickable (link to filtered timeline/archive)
+- [ ] Timeline: full audit against 154-document archive — fix dates, titles, fill 2026 gaps (Jan–Jul 2026 filings)
+- [ ] Timeline: add all 2026 state court events (substitution of attorney, motions to dismiss, disqualification motion, stay order, Dept 6 referral, July 2026 filings)
+- [ ] Timeline: add "what was really happening" annotation layer — parallel narrative track per event
+- [ ] Narrative Layer: build process-of-elimination analysis for each major claim:
+  - [ ] Amended complaint / Nunc Pro Tunc fraud
+  - [ ] Brady violation / phone destruction
+  - [ ] Judicial silence / non-rulings as deliberate strategy
+  - [ ] Counsel failure / alignment with state interests
+  - [ ] Competency detour as tactical delay
+  - [ ] Warrant posture as coercion mechanism
+- [ ] Build "What Really Happened" page with sourced, reasoned conclusions per actor
+- [ ] Accountability page: swap to event-level signal counts

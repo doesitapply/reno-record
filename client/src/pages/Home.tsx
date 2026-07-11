@@ -44,14 +44,20 @@ const STATUS_EVENTS = [
   { date: "Jul 7, 2026", event: "Most recent pro se filing (today)", color: "bg-green-500" },
 ];
 
-function StatCard({ value, label, icon: Icon }: { value: string | number; label: string; icon: React.ElementType }) {
-  return (
-    <div className="flex flex-col items-center gap-1 p-4 rounded-lg bg-white/5 border border-white/10">
-      <Icon className="w-5 h-5 text-amber-400 mb-1" />
+function StatCard({ value, label, icon: Icon, href }: { value: string | number; label: string; icon: React.ElementType; href?: string }) {
+  const inner = (
+    <div className={cn(
+      "flex flex-col items-center gap-1 p-4 rounded-lg bg-white/5 border border-white/10 transition-all",
+      href && "hover:border-amber-500/40 hover:bg-amber-500/5 cursor-pointer group"
+    )}>
+      <Icon className={cn("w-5 h-5 text-amber-400 mb-1", href && "group-hover:text-amber-300 transition-colors")} />
       <span className="text-2xl font-bold text-white tabular-nums">{value}</span>
-      <span className="text-xs text-zinc-400 text-center leading-tight">{label}</span>
+      <span className={cn("text-xs text-zinc-400 text-center leading-tight", href && "group-hover:text-zinc-300 transition-colors")}>{label}</span>
+      {href && <span className="text-[10px] text-amber-500/60 group-hover:text-amber-400 transition-colors mt-0.5">View →</span>}
     </div>
   );
+  if (href) return <Link href={href}>{inner}</Link>;
+  return inner;
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -140,11 +146,11 @@ export default function Home() {
         <section className="bg-zinc-900 border-b border-white/10">
           <div className="max-w-5xl mx-auto px-6 py-8">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              <StatCard value={s.daysSinceArrest?.toLocaleString() ?? "—"} label="Days Since Arrest" icon={Calendar} />
-              <StatCard value={s.documents ?? 0} label="Documents Archived" icon={FileText} />
-              <StatCard value={s.timelineEvents ?? 0} label="Timeline Events" icon={Clock} />
-              <StatCard value={s.actors ?? 0} label="Named Actors" icon={Users} />
-              <StatCard value={s.prrs ?? 0} label="Records Requests" icon={Search} />
+              <StatCard value={s.daysSinceArrest?.toLocaleString() ?? "—"} label="Days Since Arrest" icon={Calendar} href="/timeline" />
+              <StatCard value={s.documents ?? 0} label="Documents Archived" icon={FileText} href="/evidence" />
+              <StatCard value={s.timelineEvents ?? 0} label="Timeline Events" icon={Clock} href="/timeline" />
+              <StatCard value={s.actors ?? 0} label="Named Actors" icon={Users} href="/actors" />
+              <StatCard value={s.prrs ?? 0} label="Records Requests" icon={Search} href="/public-records" />
             </div>
           </div>
         </section>

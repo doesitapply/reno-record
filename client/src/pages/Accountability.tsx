@@ -178,10 +178,10 @@ const ROLES = [
 
 export default function Accountability() {
   const { data: stats } = trpc.patterns.siteStats.useQuery();
+  const { data: eventTagCounts } = trpc.violationTag.getEventTagCounts.useQuery();
 
-  const daysInSystem = stats
-    ? Math.floor((Date.now() - new Date("2023-03-13").getTime()) / 86400000)
-    : 1205;
+  const daysInSystem = Math.floor((Date.now() - new Date("2023-03-13").getTime()) / 86400000);
+  const totalEventSignals = eventTagCounts?.reduce((sum: number, t: any) => sum + (t.count ?? 0), 0) ?? null;
 
   return (
     <SiteShell>
@@ -210,8 +210,8 @@ export default function Accountability() {
                 <span className="text-muted-foreground">days held without trial</span>
               </div>
               <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded px-3 py-1.5">
-                <span className="text-orange-400 font-mono font-bold">137</span>
-                <span className="text-muted-foreground">documented violation signals</span>
+                <span className="text-orange-400 font-mono font-bold">{totalEventSignals ?? "—"}</span>
+                <span className="text-muted-foreground">event-level violation signals</span>
               </div>
               <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded px-3 py-1.5">
                 <span className="text-yellow-400 font-mono font-bold">5</span>
