@@ -1,0 +1,1 @@
+ALTER TABLE `api_keys` MODIFY COLUMN `scope` enum('read','ingest','write') NOT NULL DEFAULT 'read';

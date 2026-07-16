@@ -1884,7 +1884,7 @@ export async function createApiKey(data: {
   label: string;
   keyHash: string;
   keyPrefix: string;
-  scope: "read" | "ingest";
+  scope: "read" | "ingest" | "write";
   createdBy?: number | null;
 }) {
   const db = await getDb();

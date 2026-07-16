@@ -1,16 +1,23 @@
 /**
- * Public REST API for The Reno Record.
+ * Public REST API for The Reno Record — v8.0 (Agent API)
  *
- * Mounted at /api/public. Two manifests describe the same endpoints:
- *   - GET /api/public/openapi.json  → OpenAPI 3 (for Hermes-style function-callers)
- *   - GET /api/public/mcp.json      → MCP tool manifest (for Codex/Claude/MCP clients)
+ * Mounted at /api/public.
+ * Discovery manifests:
+ *   GET /api/public/openapi.json  → OpenAPI 3 spec
+ *   GET /api/public/mcp.json      → MCP tool manifest
  *
  * Auth: API key via `Authorization: Bearer <key>` or `x-api-key: <key>`.
- * Scopes: read (all GETs) | ingest (adds POST /ingest). Only sha256 hash is stored.
  *
- * Hard guarantees: read endpoints only ever return publicStatus=true + reviewStatus=approved
- * rows (enforced in db helpers). Ingest goes through the same Goblin pipeline as admin —
- * documents land as pending, never auto-published unless they clear the verifiability threshold.
+ * Scopes (additive — each scope includes all scopes below it):
+ *   read   — all GET endpoints (public data only)
+ *   ingest — read + POST /ingest (document ingestion pipeline)
+ *   write  — ingest + all write/monitor/admin agent endpoints
+ *
+ * Security guarantees:
+ *   - read endpoints only return publicStatus=true + reviewStatus=approved rows
+ *   - write endpoints require explicit write-scoped key
+ *   - only sha256 hash of the raw key is ever stored
+ *   - internal fields (fileKey, uploadedBy) are stripped from all responses
  */
 import { Router, type Request, type Response, type NextFunction } from "express";
 import crypto from "node:crypto";
@@ -19,10 +26,12 @@ import { validateUpload, decodeBase64Strict, checkRateLimit, writeAudit } from "
 import { runGoblinPipeline } from "./_pipeline";
 import { buildOpenApiSpec } from "./publicApiSpec";
 import { buildMcpManifest } from "./publicApiMcp";
+import { analyzePredicates, persistPredicateFindings } from "./predicateAnalysisEngine";
+import { predicateFindings } from "../drizzle/schema";
+import { eq, sql, desc, asc } from "drizzle-orm";
 
 type ApiKeyRow = NonNullable<Awaited<ReturnType<typeof db.getActiveApiKeyByHash>>>;
 
-// Attach the resolved key to the request object.
 interface AuthedRequest extends Request {
   apiKey?: ApiKeyRow;
 }
@@ -35,8 +44,15 @@ function extractKey(req: Request): string | null {
   return null;
 }
 
-/** Middleware factory. requiredScope "read" is satisfied by both read and ingest keys. */
-function apiKeyAuth(requiredScope: "read" | "ingest") {
+/** Scope hierarchy: write > ingest > read */
+function scopeAllows(keyScope: string, requiredScope: "read" | "ingest" | "write"): boolean {
+  if (requiredScope === "read") return true; // all scopes can read
+  if (requiredScope === "ingest") return keyScope === "ingest" || keyScope === "write";
+  if (requiredScope === "write") return keyScope === "write";
+  return false;
+}
+
+function apiKeyAuth(requiredScope: "read" | "ingest" | "write") {
   return async (req: AuthedRequest, res: Response, next: NextFunction) => {
     try {
       const raw = extractKey(req);
@@ -48,12 +64,13 @@ function apiKeyAuth(requiredScope: "read" | "ingest") {
       if (!key) {
         return res.status(401).json({ error: "invalid_api_key", message: "API key is invalid or revoked." });
       }
-      // ingest scope implies read; read scope cannot perform ingest.
-      if (requiredScope === "ingest" && key.scope !== "ingest") {
-        return res.status(403).json({ error: "insufficient_scope", message: "This endpoint requires an ingest-scoped key." });
+      if (!scopeAllows(key.scope, requiredScope)) {
+        return res.status(403).json({
+          error: "insufficient_scope",
+          message: `This endpoint requires a '${requiredScope}' scoped key. Your key has scope '${key.scope}'.`,
+        });
       }
       req.apiKey = key;
-      // best-effort usage bump; never blocks the request
       void db.touchApiKey(key.id);
       next();
     } catch (e: any) {
@@ -62,17 +79,14 @@ function apiKeyAuth(requiredScope: "read" | "ingest") {
   };
 }
 
-// Internal-only fields that must never appear in any public API response.
 const INTERNAL_DOC_FIELDS = ["fileKey", "uploadedBy", "file_key", "uploaded_by"] as const;
 
-/** Strip internal-only fields from a document row before returning it publicly. */
 function publicDoc(d: any) {
   if (!d) return d;
   const { fileKey, uploadedBy, ...rest } = d;
   return rest;
 }
 
-/** Redact internal fields from a version snapshot (snapshots are full row copies). */
 function publicVersion(v: any) {
   if (!v) return v;
   const snap = v.snapshot;
@@ -90,10 +104,16 @@ function asInt(v: unknown, fallback?: number): number | undefined {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function asFloat(v: unknown, fallback?: number): number | undefined {
+  if (v === undefined || v === null || v === "") return fallback;
+  const n = parseFloat(String(v));
+  return Number.isFinite(n) ? n : fallback;
+}
+
 export function createPublicApiRouter(): Router {
   const r = Router();
 
-  // ---- Manifests (no auth — discovery documents) ----
+  // ── Discovery manifests (no auth) ──────────────────────────────────────────
   r.get("/openapi.json", (req, res) => {
     const base = `${req.protocol}://${req.get("host")}/api/public`;
     res.json(buildOpenApiSpec(base));
@@ -103,11 +123,14 @@ export function createPublicApiRouter(): Router {
     res.json(buildMcpManifest(base));
   });
 
-  // ---- Read endpoints (read scope) ----
+  // ── READ endpoints (scope: read) ───────────────────────────────────────────
+
+  /** System health + aggregate stats */
   r.get("/stats", apiKeyAuth("read"), async (_req, res) => {
     res.json(await db.getSiteStats());
   });
 
+  /** List public documents with optional filters */
   r.get("/documents", apiKeyAuth("read"), async (req, res) => {
     const docs = await db.listPublicDocuments({
       q: req.query.q ? String(req.query.q) : undefined,
@@ -122,11 +145,11 @@ export function createPublicApiRouter(): Router {
     res.json({ count: docs.length, documents: docs.map(publicDoc) });
   });
 
+  /** Get a single document by ID */
   r.get("/documents/:id", apiKeyAuth("read"), async (req, res) => {
     const id = asInt(req.params.id);
     if (!id) return res.status(400).json({ error: "bad_id" });
     const doc = await db.getDocumentById(id);
-    // Only expose approved + public documents through the API.
     if (!doc || !doc.publicStatus || doc.reviewStatus !== "approved") {
       return res.status(404).json({ error: "not_found" });
     }
@@ -137,6 +160,7 @@ export function createPublicApiRouter(): Router {
     res.json({ ...publicDoc(doc), violationTags, versions: versions.map(publicVersion) });
   });
 
+  /** List violation taxonomy with document counts */
   r.get("/violations", apiKeyAuth("read"), async (_req, res) => {
     const [tags, metrics] = await Promise.all([db.listViolationTags(), db.getPatternMetrics()]);
     const counts: Record<string, { count: number; latestDocTitle: string | null; latestDocDate: string | null }> = {};
@@ -157,10 +181,12 @@ export function createPublicApiRouter(): Router {
     });
   });
 
+  /** List all public actors */
   r.get("/actors", apiKeyAuth("read"), async (_req, res) => {
     res.json({ actors: await db.listPublicActors() });
   });
 
+  /** List public timeline events */
   r.get("/timeline", apiKeyAuth("read"), async (req, res) => {
     const events = await db.listPublicTimeline({
       category: req.query.category ? String(req.query.category) : undefined,
@@ -169,13 +195,66 @@ export function createPublicApiRouter(): Router {
     res.json({ count: events.length, events });
   });
 
-  // ---- Ingest endpoint (ingest scope) ----
+  /** Get violation tags for a specific timeline event */
+  r.get("/timeline/:id/tags", apiKeyAuth("read"), async (req, res) => {
+    const id = asInt(req.params.id);
+    if (!id) return res.status(400).json({ error: "bad_id" });
+    const tags = await db.getTimelineEventViolationTags(id);
+    res.json({ eventId: id, count: tags.length, tags });
+  });
+
+  /** Get predicate analysis report (optionally filtered) */
+  r.get("/predicate-report", apiKeyAuth("read"), async (req, res) => {
+    const storyId = asInt(req.query.storyId, 60001) ?? 60001;
+    const drizzleDb = await db.getDb();
+    if (!drizzleDb) return res.status(503).json({ error: "db_unavailable" });
+    const statusFilter = req.query.status ? String(req.query.status) : undefined;
+    const severityFilter = req.query.severity ? String(req.query.severity) : undefined;
+    const limit = Math.min(asInt(req.query.limit, 100) ?? 100, 500);
+    const offset = asInt(req.query.offset, 0) ?? 0;
+    const conditions: any[] = [eq(predicateFindings.storyId, storyId)];
+    if (statusFilter) conditions.push(eq(predicateFindings.predicateStatus, statusFilter as any));
+    if (severityFilter) conditions.push(eq(predicateFindings.severityCategory, severityFilter as any));
+    const rows = await drizzleDb
+      .select()
+      .from(predicateFindings)
+      .where(conditions.length === 1 ? conditions[0] : (await import("drizzle-orm")).and(...conditions))
+      .orderBy(desc(predicateFindings.severityScore), asc(predicateFindings.eventDate))
+      .limit(limit)
+      .offset(offset);
+    res.json({ count: rows.length, storyId, findings: rows });
+  });
+
+  /** Monitor: ingest queue status */
+  r.get("/monitor/queue", apiKeyAuth("read"), async (req, res) => {
+    const status = req.query.status ? String(req.query.status) : undefined;
+    const jobs = await db.listIngestJobs({ status, limit: asInt(req.query.limit, 50) });
+    const pending = jobs.filter((j: any) => j.status === "pending").length;
+    const processing = jobs.filter((j: any) => j.status === "processing").length;
+    const failed = jobs.filter((j: any) => j.status === "failed").length;
+    res.json({ pending, processing, failed, total: jobs.length, jobs });
+  });
+
+  /** Monitor: documents needing review */
+  r.get("/monitor/review-queue", apiKeyAuth("read"), async (_req, res) => {
+    const docs = await db.listDocumentsNeedingReview() as any[];
+    res.json({ count: docs.length, documents: docs.map(publicDoc) });
+  });
+
+  /** Monitor: event-level violation tag counts (deduplicated) */
+  r.get("/monitor/event-tag-counts", apiKeyAuth("read"), async (_req, res) => {
+    const counts = await db.getAllEventViolationTagCounts();
+    res.json({ count: counts.length, tagCounts: counts });
+  });
+
+  // ── INGEST endpoint (scope: ingest) ────────────────────────────────────────
+
+  /** Ingest a document through the Goblin pipeline */
   r.post("/ingest", apiKeyAuth("ingest"), async (req: AuthedRequest, res) => {
     const { filename, mimeType, dataBase64, storyId } = req.body ?? {};
     if (!filename || !mimeType || !dataBase64) {
       return res.status(400).json({ error: "bad_request", message: "filename, mimeType, and dataBase64 are required." });
     }
-    // Validate before doing any work.
     let v;
     try {
       const buffer = decodeBase64Strict(String(dataBase64));
@@ -188,23 +267,14 @@ export function createPublicApiRouter(): Router {
       });
       return res.status(400).json({ error: "invalid_upload", message: e?.message ?? String(e) });
     }
-
-    // Per-creator rate limit: 30 ingests / 24h. Keyed on the same actorUserId the pipeline
-    // writes to the audit log (the key's createdBy), so the count actually matches.
     const rateLimitUserId = req.apiKey!.createdBy;
     if (rateLimitUserId != null) {
       try {
-        await checkRateLimit({
-          userId: rateLimitUserId,
-          action: "document_ingested",
-          windowMs: 24 * 60 * 60 * 1000,
-          max: 30,
-        });
+        await checkRateLimit({ userId: rateLimitUserId, action: "document_ingested", windowMs: 24 * 60 * 60 * 1000, max: 30 });
       } catch (e: any) {
         return res.status(429).json({ error: "rate_limited", message: e?.message ?? "Too many ingests in the last 24h." });
       }
     }
-
     try {
       const result = await runGoblinPipeline({
         filename: v.filename,
@@ -223,11 +293,277 @@ export function createPublicApiRouter(): Router {
         reviewStatus: result.published ? "approved" : "pending",
         verifiability: result.verifiability,
         message: result.published
-          ? "Document ingested and auto-published (cleared verifiability threshold)."
-          : "Document ingested and queued for review. It is NOT public until approved.",
+          ? "Document ingested and auto-published."
+          : "Document ingested and queued for review.",
       });
     } catch (e: any) {
       res.status(500).json({ error: "ingest_failed", message: String(e?.message || e) });
+    }
+  });
+
+  // ── WRITE endpoints (scope: write) ─────────────────────────────────────────
+
+  /**
+   * POST /timeline
+   * Create a new timeline event.
+   * Body: { eventDate, title, summary, category, actors?, storyId?, publicStatus? }
+   */
+  r.post("/timeline", apiKeyAuth("write"), async (req: AuthedRequest, res) => {
+    const { eventDate, title, summary, category, actors, storyId, publicStatus } = req.body ?? {};
+    if (!eventDate || !title || !summary || !category) {
+      return res.status(400).json({ error: "bad_request", message: "eventDate, title, summary, and category are required." });
+    }
+    const VALID_CATEGORIES = ["arrest", "hearing", "filing", "order", "discovery", "counsel", "competency", "civil", "warrant", "other"];
+    if (!VALID_CATEGORIES.includes(category)) {
+      return res.status(400).json({ error: "bad_category", message: `category must be one of: ${VALID_CATEGORIES.join(", ")}` });
+    }
+    try {
+      const id = await db.insertTimelineEvent({
+        eventDate: new Date(eventDate),
+        title: String(title),
+        summary: String(summary),
+        category: String(category) as any,
+        actors: actors ?? null,
+        storyId: asInt(storyId) ?? 60001,
+        publicStatus: publicStatus !== false,
+      });
+      res.status(201).json({ ok: true, id, message: "Timeline event created." });
+    } catch (e: any) {
+      res.status(500).json({ error: "create_failed", message: String(e?.message || e) });
+    }
+  });
+
+  /**
+   * PATCH /timeline/:id
+   * Update an existing timeline event.
+   * Body: any subset of { eventDate, title, summary, category, actors, publicStatus }
+   */
+  r.patch("/timeline/:id", apiKeyAuth("write"), async (req: AuthedRequest, res) => {
+    const id = asInt(req.params.id);
+    if (!id) return res.status(400).json({ error: "bad_id" });
+    const { eventDate, title, summary, category, actors, publicStatus } = req.body ?? {};
+    const patch: any = {};
+    if (eventDate !== undefined) patch.eventDate = new Date(eventDate);
+    if (title !== undefined) patch.title = String(title);
+    if (summary !== undefined) patch.summary = String(summary);
+    if (category !== undefined) patch.category = String(category);
+    if (actors !== undefined) patch.actors = actors;
+    if (publicStatus !== undefined) patch.publicStatus = Boolean(publicStatus);
+    if (Object.keys(patch).length === 0) {
+      return res.status(400).json({ error: "no_fields", message: "Provide at least one field to update." });
+    }
+    try {
+      await db.updateTimelineEvent(id, patch);
+      res.json({ ok: true, id, updated: Object.keys(patch) });
+    } catch (e: any) {
+      res.status(500).json({ error: "update_failed", message: String(e?.message || e) });
+    }
+  });
+
+  /**
+   * POST /timeline/:id/tags
+   * Apply a violation tag to a timeline event.
+   * Body: { violationTagId, sourceQuote?, sourceCitation?, confidence?, addedBy? }
+   */
+  r.post("/timeline/:id/tags", apiKeyAuth("write"), async (req: AuthedRequest, res) => {
+    const timelineEventId = asInt(req.params.id);
+    if (!timelineEventId) return res.status(400).json({ error: "bad_id" });
+    const { violationTagId, sourceQuote, sourceCitation, confidence, addedBy } = req.body ?? {};
+    if (!violationTagId) {
+      return res.status(400).json({ error: "bad_request", message: "violationTagId is required." });
+    }
+    try {
+      await db.addTimelineEventViolationTag({
+        timelineEventId,
+        violationTagId: Number(violationTagId),
+        sourceQuote: sourceQuote ? String(sourceQuote) : "",
+        sourceCitation: sourceCitation ? String(sourceCitation) : undefined,
+        confidence: asFloat(confidence, 75) ?? 75,
+        addedBy: "human" as const,
+      });
+      res.status(201).json({ ok: true, timelineEventId, violationTagId: Number(violationTagId) });
+    } catch (e: any) {
+      res.status(500).json({ error: "tag_failed", message: String(e?.message || e) });
+    }
+  });
+
+  /**
+   * DELETE /timeline/:id/tags/:tagId
+   * Remove a violation tag from a timeline event.
+   */
+  r.delete("/timeline/:id/tags/:tagId", apiKeyAuth("write"), async (req: AuthedRequest, res) => {
+    const tagId = asInt(req.params.tagId);
+    if (!tagId) return res.status(400).json({ error: "bad_id" });
+    try {
+      await db.removeTimelineEventViolationTag(tagId);
+      res.json({ ok: true, removedTagId: tagId });
+    } catch (e: any) {
+      res.status(500).json({ error: "remove_failed", message: String(e?.message || e) });
+    }
+  });
+
+  /**
+   * POST /documents/:id/tags
+   * Apply a violation tag to a document.
+   * Body: { violationTagId, sourceQuote?, sourceCitation?, confidence?, addedBy? }
+   */
+  r.post("/documents/:id/tags", apiKeyAuth("write"), async (req: AuthedRequest, res) => {
+    const documentId = asInt(req.params.id);
+    if (!documentId) return res.status(400).json({ error: "bad_id" });
+    const { violationTagId, sourceQuote, sourceCitation, confidence, addedBy } = req.body ?? {};
+    if (!violationTagId) {
+      return res.status(400).json({ error: "bad_request", message: "violationTagId is required." });
+    }
+    try {
+      await db.addDocumentViolationTag({
+        documentId,
+        violationTagId: Number(violationTagId),
+        sourceQuote: sourceQuote ? String(sourceQuote) : "",
+        sourceCitation: sourceCitation ? String(sourceCitation) : undefined,
+        confidence: asFloat(confidence, 75) ?? 75,
+        addedBy: "human" as const,
+      });
+      res.status(201).json({ ok: true, documentId, violationTagId: Number(violationTagId) });
+    } catch (e: any) {
+      res.status(500).json({ error: "tag_failed", message: String(e?.message || e) });
+    }
+  });
+
+  /**
+   * DELETE /documents/:id/tags/:tagId
+   * Remove a violation tag from a document.
+   */
+  r.delete("/documents/:id/tags/:tagId", apiKeyAuth("write"), async (req: AuthedRequest, res) => {
+    const tagId = asInt(req.params.tagId);
+    if (!tagId) return res.status(400).json({ error: "bad_id" });
+    try {
+      await db.removeDocumentViolationTag(tagId);
+      res.json({ ok: true, removedTagId: tagId });
+    } catch (e: any) {
+      res.status(500).json({ error: "remove_failed", message: String(e?.message || e) });
+    }
+  });
+
+  /**
+   * PATCH /documents/:id
+   * Update document metadata (title, summary, classification, publicStatus, etc.)
+   * Body: any subset of { title, aiSummary, recordStatus, sourceType, publicStatus, reviewStatus, issueTags, actorNames }
+   */
+  r.patch("/documents/:id", apiKeyAuth("write"), async (req: AuthedRequest, res) => {
+    const id = asInt(req.params.id);
+    if (!id) return res.status(400).json({ error: "bad_id" });
+    const { title, aiSummary, recordStatus, sourceType, publicStatus, reviewStatus, issueTags, actorNames } = req.body ?? {};
+    const patch: any = {};
+    if (title !== undefined) patch.title = String(title);
+    if (aiSummary !== undefined) patch.aiSummary = String(aiSummary);
+    if (recordStatus !== undefined) patch.recordStatus = String(recordStatus);
+    if (sourceType !== undefined) patch.sourceType = String(sourceType);
+    if (publicStatus !== undefined) patch.publicStatus = Boolean(publicStatus);
+    if (reviewStatus !== undefined) patch.reviewStatus = String(reviewStatus);
+    if (issueTags !== undefined) patch.issueTags = Array.isArray(issueTags) ? issueTags : [issueTags];
+    if (actorNames !== undefined) patch.actorNames = Array.isArray(actorNames) ? actorNames : [actorNames];
+    if (Object.keys(patch).length === 0) {
+      return res.status(400).json({ error: "no_fields", message: "Provide at least one field to update." });
+    }
+    try {
+      await db.updateDocument(id, patch);
+      res.json({ ok: true, id, updated: Object.keys(patch) });
+    } catch (e: any) {
+      res.status(500).json({ error: "update_failed", message: String(e?.message || e) });
+    }
+  });
+
+  /**
+   * POST /predicate-report/generate
+   * Trigger a full predicate analysis run for a story.
+   * Body: { storyId? } — defaults to 60001 (CR23-0657)
+   * Long-running: ~2-5 min for 114 events. Returns immediately with a job token.
+   */
+  r.post("/predicate-report/generate", apiKeyAuth("write"), async (req: AuthedRequest, res) => {
+    const storyId = asInt(req.body?.storyId, 60001) ?? 60001;
+    // Fire async — return immediately with status
+    const runId = `predicate-${storyId}-${Date.now()}`;
+    res.json({
+      ok: true,
+      runId,
+      storyId,
+      message: "Predicate analysis started. Poll GET /predicate-report?storyId=<id> for results. Typical duration: 2-5 minutes.",
+      pollUrl: `/api/public/predicate-report?storyId=${storyId}`,
+    });
+    // Run in background
+    (async () => {
+      try {
+        const findings = await analyzePredicates(storyId);
+        const drizzleDb = await db.getDb();
+        if (!drizzleDb) return;
+        const [versionRow] = await drizzleDb
+          .select({ maxVersion: sql<number>`COALESCE(MAX(${predicateFindings.reportVersion}), 0)` })
+          .from(predicateFindings)
+          .where(eq(predicateFindings.storyId, storyId));
+        const nextVersion = ((versionRow as any)?.maxVersion ?? 0) + 1;
+        await persistPredicateFindings(storyId, findings, nextVersion);
+        console.log(`[AgentAPI] Predicate report generated: storyId=${storyId} findings=${findings.length} version=${nextVersion}`);
+      } catch (err) {
+        console.error(`[AgentAPI] Predicate report failed: storyId=${storyId}`, err);
+      }
+    })();
+  });
+
+  /**
+   * POST /monitor/approve-document
+   * Approve a pending document (set reviewStatus=approved + publicStatus=true).
+   * Body: { documentId }
+   */
+  r.post("/monitor/approve-document", apiKeyAuth("write"), async (req: AuthedRequest, res) => {
+    const { documentId } = req.body ?? {};
+    const id = asInt(documentId);
+    if (!id) return res.status(400).json({ error: "bad_request", message: "documentId is required." });
+    try {
+      await db.updateDocument(id, { reviewStatus: "approved" as any, publicStatus: true });
+      res.json({ ok: true, documentId: id, message: "Document approved and published." });
+    } catch (e: any) {
+      res.status(500).json({ error: "approve_failed", message: String(e?.message || e) });
+    }
+  });
+
+  /**
+   * POST /monitor/reject-document
+   * Reject a pending document (set reviewStatus=rejected + publicStatus=false).
+   * Body: { documentId, reason? }
+   */
+  r.post("/monitor/reject-document", apiKeyAuth("write"), async (req: AuthedRequest, res) => {
+    const { documentId, reason } = req.body ?? {};
+    const id = asInt(documentId);
+    if (!id) return res.status(400).json({ error: "bad_request", message: "documentId is required." });
+    try {
+      await db.updateDocument(id, {
+        reviewStatus: "rejected" as any,
+        publicStatus: false,
+        ...(reason ? { aiSummary: `[REJECTED: ${reason}]` } : {}),
+      });
+      res.json({ ok: true, documentId: id, message: "Document rejected." });
+    } catch (e: any) {
+      res.status(500).json({ error: "reject_failed", message: String(e?.message || e) });
+    }
+  });
+
+  /**
+   * GET /search
+   * Full-text search across documents, timeline events, and actors.
+   * Query: q (required), limit?
+   */
+  r.get("/search", apiKeyAuth("read"), async (req, res) => {
+    const q = req.query.q ? String(req.query.q) : "";
+    if (!q || q.length < 2) {
+      return res.status(400).json({ error: "bad_request", message: "q must be at least 2 characters." });
+    }
+    const limit = Math.min(asInt(req.query.limit, 20) ?? 20, 100);
+    try {
+      const results = await db.globalSearch(q, limit) as any;
+      const totalCount = (results.documents?.length ?? 0) + (results.actors?.length ?? 0) + (results.timeline?.length ?? 0) + (results.violations?.length ?? 0);
+      res.json({ q, count: totalCount, results });
+    } catch (e: any) {
+      res.status(500).json({ error: "search_failed", message: String(e?.message || e) });
     }
   });
 

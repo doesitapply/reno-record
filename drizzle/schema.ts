@@ -1164,7 +1164,7 @@ export const apiKeys = mysqlTable(
     keyHash: varchar("key_hash", { length: 64 }).notNull().unique(),
     /** First chars of the raw key for display, e.g. "rr_live_8f3a…" */
     keyPrefix: varchar("key_prefix", { length: 24 }).notNull(),
-    scope: mysqlEnum("scope", ["read", "ingest"]).default("read").notNull(),
+    scope: mysqlEnum("scope", ["read", "ingest", "write"]).default("read").notNull(),
     createdBy: int("created_by"),
     lastUsedAt: timestamp("last_used_at"),
     /** Total successful authenticated calls */

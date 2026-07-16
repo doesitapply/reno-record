@@ -37,7 +37,7 @@ import {
   Clock,
 } from "lucide-react";
 
-const STORY_ID = 1;
+const STORY_ID = 60001; // CR23-0657 — State v. Church
 
 type PredicateStatus =
   | "located"
