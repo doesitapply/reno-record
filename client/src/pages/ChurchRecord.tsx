@@ -109,7 +109,7 @@ export default function ChurchRecord() {
           {featured.data?.editorialNote && (
             <div className="rounded border border-amber-400/30 bg-amber-400/5 p-4">
               <div className="flex items-start gap-2">
-                <span className="text-amber-400 text-xs font-mono uppercase tracking-widest shrink-0 mt-0.5">Editorial note</span>
+                <span className="text-primary text-xs font-mono uppercase tracking-widest shrink-0 mt-0.5">Editorial note</span>
                 <p className="text-sm text-foreground/85 ml-2">{featured.data.editorialNote}</p>
               </div>
             </div>

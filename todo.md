@@ -227,3 +227,18 @@
   - [ ] Warrant posture as coercion mechanism
 - [ ] Build "What Really Happened" page with sourced, reasoned conclusions per actor
 - [ ] Accountability page: swap to event-level signal counts
+
+---
+
+## v8.1 — Visual Redesign (Institutional / Forensic)
+
+- [ ] Global CSS: off-white/cream light mode (#F7F4EF bg), deep slate dark mode (#0D1117 bg), slate-blue accent (#3B5BDB), remove all amber/gold from public-facing pages
+- [ ] Typography: add Playfair Display (serif headings) + JetBrains Mono (citations/case numbers) via Google Fonts CDN
+- [ ] Dark mode: technically superior — subtle blue-tinted dark surfaces, precise contrast ratios, no washed-out grays
+- [ ] Hero copy rewrite: lead with procedural record ("CR23-0657 · 1,162 days · No trial."), remove victim-narrative framing
+- [ ] Stat cards: inline source citations below each number
+- [ ] Nav: clean institutional header, remove aggressive amber accents on public nav
+- [ ] Timeline toggle: rename "What Really Happened" → "Legal Analysis"
+- [ ] Accountability page: forensic tone, sourced claims only
+- [ ] DashboardLayout: match new color system (admin stays functional dark)
+- [ ] TypeScript clean, checkpoint

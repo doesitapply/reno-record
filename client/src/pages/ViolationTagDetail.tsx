@@ -137,7 +137,7 @@ export default function ViolationTagDetailPage() {
       <SiteShell>
         <section className="container py-14 md:py-20 max-w-3xl">
           <div className="paper-card p-8 text-center space-y-4">
-            <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto" />
+            <AlertTriangle className="w-10 h-10 text-primary mx-auto" />
             <h1 className="display-serif text-3xl">Tag not found.</h1>
             <p className="text-muted-foreground">
               This violation tag doesn't exist or has no public evidence yet.
@@ -166,7 +166,7 @@ export default function ViolationTagDetailPage() {
         <div className="mb-8">
           <Link
             href="/patterns"
-            className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-amber-400 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             Patterns Dashboard
@@ -190,12 +190,12 @@ export default function ViolationTagDetailPage() {
             <div className="paper-card p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Documents</span>
-                <span className="display-serif text-3xl text-amber-400">{totalDocs}</span>
+                <span className="display-serif text-3xl text-primary">{totalDocs}</span>
               </div>
               <Separator className="opacity-30" />
               <div className="flex items-center justify-between">
                 <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Source Quotes</span>
-                <span className="display-serif text-3xl text-amber-400">{totalQuotes}</span>
+                <span className="display-serif text-3xl text-primary">{totalQuotes}</span>
               </div>
               <Separator className="opacity-30" />
               <div className="flex items-center justify-between">
@@ -240,8 +240,8 @@ export default function ViolationTagDetailPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1.5">
-                          <FileText className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                          <span className="font-mono text-xs text-amber-400 uppercase tracking-widest">
+                          <FileText className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                          <span className="font-mono text-xs text-primary uppercase tracking-widest">
                             {SOURCE_LABELS[doc.docSourceType] ?? doc.docSourceType}
                           </span>
                           {doc.docCaseNumber && (
@@ -253,7 +253,7 @@ export default function ViolationTagDetailPage() {
                         </div>
                         <Link
                           href={`/evidence/${doc.docId}`}
-                          className="font-medium text-foreground hover:text-amber-400 transition-colors leading-snug block"
+                          className="font-medium text-foreground hover:text-primary transition-colors leading-snug block"
                         >
                           {doc.docTitle}
                         </Link>
@@ -280,7 +280,7 @@ export default function ViolationTagDetailPage() {
                       </div>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs font-mono px-1.5 py-0 h-5 text-amber-400/70 border-amber-400/30">
+                      <Badge variant="outline" className="text-xs font-mono px-1.5 py-0 h-5 text-primary/70 border-amber-400/30">
                         {doc.quotes.length} {doc.quotes.length === 1 ? "quote" : "quotes"}
                       </Badge>
                     </div>
@@ -291,7 +291,7 @@ export default function ViolationTagDetailPage() {
                     {doc.quotes.map((q, qIdx) => (
                       <div key={q.dvtId} className="p-5 space-y-3">
                         <div className="flex items-start gap-3">
-                          <Quote className="w-4 h-4 text-amber-400/60 flex-shrink-0 mt-0.5" />
+                          <Quote className="w-4 h-4 text-primary/60 flex-shrink-0 mt-0.5" />
                           <blockquote className="text-sm text-foreground/90 leading-relaxed italic border-l-2 border-amber-400/40 pl-3">
                             {q.sourceQuote}
                           </blockquote>
@@ -307,7 +307,7 @@ export default function ViolationTagDetailPage() {
                             {q.addedBy === "goblin" ? "AI-extracted" : "Human-verified"}
                           </span>
                           {q.confidence < 100 && (
-                            <span className="font-mono text-xs text-amber-400/60">
+                            <span className="font-mono text-xs text-primary/60">
                               {q.confidence}% confidence
                             </span>
                           )}

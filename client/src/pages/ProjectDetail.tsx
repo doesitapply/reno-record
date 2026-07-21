@@ -9,7 +9,7 @@ import { useSEO } from "@/hooks/useSEO";
 
 const STATUS_META: Record<string, { label: string; cls: string; dot: string }> = {
   live: { label: "Live", cls: "text-emerald-400 border-emerald-500/30 bg-emerald-500/10", dot: "bg-emerald-400" },
-  in_development: { label: "In Development", cls: "text-amber-400 border-amber-500/30 bg-amber-500/10", dot: "bg-amber-400" },
+  in_development: { label: "In Development", cls: "text-primary border-primary/30 bg-primary/10", dot: "bg-amber-400" },
   beta: { label: "Beta", cls: "text-sky-400 border-sky-500/30 bg-sky-500/10", dot: "bg-sky-400" },
   concept: { label: "Concept", cls: "text-violet-400 border-violet-500/30 bg-violet-500/10", dot: "bg-violet-400" },
   archived: { label: "Archived", cls: "text-muted-foreground border-border bg-secondary/40", dot: "bg-muted-foreground" },

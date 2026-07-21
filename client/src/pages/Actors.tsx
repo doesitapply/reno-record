@@ -63,7 +63,7 @@ const VIOLATION_CATEGORY_LABELS: Record<string, string> = {
 
 const VIOLATION_CATEGORY_COLORS: Record<string, string> = {
   constitutional: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-  procedural: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  procedural: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-primary/80",
   discovery: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
   judicial_conduct: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
   prosecutorial_conduct: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300",
@@ -120,7 +120,7 @@ function ActorIndex() {
                     <div className="eyebrow">{a.role || "Documented actor"}</div>
                     <div className="flex gap-1 flex-wrap justify-end">
                       {a.judicialActor && (
-                        <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30 font-mono uppercase text-[9px]">
+                        <Badge className="bg-amber-500/20 text-amber-700 border-primary/30 font-mono uppercase text-[9px]">
                           Judicial
                         </Badge>
                       )}
@@ -232,7 +232,7 @@ function ActorDetail({ slug }: { slug: string }) {
                 )}
                 <div className="flex flex-wrap gap-2 mt-4">
                   {actor.judicialActor && (
-                    <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30 font-mono uppercase text-[10px]">
+                    <Badge className="bg-amber-500/20 text-amber-700 border-primary/30 font-mono uppercase text-[10px]">
                       Judicial actor
                     </Badge>
                   )}

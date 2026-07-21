@@ -154,7 +154,7 @@ function PreviewCard({ route }: { route: RoutePreview }) {
             ) : (
               <div className="text-center">
                 <div className="text-xs text-muted-foreground font-mono">og:image</div>
-                <div className="text-xs text-amber-400/60 font-mono">/og-default.png</div>
+                <div className="text-xs text-primary/60 font-mono">/og-default.png</div>
               </div>
             )}
           </div>
@@ -174,7 +174,7 @@ function PreviewCard({ route }: { route: RoutePreview }) {
 
       {/* Meta details */}
       <div className="p-4 space-y-2">
-        <h3 className="font-mono text-xs uppercase tracking-widest text-amber-400">{route.label}</h3>
+        <h3 className="font-mono text-xs uppercase tracking-widest text-primary">{route.label}</h3>
         <dl className="space-y-1.5 text-xs">
           <div>
             <dt className="text-muted-foreground font-mono inline">og:title — </dt>
@@ -241,7 +241,7 @@ export default function PreviewCheck() {
       <SiteShell>
         <div className="min-h-screen flex items-center justify-center px-4">
           <div className="text-center space-y-4 max-w-sm">
-            <Lock className="w-10 h-10 text-amber-400 mx-auto" />
+            <Lock className="w-10 h-10 text-primary mx-auto" />
             <h1 className="font-serif text-2xl font-bold text-foreground">Admin Only</h1>
             <p className="text-muted-foreground text-sm">
               This page is restricted to archive administrators.
@@ -309,7 +309,7 @@ export default function PreviewCheck() {
           </div>
 
           <div className="mt-8 paper-card p-5 space-y-3">
-            <h2 className="font-mono text-xs uppercase tracking-widest text-amber-400">
+            <h2 className="font-mono text-xs uppercase tracking-widest text-primary">
               Missing: og:image
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">

@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
 @custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -40,7 +38,6 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-
   /* Reno Record brand tokens */
   --color-bone: var(--bone);
   --color-ink: var(--ink);
@@ -52,140 +49,146 @@
   --color-neon-gold: var(--neon-gold);
   --color-felt: var(--felt);
   --color-casino-bg: var(--casino-bg);
-
+  --color-slate-accent: var(--slate-accent);
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: 'Fraunces', ui-serif, Georgia, serif;
+  --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
 /* ============================================================
-   DARK RENO (default) — casino courtroom, 2am, neon on black
+   DEFAULT (DARK) — Federal courthouse at midnight.
+   Deep blue-slate. Precise. No glow. No casino.
    ============================================================ */
 :root {
   --radius: 0.375rem;
-
-  /* Brand tokens */
-  --bone: oklch(0.975 0.012 85);
-  --ink: oklch(0.12 0.02 260);
-  --navy: oklch(0.28 0.07 260);
-  --navy-deep: oklch(0.11 0.04 260);
-  --amber: oklch(0.78 0.16 70);
-  --amber-soft: oklch(0.93 0.08 80);
+  /* Brand tokens — preserved for backward compat */
+  --bone: oklch(0.975 0.008 75);
+  --ink: oklch(0.13 0.015 255);
+  --navy: oklch(0.30 0.08 255);
+  --navy-deep: oklch(0.13 0.04 255);
+  --amber: oklch(0.76 0.14 70);
+  --amber-soft: oklch(0.93 0.06 78);
   --rust: oklch(0.52 0.16 28);
-
-  /* Dark Reno exclusive tokens — softened for readability */
-  --neon-gold: oklch(0.76 0.14 72);         /* warm gold, less neon-harsh */
-  --felt: oklch(0.26 0.055 155);            /* muted felt green */
-  --casino-bg: oklch(0.14 0.018 255);       /* dark slate — not pure black */
-  --casino-card: oklch(0.18 0.022 255);     /* card surface — readable lift */
-  --casino-border: oklch(0.32 0.05 70);     /* soft amber border */
-
-  /* Dark Reno semantic tokens (DEFAULT — dark is the default experience) */
-  --background: var(--casino-bg);
-  --foreground: oklch(0.88 0.012 80);       /* warm off-white, softer */
-  --card: var(--casino-card);
-  --card-foreground: oklch(0.88 0.012 80);
-  --popover: oklch(0.20 0.025 255);
-  --popover-foreground: oklch(0.88 0.012 80);
-  --primary: var(--neon-gold);
-  --primary-foreground: oklch(0.12 0.02 260);
-  --secondary: oklch(0.22 0.03 255);
-  --secondary-foreground: oklch(0.80 0.012 80);
-  --muted: oklch(0.22 0.03 255);
-  --muted-foreground: oklch(0.60 0.025 80);
-  --accent: oklch(0.26 0.055 155);          /* muted felt green */
-  --accent-foreground: oklch(0.88 0.012 80);
+  /* Backward compat aliases */
+  --neon-gold: oklch(0.62 0.18 255);
+  --felt: oklch(0.20 0.030 255);
+  --casino-bg: oklch(0.10 0.018 255);
+  --casino-card: oklch(0.14 0.020 255);
+  --casino-border: oklch(0.24 0.025 255);
+  /* Slate system — the real tokens */
+  --slate-bg:       oklch(0.10 0.018 255);
+  --slate-surface:  oklch(0.14 0.020 255);
+  --slate-raised:   oklch(0.17 0.022 255);
+  --slate-border:   oklch(0.24 0.025 255);
+  --slate-accent:   oklch(0.58 0.18 255);
+  --slate-accent-bright: oklch(0.68 0.20 255);
+  --signal-red:     oklch(0.58 0.20 25);
+  --signal-amber:   oklch(0.74 0.14 70);
+  --signal-blue:    oklch(0.60 0.16 240);
+  --signal-purple:  oklch(0.58 0.16 295);
+  --signal-orange:  oklch(0.65 0.18 50);
+  /* Dark semantic tokens */
+  --background: var(--slate-bg);
+  --foreground: oklch(0.90 0.008 240);
+  --card: var(--slate-surface);
+  --card-foreground: oklch(0.90 0.008 240);
+  --popover: var(--slate-raised);
+  --popover-foreground: oklch(0.90 0.008 240);
+  --primary: var(--slate-accent);
+  --primary-foreground: oklch(0.97 0.005 240);
+  --secondary: oklch(0.18 0.022 255);
+  --secondary-foreground: oklch(0.80 0.010 240);
+  --muted: oklch(0.18 0.020 255);
+  --muted-foreground: oklch(0.58 0.018 240);
+  --accent: oklch(0.20 0.030 255);
+  --accent-foreground: oklch(0.90 0.008 240);
   --destructive: var(--rust);
   --destructive-foreground: var(--bone);
-  --border: oklch(0.28 0.04 70);            /* soft amber border */
-  --input: oklch(0.21 0.025 255);
-  --ring: var(--neon-gold);
-
-  --chart-1: var(--neon-gold);
-  --chart-2: var(--felt);
-  --chart-3: var(--rust);
-  --chart-4: oklch(0.55 0.08 220);
-  --chart-5: oklch(0.65 0.06 60);
-
-  --sidebar: oklch(0.10 0.03 260);
-  --sidebar-foreground: oklch(0.85 0.015 80);
-  --sidebar-primary: var(--neon-gold);
-  --sidebar-primary-foreground: oklch(0.1 0.02 260);
-  --sidebar-accent: oklch(0.16 0.04 260);
-  --sidebar-accent-foreground: oklch(0.85 0.015 80);
-  --sidebar-border: oklch(0.22 0.04 260);
-  --sidebar-ring: var(--neon-gold);
+  --border: var(--slate-border);
+  --input: oklch(0.17 0.022 255);
+  --ring: var(--slate-accent);
+  --chart-1: var(--slate-accent);
+  --chart-2: var(--signal-amber);
+  --chart-3: var(--signal-red);
+  --chart-4: var(--signal-purple);
+  --chart-5: var(--signal-orange);
+  --sidebar: oklch(0.08 0.015 255);
+  --sidebar-foreground: oklch(0.85 0.010 240);
+  --sidebar-primary: var(--slate-accent);
+  --sidebar-primary-foreground: oklch(0.97 0.005 240);
+  --sidebar-accent: oklch(0.14 0.022 255);
+  --sidebar-accent-foreground: oklch(0.85 0.010 240);
+  --sidebar-border: oklch(0.20 0.022 255);
+  --sidebar-ring: var(--slate-accent);
 }
 
 /* ============================================================
-   LIGHT MODE — editorial bone, professional daytime reading
+   LIGHT MODE — Off-white/cream. Institutional. Editorial.
    ============================================================ */
 .light {
-  --background: var(--bone);
-  --foreground: var(--ink);
-  --card: oklch(0.99 0.005 85);
-  --card-foreground: var(--ink);
-  --popover: oklch(0.99 0.005 85);
-  --popover-foreground: var(--ink);
-  --primary: var(--navy);
-  --primary-foreground: var(--bone);
-  --secondary: oklch(0.94 0.012 85);
-  --secondary-foreground: var(--ink);
-  --muted: oklch(0.94 0.01 85);
-  --muted-foreground: oklch(0.45 0.02 260);
-  --accent: var(--amber-soft);
-  --accent-foreground: var(--ink);
+  --background: oklch(0.975 0.008 75);
+  --foreground: oklch(0.13 0.015 255);
+  --card: oklch(0.995 0.004 75);
+  --card-foreground: oklch(0.13 0.015 255);
+  --popover: oklch(0.995 0.004 75);
+  --popover-foreground: oklch(0.13 0.015 255);
+  --primary: oklch(0.35 0.12 255);
+  --primary-foreground: oklch(0.975 0.008 75);
+  --secondary: oklch(0.94 0.008 75);
+  --secondary-foreground: oklch(0.13 0.015 255);
+  --muted: oklch(0.94 0.006 75);
+  --muted-foreground: oklch(0.46 0.018 255);
+  --accent: oklch(0.92 0.010 75);
+  --accent-foreground: oklch(0.13 0.015 255);
   --destructive: var(--rust);
   --destructive-foreground: var(--bone);
-  --border: oklch(0.88 0.012 80);
-  --input: oklch(0.88 0.012 80);
-  --ring: var(--navy);
-
-  --chart-1: var(--navy);
+  --border: oklch(0.88 0.010 75);
+  --input: oklch(0.88 0.010 75);
+  --ring: oklch(0.35 0.12 255);
+  --chart-1: oklch(0.35 0.12 255);
   --chart-2: var(--amber);
   --chart-3: var(--rust);
-  --chart-4: oklch(0.55 0.05 220);
-  --chart-5: oklch(0.7 0.04 60);
-
-  --sidebar: var(--navy-deep);
-  --sidebar-foreground: var(--bone);
-  --sidebar-primary: var(--amber);
-  --sidebar-primary-foreground: var(--ink);
-  --sidebar-accent: oklch(0.24 0.06 260);
-  --sidebar-accent-foreground: var(--bone);
-  --sidebar-border: oklch(0.3 0.05 260);
-  --sidebar-ring: var(--amber);
+  --chart-4: oklch(0.50 0.08 220);
+  --chart-5: oklch(0.60 0.06 55);
+  --sidebar: oklch(0.13 0.04 255);
+  --sidebar-foreground: oklch(0.975 0.008 75);
+  --sidebar-primary: oklch(0.52 0.18 255);
+  --sidebar-primary-foreground: oklch(0.975 0.008 75);
+  --sidebar-accent: oklch(0.20 0.05 255);
+  --sidebar-accent-foreground: oklch(0.975 0.008 75);
+  --sidebar-border: oklch(0.26 0.05 255);
+  --sidebar-ring: oklch(0.52 0.18 255);
 }
 
-/* Keep .dark as alias for backward compat with any existing dark class usage */
+/* .dark alias for backward compat */
 .dark {
-  --background: var(--casino-bg);
-  --foreground: oklch(0.88 0.012 80);
-  --card: var(--casino-card);
-  --card-foreground: oklch(0.88 0.012 80);
-  --popover: oklch(0.20 0.025 255);
-  --popover-foreground: oklch(0.88 0.012 80);
-  --primary: var(--neon-gold);
-  --primary-foreground: oklch(0.12 0.02 260);
-  --secondary: oklch(0.22 0.03 255);
-  --secondary-foreground: oklch(0.80 0.012 80);
-  --muted: oklch(0.22 0.03 255);
-  --muted-foreground: oklch(0.60 0.025 80);
-  --accent: oklch(0.26 0.055 155);
-  --accent-foreground: oklch(0.88 0.012 80);
+  --background: var(--slate-bg);
+  --foreground: oklch(0.90 0.008 240);
+  --card: var(--slate-surface);
+  --card-foreground: oklch(0.90 0.008 240);
+  --popover: var(--slate-raised);
+  --popover-foreground: oklch(0.90 0.008 240);
+  --primary: var(--slate-accent);
+  --primary-foreground: oklch(0.97 0.005 240);
+  --secondary: oklch(0.18 0.022 255);
+  --secondary-foreground: oklch(0.80 0.010 240);
+  --muted: oklch(0.18 0.020 255);
+  --muted-foreground: oklch(0.58 0.018 240);
+  --accent: oklch(0.20 0.030 255);
+  --accent-foreground: oklch(0.90 0.008 240);
   --destructive: var(--rust);
   --destructive-foreground: var(--bone);
-  --border: oklch(0.28 0.04 70);
-  --input: oklch(0.21 0.025 255);
-  --ring: var(--neon-gold);
-  --sidebar: oklch(0.10 0.03 260);
-  --sidebar-foreground: oklch(0.85 0.015 80);
-  --sidebar-primary: var(--neon-gold);
-  --sidebar-primary-foreground: oklch(0.1 0.02 260);
-  --sidebar-accent: oklch(0.16 0.04 260);
-  --sidebar-accent-foreground: oklch(0.85 0.015 80);
-  --sidebar-border: oklch(0.22 0.04 260);
-  --sidebar-ring: var(--neon-gold);
+  --border: var(--slate-border);
+  --input: oklch(0.17 0.022 255);
+  --ring: var(--slate-accent);
+  --sidebar: oklch(0.08 0.015 255);
+  --sidebar-foreground: oklch(0.85 0.010 240);
+  --sidebar-primary: var(--slate-accent);
+  --sidebar-primary-foreground: oklch(0.97 0.005 240);
+  --sidebar-accent: oklch(0.14 0.022 255);
+  --sidebar-accent-foreground: oklch(0.85 0.010 240);
+  --sidebar-border: oklch(0.20 0.022 255);
+  --sidebar-ring: var(--slate-accent);
 }
 
 @layer base {
@@ -199,29 +202,22 @@
     overflow-x: hidden;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
     overflow-x: hidden;
   }
-
-  /* Dark Reno body: subtle noise texture + vignette */
-  :root body {
-    background-image:
-      radial-gradient(ellipse at 50% 0%, oklch(0.22 0.06 70 / 0.08) 0%, transparent 60%),
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.06 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
-  }
-
-  /* Light mode body: paper texture */
-  .light body {
-    background-image:
-      radial-gradient(circle at 20% 0%, rgba(0,0,0,0.025) 0, transparent 35%),
-      radial-gradient(circle at 80% 100%, rgba(0,0,0,0.025) 0, transparent 35%),
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.04 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
-  }
-
   h1, h2, h3, h4 {
     font-family: var(--font-serif);
-    font-feature-settings: "ss01", "ss02";
     letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+  h5, h6 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    letter-spacing: -0.005em;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -235,12 +231,12 @@
     @apply cursor-pointer;
   }
   ::selection {
-    background: var(--neon-gold);
-    color: oklch(0.1 0.02 260);
+    background: var(--slate-accent);
+    color: oklch(0.97 0.005 240);
   }
   .light ::selection {
-    background: var(--amber);
-    color: var(--ink);
+    background: oklch(0.35 0.12 255);
+    color: oklch(0.975 0.008 75);
   }
 }
 
@@ -256,7 +252,6 @@
   }
   p { overflow-wrap: break-word; }
   .flex { min-height: 0; min-width: 0; }
-
   @media (min-width: 640px) {
     .container { padding-left: 1.75rem !important; padding-right: 1.75rem !important; }
   }
@@ -269,23 +264,50 @@
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.18em;
-    font-size: 0.72rem;
+    font-size: 0.70rem;
     font-weight: 600;
     color: var(--muted-foreground);
   }
   .display-serif {
     font-family: var(--font-serif);
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.02em;
-    line-height: 1.02;
+    line-height: 1.05;
   }
+  .citation {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    letter-spacing: 0.02em;
+  }
+  .case-number {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--slate-accent);
+  }
+  .light .case-number {
+    color: oklch(0.35 0.12 255);
+  }
+  /* Backward compat: rule-amber → now slate-accent */
   .rule-amber {
-    border-bottom: 2px solid var(--neon-gold);
+    border-bottom: 1.5px solid var(--slate-accent);
     display: inline-block;
     padding-bottom: 0.25rem;
   }
   .light .rule-amber {
-    border-bottom-color: var(--amber);
+    border-bottom-color: oklch(0.35 0.12 255);
+  }
+  .rule-accent {
+    border-bottom: 1.5px solid var(--slate-accent);
+    display: inline-block;
+    padding-bottom: 0.2rem;
+  }
+  .light .rule-accent {
+    border-bottom-color: oklch(0.35 0.12 255);
   }
   .stamp {
     font-family: var(--font-mono);
@@ -293,72 +315,70 @@
     letter-spacing: 0.2em;
     border: 1.5px solid currentColor;
     padding: 0.18rem 0.55rem;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    transform: rotate(-1.5deg);
+    transform: rotate(-1deg);
     display: inline-block;
   }
 
-  /* ── Dark Reno exclusive components ── */
-  .docket-grid-bg {
-    background-image:
-      linear-gradient(to right, oklch(0.82 0.19 72 / 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, oklch(0.82 0.19 72 / 0.04) 1px, transparent 1px);
-    background-size: 48px 48px;
-  }
-  .light .docket-grid-bg {
-    background-image:
-      linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
-    background-size: 48px 48px;
-  }
-
-  /* Neon glow on primary elements in dark mode */
-  .neon-glow {
-    text-shadow: 0 0 8px oklch(0.82 0.19 72 / 0.6), 0 0 24px oklch(0.82 0.19 72 / 0.3);
-  }
-  .neon-border {
-    box-shadow: 0 0 0 1px oklch(0.82 0.19 72 / 0.4), 0 0 12px oklch(0.82 0.19 72 / 0.15);
-  }
-  .light .neon-glow { text-shadow: none; }
-  .light .neon-border { box-shadow: none; }
-
-  /* Casino felt accent bar */
-  .felt-bar {
-    background: linear-gradient(90deg, oklch(0.22 0.06 155), oklch(0.28 0.08 155));
-    border-top: 1px solid oklch(0.35 0.09 155);
-  }
-
-  /* Paper card — adapts to theme */
+  /* ── Paper card ── */
   .paper-card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow:
-      0 1px 0 oklch(0.82 0.19 72 / 0.06),
-      0 8px 24px -16px oklch(0 0 0 / 0.5);
+    box-shadow: 0 1px 3px oklch(0 0 0 / 0.3), 0 1px 2px oklch(0 0 0 / 0.2);
   }
   .light .paper-card {
-    box-shadow:
-      0 1px 0 rgba(0,0,0,0.02),
-      0 8px 24px -16px rgba(20,20,40,0.18);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   }
 
-  /* Actor heat score badge */
-  .heat-score-low    { color: oklch(0.65 0.04 80); }
-  .heat-score-medium { color: oklch(0.78 0.16 70); }
-  .heat-score-high   { color: oklch(0.65 0.22 30); text-shadow: 0 0 6px oklch(0.65 0.22 30 / 0.5); }
-  .heat-score-max    { color: oklch(0.55 0.25 25); text-shadow: 0 0 10px oklch(0.55 0.25 25 / 0.7); animation: pulse-heat 2s ease-in-out infinite; }
+  /* ── Violation signal colors ── */
+  .signal-constitutional { color: var(--signal-red); }
+  .signal-procedural     { color: var(--signal-amber); }
+  .signal-discovery      { color: var(--signal-blue); }
+  .signal-judicial       { color: var(--signal-purple); }
+  .signal-prosecutorial  { color: var(--signal-orange); }
 
+  /* ── Docket grid background ── */
+  .docket-grid-bg {
+    background-image:
+      linear-gradient(to right, oklch(0.90 0.008 240 / 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0.90 0.008 240 / 0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .light .docket-grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(0,0,0,0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0,0,0,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* ── Backward compat: neon-glow / neon-border → no-op in new design ── */
+  .neon-glow  {}
+  .neon-border {}
+  .light .neon-glow {}
+  .light .neon-border {}
+
+  /* ── felt-bar → neutral accent bar ── */
+  .felt-bar {
+    background: linear-gradient(90deg, oklch(0.18 0.025 255), oklch(0.22 0.030 255));
+    border-top: 1px solid oklch(0.28 0.030 255);
+  }
+
+  /* ── Actor heat score badge ── */
+  .heat-score-low    { color: oklch(0.62 0.04 240); }
+  .heat-score-medium { color: var(--signal-amber); }
+  .heat-score-high   { color: var(--signal-red); }
+  .heat-score-max    { color: oklch(0.50 0.24 25); animation: pulse-heat 2s ease-in-out infinite; }
   @keyframes pulse-heat {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+    50% { opacity: 0.65; }
   }
 
   /* Mobile */
   @media (max-width: 639px) {
     .container { overflow-x: hidden; }
-    .hero-headline { font-size: clamp(2.5rem, 10vw, 4rem); }
+    .hero-headline { font-size: clamp(2.2rem, 9vw, 3.5rem); }
     [role="tablist"] { flex-wrap: wrap; height: auto; gap: 0.25rem; }
     .pdf-viewer-container { min-height: 60vh; }
     .admin-form-grid { grid-template-columns: 1fr !important; }

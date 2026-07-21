@@ -41,7 +41,7 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 const SOURCE_COLORS: Record<string, string> = {
-  court_order: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  court_order: "bg-amber-500/15 text-primary border-primary/30",
   motion: "bg-blue-500/15 text-blue-400 border-blue-500/30",
   email: "bg-purple-500/15 text-purple-400 border-purple-500/30",
   transcript: "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
@@ -52,7 +52,7 @@ const SOURCE_COLORS: Record<string, string> = {
   image: "bg-teal-500/15 text-teal-400 border-teal-500/30",
   jail_record: "bg-rose-500/15 text-rose-400 border-rose-500/30",
   risk_notice: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
-  other: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
+  other: "bg-zinc-500/15 text-muted-foreground border-zinc-500/30",
 };
 
 /* The 4-way record classification. This replaces the old coarse State/Federal split.
@@ -169,16 +169,16 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 const ACCENT_HEADER: Record<string, string> = {
-  amber: "bg-amber-500/8 border-amber-500/20",
+  amber: "bg-amber-500/8 border-primary/20",
   blue: "bg-blue-500/8 border-blue-500/20",
   violet: "bg-violet-500/8 border-violet-500/20",
   zinc: "bg-zinc-500/8 border-zinc-500/20",
 };
 const ACCENT_TEXT: Record<string, string> = {
-  amber: "text-amber-400",
+  amber: "text-primary",
   blue: "text-blue-400",
   violet: "text-violet-400",
-  zinc: "text-zinc-400",
+  zinc: "text-muted-foreground",
 };
 
 /* ─────────────────────────────────────────────
@@ -292,7 +292,7 @@ export default function EvidencePage() {
           </p>
 
           {undatedCount > 0 && (
-            <div className="mt-3 inline-flex items-center gap-2 text-xs text-amber-400/90 bg-amber-500/10 border border-amber-500/25 rounded px-2.5 py-1">
+            <div className="mt-3 inline-flex items-center gap-2 text-xs text-primary/90 bg-primary/10 border border-amber-500/25 rounded px-2.5 py-1">
               <CalendarOff className="h-3.5 w-3.5" />
               {undatedCount} document{undatedCount !== 1 ? "s" : ""} undated — needs a verified filing date
             </div>
@@ -335,7 +335,7 @@ export default function EvidencePage() {
               onClick={() => setSidebarOpen((o) => !o)}
               className={cn(
                 "gap-1.5 shrink-0 lg:hidden",
-                hasActiveFilters && "border-amber-500/60 text-amber-400",
+                hasActiveFilters && "border-amber-500/60 text-primary",
               )}
             >
               <Filter className="h-3.5 w-3.5" />
@@ -399,7 +399,7 @@ export default function EvidencePage() {
                       className={cn(
                         "w-full text-left px-2.5 py-1.5 rounded text-sm flex items-center justify-between gap-2 transition-colors",
                         recordFilter === f.value
-                          ? "bg-amber-500/15 text-amber-400 font-medium"
+                          ? "bg-amber-500/15 text-primary font-medium"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
                       )}
                     >
@@ -423,7 +423,7 @@ export default function EvidencePage() {
                   className={cn(
                     "w-full text-left px-2.5 py-1.5 rounded text-sm flex items-center justify-between gap-2 transition-colors",
                     sourceType === "all"
-                      ? "bg-amber-500/15 text-amber-400 font-medium"
+                      ? "bg-amber-500/15 text-primary font-medium"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
                   )}
                 >
@@ -445,7 +445,7 @@ export default function EvidencePage() {
                       className={cn(
                         "w-full text-left px-2.5 py-1.5 rounded text-sm flex items-center justify-between gap-2 transition-colors",
                         sourceType === val
-                          ? "bg-amber-500/15 text-amber-400 font-medium"
+                          ? "bg-amber-500/15 text-primary font-medium"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
                       )}
                     >
@@ -470,7 +470,7 @@ export default function EvidencePage() {
                     className={cn(
                       "w-full text-left px-2.5 py-1.5 rounded text-sm flex items-center justify-between gap-2 transition-colors",
                       violationSlug === "all"
-                        ? "bg-amber-500/15 text-amber-400 font-medium"
+                        ? "bg-amber-500/15 text-primary font-medium"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
                     )}
                   >
@@ -486,7 +486,7 @@ export default function EvidencePage() {
                       className={cn(
                         "w-full text-left px-2.5 py-1.5 rounded text-sm flex items-center justify-between gap-2 transition-colors",
                         violationSlug === tag.slug
-                          ? "bg-amber-500/15 text-amber-400 font-medium"
+                          ? "bg-amber-500/15 text-primary font-medium"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
                       )}
                     >
@@ -562,7 +562,7 @@ function DocSection({
                 {section.title}
               </span>
               {!section.onRecord && (
-                <span className="text-[9px] uppercase tracking-wider font-mono px-1 py-px rounded bg-zinc-500/20 text-zinc-400 border border-zinc-500/30">
+                <span className="text-[9px] uppercase tracking-wider font-mono px-1 py-px rounded bg-zinc-500/20 text-muted-foreground border border-zinc-500/30">
                   not a filing
                 </span>
               )}
@@ -614,7 +614,7 @@ function DocCard({
 
   return (
     <Link href={`/evidence/${doc.id}`}>
-      <div className="paper-card p-4 h-full flex flex-col gap-3 cursor-pointer hover:border-amber-500/40 hover:shadow-[0_0_0_1px_oklch(0.76_0.14_72_/_0.2)] transition-all group">
+      <div className="paper-card p-4 h-full flex flex-col gap-3 cursor-pointer hover:border-primary/40 hover:shadow-[0_0_0_1px_oklch(0.76_0.14_72_/_0.2)] transition-all group">
         {/* Top row: source chip + date */}
         <div className="flex items-center justify-between gap-2">
           <span
@@ -626,7 +626,7 @@ function DocCard({
             {sourceLabel}
           </span>
           {resolved.undated ? (
-            <span className="flex items-center gap-1 text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded px-1.5 py-0.5 shrink-0">
+            <span className="flex items-center gap-1 text-[10px] font-mono font-bold text-primary bg-primary/10 border border-primary/30 rounded px-1.5 py-0.5 shrink-0">
               <CalendarOff className="h-3 w-3" />
               UNDATED
             </span>
@@ -643,7 +643,7 @@ function DocCard({
 
         {/* Title */}
         <div className="flex-1">
-          <h3 className="text-sm font-semibold leading-snug group-hover:text-amber-400 transition-colors line-clamp-2">
+          <h3 className="text-sm font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-2">
             {doc.title}
           </h3>
           {snippet && (

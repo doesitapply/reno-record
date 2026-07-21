@@ -37,7 +37,7 @@ function EventViolationTags({ eventId }: { eventId: number }) {
   if (!tags.length) return null;
   const categoryColor = (cat: string) => {
     if (cat === "constitutional") return "border-red-500/50 text-red-400";
-    if (cat === "procedural") return "border-amber-500/50 text-amber-400";
+    if (cat === "procedural") return "border-amber-500/50 text-primary";
     if (cat === "discovery") return "border-blue-500/50 text-blue-400";
     if (cat === "judicial_conduct") return "border-purple-500/50 text-purple-400";
     if (cat === "prosecutorial_conduct") return "border-orange-500/50 text-orange-400";
@@ -127,7 +127,7 @@ function EventCard({ ev }: { ev: any }) {
             })}
           </span>
           {evCase === "state_case" && (
-            <Badge variant="outline" className="font-mono uppercase text-[10px] border-amber-500/50 text-amber-400 gap-1">
+            <Badge variant="outline" className="font-mono uppercase text-[10px] border-amber-500/50 text-primary gap-1">
               <Scale className="h-2.5 w-2.5" /> State
             </Badge>
           )}
@@ -153,12 +153,12 @@ function EventCard({ ev }: { ev: any }) {
               className={cn(
                 "ml-auto flex items-center gap-1 font-mono uppercase text-[10px] tracking-widest px-2 py-0.5 rounded border transition-colors",
                 showNarrative
-                  ? "border-red-500/60 text-red-400 bg-red-500/10"
-                  : "border-border text-muted-foreground hover:border-red-500/50 hover:text-red-400",
+                  ? "border-primary/60 text-primary bg-primary/10"
+                  : "border-border text-muted-foreground hover:border-primary/50 hover:text-primary",
               )}
             >
               {showNarrative ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-              {showNarrative ? "Official record" : "What really happened"}
+              {showNarrative ? "Official Summary" : "Legal Analysis"}
             </button>
           )}
         </div>
@@ -171,11 +171,11 @@ function EventCard({ ev }: { ev: any }) {
 
         {/* Narrative layer */}
         {showNarrative && narrative && (
-          <div className="mt-3 rounded-md border border-red-500/30 bg-red-500/5 p-4">
+          <div className="mt-3 rounded-md border border-primary/20 bg-primary/5 p-4">
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-3.5 w-3.5 text-red-400 shrink-0" />
-              <span className="font-mono text-[10px] uppercase tracking-widest text-red-400 font-semibold">
-                What was really happening
+              <Scale className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="font-mono text-[10px] uppercase tracking-widest text-primary font-semibold">
+                Legal Analysis
               </span>
             </div>
             <p className="text-sm text-foreground/90 leading-relaxed">{narrative}</p>
@@ -333,11 +333,11 @@ export default function TimelinePage() {
               <div className="eyebrow mb-3">Case Status</div>
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <Scale className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+                  <Scale className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold">CR23-0657</div>
                     <div className="text-xs text-muted-foreground">Washoe County District Court · Dept. 8</div>
-                    <div className="text-xs text-amber-400 mt-1 font-mono uppercase tracking-widest">Stayed · Disqualification pending Dept. 6</div>
+                    <div className="text-xs text-primary mt-1 font-mono uppercase tracking-widest">Stayed · Disqualification pending Dept. 6</div>
                   </div>
                 </div>
                 <div className="border-t border-border" />

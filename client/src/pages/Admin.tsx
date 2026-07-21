@@ -207,8 +207,8 @@ function IngestTab() {
                           : j.status === "failed"
                             ? "bg-red-500/15 text-red-300 border-red-400/30"
                             : j.status === "drafted"
-                              ? "bg-amber-400/15 text-amber-300 border-amber-300/30"
-                              : "bg-white/[0.04] text-bone/70 border-white/10"
+                              ? "bg-amber-400/15 text-primary/80 border-amber-300/30"
+                              : "bg-white/[0.04] text-bone/70 border-border"
                       }
                     >
                       {j.status}
@@ -313,19 +313,19 @@ function IngestTab() {
                   )}
                   {((draft.chronology?.length || 0) > 0 || (draft.redactionRisks?.length || 0) > 0 || (draft.publicRecordsTargets?.length || 0) > 0) && (
                     <div className="mt-3 rounded border border-amber-300/25 bg-amber-400/5 p-2 text-xs space-y-1">
-                      {(draft.chronology?.length || 0) > 0 && <div><span className="uppercase tracking-wider text-amber-300 mr-1">Chronology:</span>{draft.chronology.length} extracted event(s)</div>}
-                      {(draft.redactionRisks?.length || 0) > 0 && <div><span className="uppercase tracking-wider text-amber-300 mr-1">Redaction:</span>{draft.redactionRisks.map((r: any) => `${r.riskType}:${r.severity}`).join(" · ")}</div>}
-                      {(draft.publicRecordsTargets?.length || 0) > 0 && <div><span className="uppercase tracking-wider text-amber-300 mr-1">PRR targets:</span>{draft.publicRecordsTargets.map((r: any) => r.agency).join(" · ")}</div>}
+                      {(draft.chronology?.length || 0) > 0 && <div><span className="uppercase tracking-wider text-primary/80 mr-1">Chronology:</span>{draft.chronology.length} extracted event(s)</div>}
+                      {(draft.redactionRisks?.length || 0) > 0 && <div><span className="uppercase tracking-wider text-primary/80 mr-1">Redaction:</span>{draft.redactionRisks.map((r: any) => `${r.riskType}:${r.severity}`).join(" · ")}</div>}
+                      {(draft.publicRecordsTargets?.length || 0) > 0 && <div><span className="uppercase tracking-wider text-primary/80 mr-1">PRR targets:</span>{draft.publicRecordsTargets.map((r: any) => r.agency).join(" · ")}</div>}
                     </div>
                   )}
                   {(draft.warnings?.length || 0) > 0 && (
-                    <div className="text-xs text-amber-400 mt-2">
+                    <div className="text-xs text-primary mt-2">
                       ⚠ {draft.warnings.join(" — ")}
                     </div>
                   )}
                   {draft.proposedTimeline && (
                     <div className="mt-3 rounded border border-amber-300/30 bg-amber-400/10 p-2 text-xs">
-                      <span className="uppercase tracking-wider text-amber-300 mr-2">
+                      <span className="uppercase tracking-wider text-primary/80 mr-2">
                         Proposed timeline event:
                       </span>
                       <span className="font-mono">
@@ -1000,7 +1000,7 @@ function DocumentViolationTagPanel({ documentId }: { documentId: number }) {
     <div className="paper-card mt-4 p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="font-semibold text-sm flex items-center gap-2">
-          <Shield className="h-4 w-4 text-amber-400" />
+          <Shield className="h-4 w-4 text-primary" />
           Violation Tags ({tags?.length ?? 0})
         </div>
         <Button size="sm" variant="outline" onClick={() => setAdding(v => !v)}>
@@ -1050,9 +1050,9 @@ function DocumentViolationTagPanel({ documentId }: { documentId: number }) {
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-medium">{(allTags ?? []).find(a => a.id === t.violationTagId)?.label ?? `Tag #${t.violationTagId}`}</span>
                   <span className="text-muted-foreground">{t.confidence}% conf</span>
-                  {t.addedBy === "goblin" && <Badge className="text-xs bg-amber-500/20 text-amber-400 border-amber-500/30">Goblin</Badge>}
+                  {t.addedBy === "goblin" && <Badge className="text-xs bg-amber-500/20 text-primary border-primary/30">Goblin</Badge>}
                 </div>
-                <blockquote className="mt-1 border-l-2 border-amber-500/40 pl-2 text-muted-foreground italic line-clamp-2">{t.sourceQuote}</blockquote>
+                <blockquote className="mt-1 border-l-2 border-primary/40 pl-2 text-muted-foreground italic line-clamp-2">{t.sourceQuote}</blockquote>
                 {t.sourceCitation && <div className="text-muted-foreground mt-0.5">Cite: {t.sourceCitation}</div>}
               </div>
               <button onClick={() => removeTag.mutate({ id: t.id })} className="shrink-0 text-muted-foreground hover:text-destructive transition-colors" title="Remove tag">
@@ -1297,7 +1297,7 @@ function DocumentReview({ id }: { id: number }) {
                 )}
               </div>
               {needsReupload && (
-                <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                <div className="bg-primary/10 border-b border-primary/30 px-4 py-2.5 text-xs text-amber-700 dark:text-primary/80 flex items-center gap-2">
                   <span className="font-semibold">⚠ File needs re-upload.</span>
                   The original file had spaces in its name which broke CloudFront signing. Delete this record and re-ingest the file through Docket Goblin.
                 </div>
@@ -2650,7 +2650,7 @@ function ViolationTagsAdminTab() {
 
   const CATEGORY_COLORS: Record<string, string> = {
     constitutional: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-    procedural: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+    procedural: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-primary/80",
     discovery: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
     judicial_conduct: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
     prosecutorial_conduct: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300",

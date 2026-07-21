@@ -11,7 +11,7 @@ import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  pending: "bg-primary/10 text-amber-600 border-primary/20",
   approved: "bg-green-500/10 text-green-600 border-green-500/20",
   rejected: "bg-red-500/10 text-red-600 border-red-500/20",
   needs_changes: "bg-blue-500/10 text-blue-600 border-blue-500/20",

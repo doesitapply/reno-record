@@ -33,7 +33,7 @@ function ActorViolationBoard() {
     return (
       <div className="space-y-3">
         {Array.from({ length: 10 }).map((_, i) => (
-          <div key={i} className="h-16 rounded-lg bg-white/5 animate-pulse" />
+          <div key={i} className="h-16 rounded-lg bg-card animate-pulse" />
         ))}
       </div>
     );
@@ -67,7 +67,7 @@ function ActorViolationBoard() {
             {/* Rank */}
             <div className="w-8 text-center shrink-0">
               {idx === 0 ? (
-                <Trophy className="h-5 w-5 text-amber-400 mx-auto" />
+                <Trophy className="h-5 w-5 text-primary mx-auto" />
               ) : (
                 <span className="text-sm font-mono text-muted-foreground">#{idx + 1}</span>
               )}
@@ -110,7 +110,7 @@ function AuditorBoard() {
     return (
       <div className="space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-14 rounded-lg bg-white/5 animate-pulse" />
+          <div key={i} className="h-14 rounded-lg bg-card animate-pulse" />
         ))}
       </div>
     );
@@ -139,7 +139,7 @@ function AuditorBoard() {
           <div key={String(auditor.userId)} className="paper-card p-4 flex items-center gap-4">
             <div className="w-8 text-center shrink-0">
               {idx === 0 ? (
-                <Trophy className="h-5 w-5 text-amber-400 mx-auto" />
+                <Trophy className="h-5 w-5 text-primary mx-auto" />
               ) : (
                 <span className="text-sm font-mono text-muted-foreground">#{idx + 1}</span>
               )}
@@ -159,7 +159,7 @@ function AuditorBoard() {
 
             <div className="text-right shrink-0">
               <div className="text-xs text-muted-foreground">{actions} action{actions !== 1 ? "s" : ""}</div>
-              <div className="text-sm font-mono font-bold text-amber-400">{xp.toLocaleString()} XP</div>
+              <div className="text-sm font-mono font-bold text-primary">{xp.toLocaleString()} XP</div>
             </div>
           </div>
         );
@@ -183,8 +183,8 @@ export default function Leaderboard() {
         </div>
 
         {/* Disclaimer */}
-        <div className="mb-8 rounded border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-muted-foreground flex gap-3">
-          <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+        <div className="mb-8 rounded border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground flex gap-3">
+          <AlertTriangle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           <span>
             Rankings are derived from documents in the public archive. Heat scores reflect evidence density,
             not legal findings. All entries are source-cited public records.

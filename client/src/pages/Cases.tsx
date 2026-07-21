@@ -25,7 +25,7 @@ function StatRow({ label, value, highlight }: { label: string; value: string | n
   return (
     <div className="flex justify-between items-center py-2 border-b border-border last:border-0">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className={`text-sm font-mono font-semibold ${highlight ? "text-amber-400" : ""}`}>
+      <span className={`text-sm font-mono font-semibold ${highlight ? "text-primary" : ""}`}>
         {value}
       </span>
     </div>
@@ -59,8 +59,8 @@ export default function CasesPage() {
           {/* State Case Card */}
           <div className="paper-card p-7 border-l-4 border-l-amber-500">
             <div className="flex items-center gap-2 mb-5">
-              <Scale className="h-5 w-5 text-amber-400" />
-              <span className="font-mono text-xs uppercase tracking-widest text-amber-400">
+              <Scale className="h-5 w-5 text-primary" />
+              <span className="font-mono text-xs uppercase tracking-widest text-primary">
                 State Court
               </span>
             </div>
@@ -183,7 +183,7 @@ export default function CasesPage() {
           <h3 className="display-serif text-2xl mb-4">The same actors. The same courtroom. Two dockets.</h3>
           <div className="grid md:grid-cols-3 gap-6 text-sm">
             <div>
-              <div className="font-semibold mb-2 text-amber-400">The state case created the federal case.</div>
+              <div className="font-semibold mb-2 text-primary">The state case created the federal case.</div>
               <p className="text-muted-foreground leading-relaxed">
                 The federal § 1983 complaint was filed because state court proceedings produced documented
                 constitutional violations — Faretta non-adjudication, custody-conditioned rights, no Barker
@@ -219,10 +219,10 @@ export default function CasesPage() {
               { label: "Days pretrial", value: stats.data.daysSinceArrest, icon: <AlertTriangle className="h-4 w-4" />, highlight: true },
             ].map((s) => (
               <div key={s.label} className="paper-card p-5 text-center">
-                <div className={`flex justify-center mb-2 ${s.highlight ? "text-amber-400" : "text-muted-foreground"}`}>
+                <div className={`flex justify-center mb-2 ${s.highlight ? "text-primary" : "text-muted-foreground"}`}>
                   {s.icon}
                 </div>
-                <div className={`text-3xl font-mono font-bold ${s.highlight ? "text-amber-400" : ""}`}>
+                <div className={`text-3xl font-mono font-bold ${s.highlight ? "text-primary" : ""}`}>
                   {s.value}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1 font-mono uppercase tracking-widest">

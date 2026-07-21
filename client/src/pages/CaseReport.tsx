@@ -22,7 +22,7 @@ const RECORD_STATUS_COLORS: Record<string, string> = {
   on_record_state: "bg-blue-900/40 text-blue-300 border-blue-800/50",
   on_record_federal: "bg-indigo-900/40 text-indigo-300 border-indigo-800/50",
   off_record: "bg-stone-800/60 text-stone-400 border-stone-700/50",
-  disputed: "bg-amber-900/40 text-amber-300 border-amber-800/50",
+  disputed: "bg-amber-900/40 text-primary/80 border-amber-800/50",
   unclassified: "bg-stone-800/40 text-stone-500 border-stone-700/40",
 };
 
@@ -94,7 +94,7 @@ export default function CaseReportPage() {
       <SiteShell>
         <div className="min-h-screen bg-stone-950 flex items-center justify-center">
           <div className="text-center">
-            <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-3" />
+            <AlertTriangle className="w-8 h-8 text-primary mx-auto mb-3" />
             <p className="text-stone-400 text-sm">Report not found or not available.</p>
             <Link href="/"><Button variant="ghost" size="sm" className="mt-4">← Back to archive</Button></Link>
           </div>
@@ -119,7 +119,7 @@ export default function CaseReportPage() {
               <div>
                 <div className="inline-flex items-center gap-2 border border-amber-800/40 bg-amber-950/30 rounded px-3 py-1 mb-3 print:hidden">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                  <span className="text-xs font-mono text-amber-400 uppercase tracking-widest">Forensic Case Report</span>
+                  <span className="text-xs font-mono text-primary uppercase tracking-widest">Forensic Case Report</span>
                 </div>
                 <h1 className="text-2xl md:text-3xl font-black text-stone-50 leading-tight mb-1">
                   {story.mainIssue ?? "Case Report"}
@@ -142,7 +142,7 @@ export default function CaseReportPage() {
             {/* Stats strip */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
               {[
-                { label: "Documents", value: documents.length, color: "text-amber-400" },
+                { label: "Documents", value: documents.length, color: "text-primary" },
                 { label: "Timeline Events", value: timeline.length, color: "text-violet-400" },
                 { label: "Named Actors", value: actors.length, color: "text-sky-400" },
                 { label: "Violation Types", value: topViolations.length, color: "text-red-400" },
@@ -214,7 +214,7 @@ export default function CaseReportPage() {
                 ))}
                 {timeline.length > 30 && (
                   <p className="text-xs text-stone-600 font-mono pl-2">
-                    + {timeline.length - 30} more events — <Link href="/timeline" className="text-amber-500 hover:underline">view full timeline</Link>
+                    + {timeline.length - 30} more events — <Link href="/timeline" className="text-primary hover:underline">view full timeline</Link>
                   </p>
                 )}
               </div>
@@ -251,7 +251,7 @@ export default function CaseReportPage() {
             <section className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-amber-400" />
+                  <FileText className="w-4 h-4 text-primary" />
                   <h2 className="text-sm font-mono uppercase tracking-widest text-stone-300">Evidence Archive ({documents.length} documents)</h2>
                 </div>
                 <Link href="/evidence">
@@ -265,7 +265,7 @@ export default function CaseReportPage() {
                   <Link key={doc.id} href={`/evidence/${doc.id}`}>
                     <div className="group flex items-center justify-between rounded border border-stone-800 bg-stone-900/30 hover:border-amber-700/40 hover:bg-stone-900/60 px-3 py-2 cursor-pointer transition-all">
                       <div className="min-w-0">
-                        <p className="text-sm text-stone-300 group-hover:text-amber-300 transition-colors truncate">{doc.title}</p>
+                        <p className="text-sm text-stone-300 group-hover:text-primary/80 transition-colors truncate">{doc.title}</p>
                         {doc.caseNumber && <p className="text-[10px] font-mono text-stone-600 mt-0.5">{doc.caseNumber}</p>}
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-3">
@@ -306,7 +306,7 @@ export default function CaseReportPage() {
                       "text-[10px] font-mono px-1.5 py-0.5 rounded border",
                       prr.status === "produced" ? "bg-green-900/40 text-green-300 border-green-800/50" :
                       prr.status === "denied" ? "bg-red-900/40 text-red-300 border-red-800/50" :
-                      prr.status === "overdue" ? "bg-amber-900/40 text-amber-300 border-amber-800/50" :
+                      prr.status === "overdue" ? "bg-amber-900/40 text-primary/80 border-amber-800/50" :
                       "bg-stone-800/40 text-stone-400 border-stone-700/40"
                     )}>
                       {prr.status?.replace(/_/g, " ")}

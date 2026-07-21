@@ -250,7 +250,7 @@ function ActionableBadge({ status }: { status: ActionableStatus }) {
     </span>
   );
   if (status === "conditional") return (
-    <span className="inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+    <span className="inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded bg-amber-500/15 text-primary border border-primary/30">
       <MinusCircle className="w-3 h-3" /> Conditional
     </span>
   );
@@ -268,7 +268,7 @@ function ImmunityBadge({ status }: { status: ImmunityStatus }) {
     </span>
   );
   if (status === "partial") return (
-    <span className="inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+    <span className="inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded bg-amber-500/15 text-primary border border-primary/30">
       <ShieldAlert className="w-3 h-3" /> Partial Immunity
     </span>
   );
@@ -287,7 +287,7 @@ function ImmunityBadge({ status }: { status: ImmunityStatus }) {
 function TierBadge({ tier }: { tier: ActionabilityTier }) {
   const map = {
     tier1: { label: "Tier 1 — Move Now", className: "bg-red-500/20 text-red-400 border-red-500/40" },
-    tier2: { label: "Tier 2 — Federal / Parallel", className: "bg-amber-500/20 text-amber-400 border-amber-500/40" },
+    tier2: { label: "Tier 2 — Federal / Parallel", className: "bg-amber-500/20 text-primary border-primary/40" },
     tier3: { label: "Tier 3 — Appellate / Support", className: "bg-blue-500/20 text-blue-400 border-blue-500/40" },
   };
   const { label, className } = map[tier];
@@ -308,13 +308,13 @@ function ViolationCard({ v }: { v: ViolationEntry }) {
   return (
     <div className={`paper-card border-l-4 ${borderColor} overflow-hidden`}>
       <button
-        className="w-full text-left p-5 flex items-start justify-between gap-4 hover:bg-white/[0.02] transition-colors"
+        className="w-full text-left p-5 flex items-start justify-between gap-4 hover:bg-muted/20 transition-colors"
         onClick={() => setOpen(!open)}
       >
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-medium text-foreground">{v.label}</span>
-            <span className="font-mono text-xs text-amber-400">{v.count} instances</span>
+            <span className="font-mono text-xs text-primary">{v.count} instances</span>
           </div>
           <div className="flex flex-wrap gap-2">
             <ActionableBadge status={v.actionable} />
@@ -341,13 +341,13 @@ function ViolationCard({ v }: { v: ViolationEntry }) {
           </div>
           {v.tierNote && (
             <div className="bg-amber-400/5 border border-amber-400/20 rounded p-3">
-              <div className="font-mono text-xs uppercase tracking-widest text-amber-400/70 mb-1">Strategic Note</div>
+              <div className="font-mono text-xs uppercase tracking-widest text-primary/70 mb-1">Strategic Note</div>
               <p className="text-sm text-amber-100/80">{v.tierNote}</p>
             </div>
           )}
           <Link
             href={`/patterns/tag/${v.slug}`}
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-amber-400/70 hover:text-amber-400 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-primary/70 hover:text-primary transition-colors"
           >
             <FileText className="w-3 h-3" />
             View {v.count} source-cited documents →
@@ -386,7 +386,7 @@ export default function CaseIntelligencePage() {
           <div className="eyebrow">Case Intelligence Dashboard</div>
           <h1 className="display-serif text-5xl md:text-6xl mt-3 leading-[1.02]">
             What happened.<br />
-            <span className="text-amber-400">What it means.</span>
+            <span className="text-primary">What it means.</span>
           </h1>
           <p className="mt-5 text-foreground/80 leading-relaxed max-w-2xl">
             State v. Church (CR23-0657) · Church v. Washoe County (3:24-cv-00579-ART-CSD) ·
@@ -398,7 +398,7 @@ export default function CaseIntelligencePage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
           {[
             { icon: Clock, label: "Days Pending", value: "800+", color: "text-red-400" },
-            { icon: TrendingUp, label: "Tagged Violations", value: totalInstances, color: "text-amber-400" },
+            { icon: TrendingUp, label: "Tagged Violations", value: totalInstances, color: "text-primary" },
             { icon: Zap, label: "Actionable Claims", value: actionableCount, color: "text-emerald-400" },
             { icon: ShieldOff, label: "Immunity Bypassed", value: bypassCount, color: "text-red-400" },
           ].map(({ icon: Icon, label, value, color }) => (
@@ -423,7 +423,7 @@ export default function CaseIntelligencePage() {
               onClick={() => setActiveSection(id as any)}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded text-sm font-mono transition-colors ${
                 activeSection === id
-                  ? "bg-amber-400/15 text-amber-400 border border-amber-400/30"
+                  ? "bg-amber-400/15 text-primary border border-amber-400/30"
                   : "text-muted-foreground hover:text-foreground border border-transparent"
               }`}
             >
@@ -523,7 +523,7 @@ export default function CaseIntelligencePage() {
                   <div><span className="text-muted-foreground">Judge:</span> Anne R. Traum</div>
                   <div><span className="text-muted-foreground">Claims:</span> § 1983 constitutional violations</div>
                   <div><span className="text-muted-foreground">Filed:</span> January 6, 2025</div>
-                  <div><span className="text-muted-foreground">Status:</span> <span className="text-amber-400">Dismissed (Rooker-Feldman) · Rule 59(e) pending</span></div>
+                  <div><span className="text-muted-foreground">Status:</span> <span className="text-primary">Dismissed (Rooker-Feldman) · Rule 59(e) pending</span></div>
                 </div>
               </div>
             </div>
@@ -550,7 +550,7 @@ export default function CaseIntelligencePage() {
                     <div className="font-mono text-xs text-muted-foreground w-20 flex-shrink-0 pt-0.5">{date}</div>
                     <div className="flex-1 text-sm text-foreground/80 leading-relaxed">{event}</div>
                     {flag && (
-                      <Link href={`/patterns/tag/${flag}`} className="text-xs font-mono text-amber-400/60 hover:text-amber-400 flex-shrink-0 transition-colors">
+                      <Link href={`/patterns/tag/${flag}`} className="text-xs font-mono text-primary/60 hover:text-primary flex-shrink-0 transition-colors">
                         ⚑
                       </Link>
                     )}
@@ -571,7 +571,7 @@ export default function CaseIntelligencePage() {
                   { label: "Violation Tags", value: "14", sub: "Constitutional, procedural, civil rights" },
                 ].map(({ label, value, sub }) => (
                   <div key={label} className="paper-card p-4">
-                    <div className="display-serif text-3xl text-amber-400">{value}</div>
+                    <div className="display-serif text-3xl text-primary">{value}</div>
                     <div className="eyebrow !text-[0.62rem] mt-1">{label}</div>
                     <div className="text-xs text-muted-foreground mt-1">{sub}</div>
                   </div>
@@ -678,22 +678,22 @@ export default function CaseIntelligencePage() {
                   </thead>
                   <tbody>
                     {VIOLATIONS.map(v => (
-                      <tr key={v.slug} className="border-b border-border/20 hover:bg-white/[0.02]">
+                      <tr key={v.slug} className="border-b border-border/20 hover:bg-muted/20">
                         <td className="py-2 pr-4 text-foreground/80">
-                          <Link href={`/patterns/tag/${v.slug}`} className="hover:text-amber-400 transition-colors">
+                          <Link href={`/patterns/tag/${v.slug}`} className="hover:text-primary transition-colors">
                             {v.label}
                           </Link>
                         </td>
-                        <td className="py-2 pr-4 text-amber-400">{v.count}</td>
+                        <td className="py-2 pr-4 text-primary">{v.count}</td>
                         <td className="py-2 pr-4">
-                          <span className={v.actionable === "yes" ? "text-emerald-400" : v.actionable === "conditional" ? "text-amber-400" : "text-muted-foreground"}>
+                          <span className={v.actionable === "yes" ? "text-emerald-400" : v.actionable === "conditional" ? "text-primary" : "text-muted-foreground"}>
                             {v.actionable === "yes" ? "Yes" : v.actionable === "conditional" ? "Conditional" : "No"}
                           </span>
                         </td>
                         <td className="py-2">
                           <span className={
                             v.immunityBypass === "bypassed" ? "text-red-400" :
-                            v.immunityBypass === "partial" ? "text-amber-400" :
+                            v.immunityBypass === "partial" ? "text-primary" :
                             v.immunityBypass === "na" ? "text-blue-400" :
                             "text-muted-foreground"
                           }>
@@ -714,16 +714,16 @@ export default function CaseIntelligencePage() {
 
         {/* Footer nav */}
         <div className="mt-16 pt-8 border-t border-border/40 flex flex-wrap gap-4">
-          <Link href="/patterns" className="text-sm font-mono text-muted-foreground hover:text-amber-400 transition-colors">
+          <Link href="/patterns" className="text-sm font-mono text-muted-foreground hover:text-primary transition-colors">
             ← Patterns Dashboard
           </Link>
-          <Link href="/timeline" className="text-sm font-mono text-muted-foreground hover:text-amber-400 transition-colors">
+          <Link href="/timeline" className="text-sm font-mono text-muted-foreground hover:text-primary transition-colors">
             Full Timeline →
           </Link>
-          <Link href="/evidence" className="text-sm font-mono text-muted-foreground hover:text-amber-400 transition-colors">
+          <Link href="/evidence" className="text-sm font-mono text-muted-foreground hover:text-primary transition-colors">
             Evidence Archive →
           </Link>
-          <Link href="/actors" className="text-sm font-mono text-muted-foreground hover:text-amber-400 transition-colors">
+          <Link href="/actors" className="text-sm font-mono text-muted-foreground hover:text-primary transition-colors">
             Actors →
           </Link>
         </div>

@@ -170,7 +170,7 @@ export default function AdminManagePage() {
             <TabsTrigger value="apikeys" className="gap-2">
               <KeyRound className="h-3.5 w-3.5" /> API Keys
             </TabsTrigger>
-            <TabsTrigger value="reviewqueue" className="gap-2 text-amber-400">
+            <TabsTrigger value="reviewqueue" className="gap-2 text-primary">
               <AlertCircle className="h-3.5 w-3.5" /> Review Queue
             </TabsTrigger>
           </TabsList>
@@ -657,7 +657,7 @@ function ActorsTab() {
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-medium text-sm">{a.name}</span>
                 {a.judicialActor && (
-                  <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30 font-mono uppercase text-[9px]">
+                  <Badge className="bg-amber-500/20 text-amber-700 border-primary/30 font-mono uppercase text-[9px]">
                     Judicial
                   </Badge>
                 )}
@@ -961,7 +961,7 @@ function PRRsTab() {
   const STATUS_COLORS: Record<string, string> = {
     draft: "text-muted-foreground border-muted-foreground/30",
     sent: "text-blue-700 border-blue-500/40",
-    awaiting_response: "text-amber-700 border-amber-500/40",
+    awaiting_response: "text-amber-700 border-primary/40",
     overdue: "text-red-700 border-red-500/40",
     partial_response: "text-amber-600 border-amber-400/40",
     denied: "text-red-700 border-red-500/40",
@@ -1861,7 +1861,7 @@ function ApiKeysTab() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-amber-500" /> Copy your API key now
+              <ShieldAlert className="h-5 w-5 text-primary" /> Copy your API key now
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
@@ -2029,7 +2029,7 @@ function ReviewQueueTab() {
 
   const CONFIDENCE_COLORS = {
     high: "text-emerald-400 border-emerald-400/50",
-    medium: "text-amber-400 border-amber-400/50",
+    medium: "text-primary border-amber-400/50",
     low: "text-red-400 border-red-400/50",
   };
 
@@ -2049,12 +2049,12 @@ function ReviewQueueTab() {
           className="w-full flex items-start gap-3 p-4 text-left hover:bg-stone-900/40 transition-colors"
           onClick={() => setExpanded(isOpen ? null : doc.id)}
         >
-          <FileSearch className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+          <FileSearch className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
             <div className="font-medium text-sm truncate">{doc.title}</div>
             <div className="flex flex-wrap gap-2 mt-1">
               {doc.needsDateReview && (
-                <Badge variant="outline" className="text-[10px] font-mono border-amber-400/50 text-amber-400">UNDATED</Badge>
+                <Badge variant="outline" className="text-[10px] font-mono border-amber-400/50 text-primary">UNDATED</Badge>
               )}
               {doc.needsClassificationReview && (
                 <Badge variant="outline" className="text-[10px] font-mono border-blue-400/50 text-blue-400">NEEDS CLASSIFICATION</Badge>
@@ -2094,7 +2094,7 @@ function ReviewQueueTab() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Date suggestion */}
                   <div className="space-y-1">
-                    <div className="text-[10px] font-mono text-amber-400 uppercase tracking-widest">Suggested Date</div>
+                    <div className="text-[10px] font-mono text-primary uppercase tracking-widest">Suggested Date</div>
                     <div className="font-mono text-sm font-semibold">
                       {suggestion.suggestedDate ?? <span className="text-muted-foreground italic">No date found</span>}
                     </div>
@@ -2187,7 +2187,7 @@ function ReviewQueueTab() {
             {/* Manual fields */}
             {flags.needsDate && (
               <div>
-                <Label className="text-xs font-mono text-amber-400 uppercase tracking-widest">Filing Date</Label>
+                <Label className="text-xs font-mono text-primary uppercase tracking-widest">Filing Date</Label>
                 <p className="text-xs text-muted-foreground mb-2">
                   Enter the verified filing stamp date, or leave blank to mark as UNDATED and clear the flag.
                 </p>
@@ -2257,7 +2257,7 @@ function ReviewQueueTab() {
 
       {undated.length > 0 && (
         <div className="space-y-2">
-          <h3 className="font-mono text-xs uppercase tracking-widest text-amber-400 flex items-center gap-2">
+          <h3 className="font-mono text-xs uppercase tracking-widest text-primary flex items-center gap-2">
             <AlertCircle className="h-3.5 w-3.5" /> Undated ({undated.length})
           </h3>
           {undated.map((d) => <DocRow key={d.id} doc={d} />)}

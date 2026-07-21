@@ -205,7 +205,7 @@ export default function AgencyDetail() {
 
         {/* Archive notice */}
         <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/20 p-5">
-          <p className="text-sm text-amber-800 dark:text-amber-300">
+          <p className="text-sm text-amber-800 dark:text-primary/80">
             <strong>Archive methodology:</strong> Officials are linked to this agency based on their
             documented roles in public records. Document counts reflect publicly available records in
             the archive. This is not a comprehensive directory — it reflects what has been submitted

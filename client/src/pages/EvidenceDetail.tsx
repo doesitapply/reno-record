@@ -183,7 +183,7 @@ export default function EvidenceDetail() {
       <SiteShell>
         <div className="min-h-screen bg-background flex items-center justify-center px-4">
           <div className="text-center space-y-6 max-w-md">
-            <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto" />
+            <AlertTriangle className="w-12 h-12 text-primary mx-auto" />
             <div>
               <h1 className="font-serif text-3xl font-bold text-foreground mb-2">
                 Record Not Found
@@ -254,7 +254,7 @@ export default function EvidenceDetail() {
                 {/* Header */}
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline" className="font-mono text-xs uppercase tracking-wider border-amber-400/50 text-amber-400">
+                    <Badge variant="outline" className="font-mono text-xs uppercase tracking-wider border-amber-400/50 text-primary">
                       {SOURCE_LABELS[doc.sourceType] ?? "Document"}
                     </Badge>
                     {doc.caseNumber && (
@@ -285,7 +285,7 @@ export default function EvidenceDetail() {
                 {/* Summary */}
                 {(doc.description || doc.aiSummary) && (
                   <div className="paper-card p-5 space-y-3">
-                    <h2 className="font-mono text-xs uppercase tracking-widest text-amber-400">
+                    <h2 className="font-mono text-xs uppercase tracking-widest text-primary">
                       Summary
                     </h2>
                     <p className="text-foreground/90 leading-relaxed">
@@ -316,9 +316,9 @@ export default function EvidenceDetail() {
                     {doc.editorialNote && (
                       <div className="rounded border border-amber-400/30 bg-amber-400/5 p-4">
                         <div className="flex items-start gap-2">
-                          <BookOpen className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                          <BookOpen className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                           <div>
-                            <div className="text-xs font-mono uppercase tracking-widest text-amber-400 mb-1">Editorial note</div>
+                            <div className="text-xs font-mono uppercase tracking-widest text-primary mb-1">Editorial note</div>
                             <p className="text-sm text-foreground/85">{doc.editorialNote}</p>
                           </div>
                         </div>
@@ -331,7 +331,7 @@ export default function EvidenceDetail() {
                 <div className="paper-card overflow-hidden">
                   <div className="p-4 border-b border-border/40 flex flex-col gap-3">
                     <div className="flex items-start gap-2 min-w-0">
-                      <FileText className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                      <FileText className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                       <div className="min-w-0">
                         <div className="font-medium text-foreground text-sm leading-snug break-words">
                           {doc.title}
@@ -447,7 +447,7 @@ export default function EvidenceDetail() {
                 {/* Related Timeline Events */}
                 {relatedEvents.length > 0 && (
                   <div className="space-y-3">
-                    <h2 className="font-mono text-xs uppercase tracking-widest text-amber-400 flex items-center gap-2">
+                    <h2 className="font-mono text-xs uppercase tracking-widest text-primary flex items-center gap-2">
                       <Clock className="w-4 h-4" />
                       Referenced in Timeline
                     </h2>
@@ -460,7 +460,7 @@ export default function EvidenceDetail() {
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="space-y-1 min-w-0">
-                              <p className="font-medium text-foreground group-hover:text-amber-400 transition-colors text-sm leading-snug">
+                              <p className="font-medium text-foreground group-hover:text-primary transition-colors text-sm leading-snug">
                                 {ev.title}
                               </p>
                               <p className="text-xs text-muted-foreground font-mono">
@@ -472,7 +472,7 @@ export default function EvidenceDetail() {
                                 )}
                               </p>
                             </div>
-                            <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-amber-400 flex-shrink-0 mt-0.5 transition-colors" />
+                            <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary flex-shrink-0 mt-0.5 transition-colors" />
                           </div>
                         </Link>
                       ))}
@@ -485,7 +485,7 @@ export default function EvidenceDetail() {
               <div className="space-y-5">
                 {/* Share */}
                 <div className="paper-card p-5 space-y-3">
-                  <h3 className="font-mono text-xs uppercase tracking-widest text-amber-400">
+                  <h3 className="font-mono text-xs uppercase tracking-widest text-primary">
                     Share This Record
                   </h3>
                   <div className="space-y-2">
@@ -518,7 +518,7 @@ export default function EvidenceDetail() {
                 {/* Actors */}
                 {actorNames.length > 0 && (
                   <div className="paper-card p-5 space-y-3">
-                    <h3 className="font-mono text-xs uppercase tracking-widest text-amber-400 flex items-center gap-2">
+                    <h3 className="font-mono text-xs uppercase tracking-widest text-primary flex items-center gap-2">
                       <User className="w-3.5 h-3.5" />
                       Named Actors
                     </h3>
@@ -527,7 +527,7 @@ export default function EvidenceDetail() {
                         <Link
                           key={name}
                           href={`/actors/${encodeURIComponent(name.toLowerCase().replace(/\s+/g, "-"))}`}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs bg-card border border-border hover:border-amber-400/50 hover:text-amber-400 transition-colors font-mono"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs bg-card border border-border hover:border-amber-400/50 hover:text-primary transition-colors font-mono"
                         >
                           {name}
                         </Link>
@@ -539,7 +539,7 @@ export default function EvidenceDetail() {
                 {/* Tags */}
                 {(issueTags.length > 0 || aiTags.length > 0) && (
                   <div className="paper-card p-5 space-y-3">
-                    <h3 className="font-mono text-xs uppercase tracking-widest text-amber-400 flex items-center gap-2">
+                    <h3 className="font-mono text-xs uppercase tracking-widest text-primary flex items-center gap-2">
                       <Tag className="w-3.5 h-3.5" />
                       Issue Tags
                     </h3>
@@ -547,7 +547,7 @@ export default function EvidenceDetail() {
                       {Array.from(new Set([...issueTags, ...aiTags])).map((tag) => (
                         <span
                           key={tag}
-                          className="px-2 py-0.5 rounded text-xs bg-amber-400/10 text-amber-400/80 border border-amber-400/20 font-mono"
+                          className="px-2 py-0.5 rounded text-xs bg-amber-400/10 text-primary/80 border border-amber-400/20 font-mono"
                         >
                           {tag}
                         </span>
@@ -558,7 +558,7 @@ export default function EvidenceDetail() {
 
                 {/* Metadata */}
                 <div className="paper-card p-5 space-y-3">
-                  <h3 className="font-mono text-xs uppercase tracking-widest text-amber-400">
+                  <h3 className="font-mono text-xs uppercase tracking-widest text-primary">
                     Record Metadata
                   </h3>
                   <dl className="space-y-2 text-xs">
@@ -598,9 +598,9 @@ export default function EvidenceDetail() {
 
                 {/* Archive link */}
                 <div className="paper-card p-4 flex items-center gap-3 hover:border-amber-400/40 transition-colors group">
-                  <BookOpen className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                  <BookOpen className="w-5 h-5 text-primary flex-shrink-0" />
                   <div className="min-w-0">
-                    <Link href="/evidence" className="text-sm font-medium text-foreground group-hover:text-amber-400 transition-colors">
+                    <Link href="/evidence" className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
                       Browse Full Archive
                     </Link>
                     <p className="text-xs text-muted-foreground">All public records</p>
@@ -612,7 +612,7 @@ export default function EvidenceDetail() {
                   <div className="paper-card p-4">
                     <button
                       onClick={() => setHistoryOpen(v => !v)}
-                      className="w-full flex items-center justify-between text-sm font-mono text-muted-foreground hover:text-amber-400 transition-colors"
+                      className="w-full flex items-center justify-between text-sm font-mono text-muted-foreground hover:text-primary transition-colors"
                     >
                       <span className="flex items-center gap-2">
                         <History className="w-4 h-4" />
@@ -636,7 +636,7 @@ export default function EvidenceDetail() {
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <span className="text-xs font-mono text-amber-400">v{v.versionNo}</span>
+                                <span className="text-xs font-mono text-primary">v{v.versionNo}</span>
                                 <span className="text-xs text-muted-foreground ml-2">
                                   {new Date(v.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                                 </span>
@@ -644,7 +644,7 @@ export default function EvidenceDetail() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-6 px-2 text-xs text-stone-500 hover:text-amber-400"
+                                className="h-6 px-2 text-xs text-stone-500 hover:text-primary"
                                 disabled={restoreVersion.isPending}
                                 onClick={() => {
                                   if (confirm(`Restore to v${v.versionNo}? Current state will be snapshotted first.`)) {

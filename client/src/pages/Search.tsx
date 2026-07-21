@@ -35,7 +35,7 @@ const RECORD_STATUS_COLORS: Record<string, string> = {
   on_record_state: "bg-blue-900/40 text-blue-300 border-blue-800/50",
   on_record_federal: "bg-indigo-900/40 text-indigo-300 border-indigo-800/50",
   off_record: "bg-stone-800/60 text-stone-400 border-stone-700/50",
-  disputed: "bg-amber-900/40 text-amber-300 border-amber-800/50",
+  disputed: "bg-amber-900/40 text-primary/80 border-amber-800/50",
   unclassified: "bg-stone-800/40 text-stone-500 border-stone-700/40",
 };
 
@@ -76,7 +76,7 @@ export default function SearchPage() {
           {/* Search bar */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <SearchIcon className="w-5 h-5 text-amber-400" />
+              <SearchIcon className="w-5 h-5 text-primary" />
               <h1 className="text-xl font-bold text-stone-100 font-mono uppercase tracking-widest">Archive Search</h1>
             </div>
             <div className="relative">
@@ -89,12 +89,12 @@ export default function SearchPage() {
                 className="pl-9 bg-stone-900 border-stone-700 text-stone-100 placeholder:text-stone-600 focus:border-amber-600 h-11 text-base"
               />
               {isFetching && (
-                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400 animate-spin" />
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary animate-spin" />
               )}
             </div>
             {enabled && !isFetching && data && (
               <p className="mt-2 text-xs font-mono text-stone-500">
-                {totalHits} result{totalHits !== 1 ? "s" : ""} for <span className="text-amber-400">"{query}"</span>
+                {totalHits} result{totalHits !== 1 ? "s" : ""} for <span className="text-primary">"{query}"</span>
               </p>
             )}
           </div>
@@ -130,7 +130,7 @@ export default function SearchPage() {
               {data.documents.length > 0 && (
                 <section>
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-stone-800">
-                    <FileText className="w-4 h-4 text-amber-400" />
+                    <FileText className="w-4 h-4 text-primary" />
                     <span className="text-xs font-mono uppercase tracking-widest text-stone-400">Documents</span>
                     <Badge variant="outline" className="ml-auto text-xs border-stone-700 text-stone-500">{data.documents.length}</Badge>
                   </div>
@@ -140,7 +140,7 @@ export default function SearchPage() {
                         <div className="group rounded border border-stone-800 bg-stone-900/40 hover:border-amber-700/50 hover:bg-stone-900/70 p-3 cursor-pointer transition-all">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-stone-200 group-hover:text-amber-300 transition-colors leading-snug">
+                              <p className="text-sm font-medium text-stone-200 group-hover:text-primary/80 transition-colors leading-snug">
                                 {highlight(doc.title, query)}
                               </p>
                               {doc.description && (

@@ -102,7 +102,7 @@ function SignInGate() {
     <SiteShell>
       <section className="py-20">
         <div className="container max-w-2xl text-center">
-          <ShieldAlert className="mx-auto h-10 w-10 text-amber-500 mb-4" />
+          <ShieldAlert className="mx-auto h-10 w-10 text-primary mb-4" />
           <h1 className="display-serif text-4xl mb-3">Sign in to submit evidence</h1>
           <p className="text-muted-foreground mb-8">
             Submissions and document uploads require an account. This protects the archive from spam,

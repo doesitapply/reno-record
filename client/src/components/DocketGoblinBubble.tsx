@@ -133,11 +133,11 @@ export default function DocketGoblinBubble() {
         aria-label="Open Docket Goblin"
       >
         <span className="grid h-9 w-9 place-items-center rounded-full bg-amber-400/15 ring-1 ring-amber-300/40">
-          <Skull className="h-5 w-5 text-amber-300" />
+          <Skull className="h-5 w-5 text-primary/80" />
         </span>
         <span className="text-left">
           <span className="block font-serif text-base leading-none text-bone">Docket Goblin</span>
-          <span className="block text-[10px] uppercase tracking-[0.16em] text-amber-300/70">
+          <span className="block text-[10px] uppercase tracking-[0.16em] text-primary/80/70">
             Talk · Drop evidence · Auto-structure
           </span>
         </span>
@@ -162,11 +162,11 @@ export default function DocketGoblinBubble() {
       <div className="flex items-center justify-between border-b border-amber-400/20 px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="grid h-8 w-8 place-items-center rounded-full bg-amber-400/15 ring-1 ring-amber-300/40">
-            <Skull className="h-4 w-4 text-amber-300" />
+            <Skull className="h-4 w-4 text-primary/80" />
           </span>
           <div className="leading-tight">
             <div className="font-serif text-bone">Docket Goblin</div>
-            <div className="text-[10px] uppercase tracking-[0.16em] text-amber-300/70">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-primary/80/70">
               Advisory only · Never auto-publishes
             </div>
           </div>
@@ -200,9 +200,9 @@ export default function DocketGoblinBubble() {
             <Loader2 className="h-4 w-4 animate-spin" /> Loading chat…
           </div>
         ) : messages.length === 0 ? (
-          <Card className="bg-white/[0.03] border-white/10 p-4 text-sm text-bone/80">
+          <Card className="bg-white/[0.03] border-border p-4 text-sm text-bone/80">
             <div className="flex items-center gap-2 mb-2">
-              <MessageSquareText className="h-4 w-4 text-amber-300" />
+              <MessageSquareText className="h-4 w-4 text-primary/80" />
               <span className="font-serif text-bone">Welcome, Counselor.</span>
             </div>
             <p className="leading-snug">
@@ -230,7 +230,7 @@ export default function DocketGoblinBubble() {
                   (m.role === "user"
                     ? "bg-amber-400/15 text-bone border border-amber-300/30"
                     : m.role === "assistant"
-                      ? "bg-white/[0.04] text-bone/90 border border-white/10"
+                      ? "bg-white/[0.04] text-bone/90 border border-border"
                       : "bg-transparent text-bone/50 italic")
                 }
               >
@@ -244,7 +244,7 @@ export default function DocketGoblinBubble() {
           ))
         )}
         {ingest.isPending && (
-          <div className="flex items-center gap-2 text-amber-300 text-xs">
+          <div className="flex items-center gap-2 text-primary/80 text-xs">
             <Loader2 className="h-3 w-3 animate-spin" />
             Ingesting & drafting structure…
           </div>
@@ -294,9 +294,9 @@ export default function DocketGoblinBubble() {
       {dragOver && (
         <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-xl bg-amber-400/15 backdrop-blur-sm border-2 border-dashed border-amber-300">
           <div className="text-bone text-center">
-            <FileUp className="mx-auto h-8 w-8 text-amber-300 mb-2" />
+            <FileUp className="mx-auto h-8 w-8 text-primary/80 mb-2" />
             <div className="font-serif text-lg">Drop evidence to ingest</div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-amber-300/80">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-primary/80/80">
               Stays pending until you approve
             </div>
           </div>
@@ -327,7 +327,7 @@ export default function DocketGoblinBubble() {
             <FileUp className="h-4 w-4 mr-1" />
             Drop / Pick file
           </Button>
-          <Badge variant="outline" className="border-white/10 text-bone/60 text-[10px]">
+          <Badge variant="outline" className="border-border text-bone/60 text-[10px]">
             PDF · text · image · audio
           </Badge>
         </div>
@@ -344,7 +344,7 @@ export default function DocketGoblinBubble() {
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Ask the Goblin about the case…"
             disabled={isBusy}
-            className="bg-white/[0.04] border-white/10 text-bone placeholder:text-bone/40"
+            className="bg-white/[0.04] border-border text-bone placeholder:text-bone/40"
           />
           <Button
             type="submit"

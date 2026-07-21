@@ -30,7 +30,7 @@ function StatCard({
 }) {
   const colors = {
     red: "text-red-400 bg-red-400/10 border-red-400/20",
-    amber: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+    amber: "text-primary bg-amber-400/10 border-amber-400/20",
     sky: "text-sky-400 bg-sky-400/10 border-sky-400/20",
     green: "text-green-400 bg-green-400/10 border-green-400/20",
   };
@@ -101,7 +101,7 @@ export default function JudicialPattern() {
       <div className="border-b border-stone-800 bg-stone-950/90 sticky top-0 z-10 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-lg font-black tracking-tight text-amber-400 font-mono uppercase">
+            <h1 className="text-lg font-black tracking-tight text-primary font-mono uppercase">
               Judicial Pattern Analysis
             </h1>
             <p className="text-xs text-stone-500 font-mono">
@@ -122,7 +122,7 @@ export default function JudicialPattern() {
         {/* What this is */}
         <div className="bg-stone-900/60 border border-stone-800 rounded-lg p-5">
           <div className="flex items-start gap-3">
-            <Scale className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
+            <Scale className="w-5 h-5 text-primary mt-0.5 shrink-0" />
             <div>
               <h2 className="text-sm font-bold text-stone-200 mb-1">What This Is</h2>
               <p className="text-sm text-stone-400 leading-relaxed">
@@ -131,11 +131,11 @@ export default function JudicialPattern() {
                 District Court. The corpus is built from records obtained via the{" "}
                 <strong className="text-stone-200">Nevada Public Records Act (NRS Chapter 239)</strong> and public
                 case search portals. All data is public record. The analysis focuses on three signals:{" "}
-                <strong className="text-amber-400">boilerplate language reuse</strong> across rulings (indicating
+                <strong className="text-primary">boilerplate language reuse</strong> across rulings (indicating
                 templated rather than individualized review),{" "}
-                <strong className="text-amber-400">time-to-ruling anomalies</strong> (statistically improbable
+                <strong className="text-primary">time-to-ruling anomalies</strong> (statistically improbable
                 ruling speeds), and{" "}
-                <strong className="text-amber-400">pro se outcome differentials</strong> (whether unrepresented
+                <strong className="text-primary">pro se outcome differentials</strong> (whether unrepresented
                 defendants face systematically different outcomes).
               </p>
             </div>
@@ -144,9 +144,9 @@ export default function JudicialPattern() {
 
         {/* NPRA Status */}
         <div className="bg-amber-950/30 border border-amber-800/40 rounded-lg p-4 flex items-start gap-3">
-          <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+          <AlertTriangle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
           <div>
-            <p className="text-xs font-mono text-amber-400 font-bold uppercase tracking-wider mb-1">
+            <p className="text-xs font-mono text-primary font-bold uppercase tracking-wider mb-1">
               Data Acquisition Status
             </p>
             <p className="text-sm text-stone-400">
@@ -154,7 +154,7 @@ export default function JudicialPattern() {
               pending submission to the Washoe County District Court Clerk. The corpus below will populate as
               records are received and processed through the forensic ingest pipeline. The NPRA request itself
               is logged as a public record in the{" "}
-              <a href="/public-records" className="text-amber-400 underline underline-offset-2 hover:text-amber-300">
+              <a href="/public-records" className="text-primary underline underline-offset-2 hover:text-primary/80">
                 Public Records Tracker
               </a>.
             </p>
@@ -337,11 +337,11 @@ export default function JudicialPattern() {
                 <tbody>
                   {cases.map((c: any) => (
                     <tr key={c.id} className="border-b border-stone-800/50 hover:bg-stone-900/40 transition-colors">
-                      <td className="px-4 py-3 text-amber-400">{c.caseNumber}</td>
+                      <td className="px-4 py-3 text-primary">{c.caseNumber}</td>
                       <td className="px-4 py-3 text-stone-400">{c.caseType?.replace(/_/g, " ")}</td>
                       <td className="px-4 py-3">
                         {c.proSeFlag ? (
-                          <span className="text-amber-400">Yes</span>
+                          <span className="text-primary">Yes</span>
                         ) : (
                           <span className="text-stone-600">No</span>
                         )}

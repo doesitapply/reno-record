@@ -20,7 +20,7 @@ const TIER_COLORS: Record<string, string> = {
   free: "bg-muted text-muted-foreground",
   receipts: "bg-blue-500/10 text-blue-500",
   goblin_pro: "bg-primary/10 text-primary",
-  founding: "bg-amber-500/10 text-amber-500",
+  founding: "bg-primary/10 text-primary",
   founders_circle: "bg-purple-500/10 text-purple-500",
 };
 

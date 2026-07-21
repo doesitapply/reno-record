@@ -164,7 +164,7 @@ export default function RequestAudit() {
             </Link>
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-lg bg-amber-950/40 border border-amber-800/40 flex items-center justify-center shrink-0">
-                <Search className="w-5 h-5 text-amber-400" />
+                <Search className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <h1 className="text-2xl font-black text-stone-100">Request a Case Audit</h1>
@@ -340,7 +340,7 @@ export default function RequestAudit() {
                       className={cn(
                         "rounded border px-3 py-2 text-xs font-mono transition-colors text-left",
                         form.budget === v
-                          ? "border-amber-600 bg-amber-950/40 text-amber-300"
+                          ? "border-amber-600 bg-amber-950/40 text-primary/80"
                           : "border-stone-700 text-stone-500 hover:border-stone-600 hover:text-stone-400",
                       )}
                     >
@@ -357,7 +357,7 @@ export default function RequestAudit() {
               {/* Disclaimer */}
               <div className="rounded-lg border border-stone-800/50 bg-stone-900/20 p-4">
                 <div className="flex items-start gap-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                   <p className="text-xs text-stone-500 leading-relaxed">
                     <strong className="text-stone-400">This is not legal advice.</strong> Case audit
                     services provide forensic document analysis, pattern detection, and evidence
@@ -403,7 +403,7 @@ export default function RequestAudit() {
                 {WHAT_YOU_GET.map((item) => (
                   <div key={item.title} className="flex items-start gap-3">
                     <div className="w-7 h-7 rounded bg-amber-950/40 border border-amber-800/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <item.icon className="w-3.5 h-3.5 text-amber-400" />
+                      <item.icon className="w-3.5 h-3.5 text-primary" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-stone-300">{item.title}</p>
@@ -425,7 +425,7 @@ export default function RequestAudit() {
                 The same system documenting two active cases is the system available for yours.
               </p>
               <Link href="/case-intelligence">
-                <button className="mt-3 text-xs font-mono text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors">
+                <button className="mt-3 text-xs font-mono text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
                   See it in action →
                 </button>
               </Link>

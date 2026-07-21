@@ -246,7 +246,7 @@ function MetricCard({ m, clickable }: { m: Metric; clickable?: boolean }) {
     <div className={"paper-card p-5 border-l-4 transition-colors " + accent + (clickable ? " hover:border-amber-400/60 cursor-pointer" : "")}>
       <div className="flex items-start justify-between gap-2">
         <div className="display-serif text-4xl">{Number(m.value).toLocaleString()}</div>
-        {clickable && <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-amber-400/60 transition-colors flex-shrink-0 mt-1.5" />}
+        {clickable && <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary/60 transition-colors flex-shrink-0 mt-1.5" />}
       </div>
       <div className="eyebrow !text-[0.62rem] mt-2">{m.label}</div>
       {m.hint && <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{m.hint}</p>}

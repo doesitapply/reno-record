@@ -11,7 +11,7 @@ import SiteShell from "@/components/SiteShell";
 import { useSEO } from "@/hooks/useSEO";
 
 const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; accent: string }> = {
-  ai_automation: { label: "AI Automation", icon: <Sparkles className="w-4 h-4" />, accent: "text-amber-400 border-amber-500/30 bg-amber-500/5" },
+  ai_automation: { label: "AI Automation", icon: <Sparkles className="w-4 h-4" />, accent: "text-primary border-primary/30 bg-primary/5" },
   ai_agents: { label: "AI Agents", icon: <Bot className="w-4 h-4" />, accent: "text-violet-400 border-violet-500/30 bg-violet-500/5" },
   systems_architecture: { label: "Systems Architecture", icon: <Network className="w-4 h-4" />, accent: "text-sky-400 border-sky-500/30 bg-sky-500/5" },
   legal_tech: { label: "Legal Tech", icon: <Scale className="w-4 h-4" />, accent: "text-emerald-400 border-emerald-500/30 bg-emerald-500/5" },

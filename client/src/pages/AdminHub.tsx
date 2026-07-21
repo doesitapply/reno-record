@@ -114,15 +114,15 @@ const AGENCY_TYPES = [
 
 function statusColor(s: string) {
   if (s === "approved" || s === "produced" || s === "documented") return "bg-green-900/30 text-green-300 border-green-800/40";
-  if (s === "pending" || s === "awaiting_response" || s === "needs_review") return "bg-amber-900/30 text-amber-300 border-amber-800/40";
+  if (s === "pending" || s === "awaiting_response" || s === "needs_review") return "bg-amber-900/30 text-primary/80 border-amber-800/40";
   if (s === "rejected" || s === "denied") return "bg-red-900/30 text-red-300 border-red-800/40";
-  return "bg-zinc-800/60 text-zinc-400";
+  return "bg-muted/60 text-muted-foreground";
 }
 
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[140px_1fr] items-start gap-2">
-      <Label className="text-xs text-zinc-500 pt-2">{label}</Label>
+      <Label className="text-xs text-muted-foreground pt-2">{label}</Label>
       <div>{children}</div>
     </div>
   );
@@ -156,24 +156,24 @@ function EventTagPanel({ eventId }: { eventId: number }) {
 
   const categoryColor = (cat: string) => {
     if (cat === "constitutional") return "bg-red-900/30 text-red-300 border-red-800/40";
-    if (cat === "procedural") return "bg-amber-900/30 text-amber-300 border-amber-800/40";
+    if (cat === "procedural") return "bg-amber-900/30 text-primary/80 border-amber-800/40";
     if (cat === "discovery") return "bg-blue-900/30 text-blue-300 border-blue-800/40";
     if (cat === "judicial_conduct") return "bg-purple-900/30 text-purple-300 border-purple-800/40";
     if (cat === "prosecutorial_conduct") return "bg-orange-900/30 text-orange-300 border-orange-800/40";
-    return "bg-zinc-800/60 text-zinc-400 border-zinc-700/40";
+    return "bg-muted/60 text-muted-foreground border-zinc-700/40";
   };
 
   return (
     <div className="px-3 pb-3 pt-1">
-      <div className="rounded-md border border-zinc-800 bg-zinc-950/60 p-2.5 space-y-2">
+      <div className="rounded-md border border-zinc-800 bg-background/60 p-2.5 space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Violation Tags ({tags.length})</span>
-          <button onClick={() => setShowAdd(v => !v)} className="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-200 transition-colors">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Violation Tags ({tags.length})</span>
+          <button onClick={() => setShowAdd(v => !v)} className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground/90 transition-colors">
             <Plus className="w-3 h-3" /> Add Tag
           </button>
         </div>
 
-        {isLoading && <div className="text-[10px] text-zinc-600">Loading…</div>}
+        {isLoading && <div className="text-[10px] text-muted-foreground">Loading…</div>}
 
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -197,10 +197,10 @@ function EventTagPanel({ eventId }: { eventId: number }) {
           <div className="mt-2 space-y-2 border-t border-zinc-800 pt-2">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <Label className="text-[10px] text-zinc-500 mb-1 block">Violation Tag</Label>
+                <Label className="text-[10px] text-muted-foreground mb-1 block">Violation Tag</Label>
                 <Select value={addForm.violationTagId} onValueChange={v => setAddForm(f => ({ ...f, violationTagId: v }))}>
-                  <SelectTrigger className="h-7 text-[10px] bg-zinc-900 border-zinc-700"><SelectValue placeholder="Select tag…" /></SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-zinc-700 max-h-48">
+                  <SelectTrigger className="h-7 text-[10px] bg-card border-zinc-700"><SelectValue placeholder="Select tag…" /></SelectTrigger>
+                  <SelectContent className="bg-card border-zinc-700 max-h-48">
                     {allTags.map((t: any) => (
                       <SelectItem key={t.id} value={String(t.id)} className="text-[10px]">{t.label}</SelectItem>
                     ))}
@@ -208,17 +208,17 @@ function EventTagPanel({ eventId }: { eventId: number }) {
                 </Select>
               </div>
               <div>
-                <Label className="text-[10px] text-zinc-500 mb-1 block">Confidence %</Label>
-                <Input type="number" min="0" max="100" value={addForm.confidence} onChange={e => setAddForm(f => ({ ...f, confidence: e.target.value }))} className="h-7 text-[10px] bg-zinc-900 border-zinc-700" />
+                <Label className="text-[10px] text-muted-foreground mb-1 block">Confidence %</Label>
+                <Input type="number" min="0" max="100" value={addForm.confidence} onChange={e => setAddForm(f => ({ ...f, confidence: e.target.value }))} className="h-7 text-[10px] bg-card border-zinc-700" />
               </div>
             </div>
             <div>
-              <Label className="text-[10px] text-zinc-500 mb-1 block">Source Quote <span className="text-red-500">*</span></Label>
-              <Input value={addForm.sourceQuote} onChange={e => setAddForm(f => ({ ...f, sourceQuote: e.target.value }))} placeholder="Verbatim quote from record supporting this tag…" className="h-7 text-[10px] bg-zinc-900 border-zinc-700" />
+              <Label className="text-[10px] text-muted-foreground mb-1 block">Source Quote <span className="text-red-500">*</span></Label>
+              <Input value={addForm.sourceQuote} onChange={e => setAddForm(f => ({ ...f, sourceQuote: e.target.value }))} placeholder="Verbatim quote from record supporting this tag…" className="h-7 text-[10px] bg-card border-zinc-700" />
             </div>
             <div>
-              <Label className="text-[10px] text-zinc-500 mb-1 block">Citation (optional)</Label>
-              <Input value={addForm.sourceCitation} onChange={e => setAddForm(f => ({ ...f, sourceCitation: e.target.value }))} placeholder="e.g. RT 12:4-9, Dec 5 2024" className="h-7 text-[10px] bg-zinc-900 border-zinc-700" />
+              <Label className="text-[10px] text-muted-foreground mb-1 block">Citation (optional)</Label>
+              <Input value={addForm.sourceCitation} onChange={e => setAddForm(f => ({ ...f, sourceCitation: e.target.value }))} placeholder="e.g. RT 12:4-9, Dec 5 2024" className="h-7 text-[10px] bg-card border-zinc-700" />
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setShowAdd(false)} className="text-[10px] h-6 px-2">Cancel</Button>
@@ -276,48 +276,48 @@ function DocumentsTab() {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search documents…" className="pl-8 h-8 text-xs bg-zinc-900 border-zinc-700" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search documents…" className="pl-8 h-8 text-xs bg-card border-zinc-700" />
         </div>
-        <span className="text-xs text-zinc-600">{filtered.length} of {docs.length}</span>
+        <span className="text-xs text-muted-foreground">{filtered.length} of {docs.length}</span>
         <BatchClassifyButton />
       </div>
 
       {isLoading ? (
-        <div className="flex items-center gap-2 py-8 text-zinc-500 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
+        <div className="flex items-center gap-2 py-8 text-muted-foreground text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
       ) : (
         <div className="rounded-lg border border-zinc-800 overflow-hidden">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900/60">
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-8">#</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium">Title</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-28">Date</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-28">Record Status</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-24">Visibility</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-24">Review</th>
+              <tr className="border-b border-zinc-800 bg-card/60">
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-8">#</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium">Title</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-28">Date</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-28">Record Status</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-24">Visibility</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-24">Review</th>
                 <th className="px-3 py-2 w-32"></th>
               </tr>
             </thead>
             <tbody>
               {(filtered as any[]).map((doc: any, i: number) => (
-                <tr key={doc.id} className={`border-b border-zinc-800/60 hover:bg-zinc-800/20 transition-colors ${i % 2 === 0 ? "" : "bg-zinc-900/20"}`}>
-                  <td className="px-3 py-2 text-zinc-600">{doc.id}</td>
+                <tr key={doc.id} className={`border-b border-zinc-800/60 hover:bg-muted/20 transition-colors ${i % 2 === 0 ? "" : "bg-card/20"}`}>
+                  <td className="px-3 py-2 text-muted-foreground">{doc.id}</td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1.5">
-                      <Link href={`/evidence/${doc.id}`} className="text-zinc-200 hover:text-amber-300 transition-colors line-clamp-1 max-w-xs">{doc.title}</Link>
-                      <ExternalLink className="w-3 h-3 text-zinc-600 flex-shrink-0" />
+                      <Link href={`/evidence/${doc.id}`} className="text-foreground/90 hover:text-primary/80 transition-colors line-clamp-1 max-w-xs">{doc.title}</Link>
+                      <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                     </div>
-                    {doc.actorNames && <p className="text-zinc-600 text-[10px] mt-0.5 line-clamp-1">{doc.actorNames}</p>}
+                    {doc.actorNames && <p className="text-muted-foreground text-[10px] mt-0.5 line-clamp-1">{doc.actorNames}</p>}
                   </td>
-                  <td className="px-3 py-2 text-zinc-400 font-mono">
-                    {doc.documentDate ? new Date(doc.documentDate).toLocaleDateString() : <span className="text-amber-500">UNDATED</span>}
+                  <td className="px-3 py-2 text-muted-foreground font-mono">
+                    {doc.documentDate ? new Date(doc.documentDate).toLocaleDateString() : <span className="text-primary">UNDATED</span>}
                   </td>
                   <td className="px-3 py-2">
                     {doc.recordStatus ? (
-                      <span className="text-[10px] font-mono text-zinc-400">{doc.recordStatus.replace(/_/g, " ")}</span>
+                      <span className="text-[10px] font-mono text-muted-foreground">{doc.recordStatus.replace(/_/g, " ")}</span>
                     ) : (
-                      <span className="text-[10px] text-zinc-600">—</span>
+                      <span className="text-[10px] text-muted-foreground">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2">
@@ -332,16 +332,16 @@ function DocumentsTab() {
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1 justify-end">
-                      <button onClick={() => { setEditId(doc.id); setEditForm({ title: doc.title, description: doc.description ?? "", caseNumber: doc.caseNumber ?? "", actorNames: doc.actorNames ?? "", visibility: doc.visibility ?? "pending_review", reviewStatus: doc.reviewStatus, sourceType: doc.sourceType }); }} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors" title="Edit">
+                      <button onClick={() => { setEditId(doc.id); setEditForm({ title: doc.title, description: doc.description ?? "", caseNumber: doc.caseNumber ?? "", actorNames: doc.actorNames ?? "", visibility: doc.visibility ?? "pending_review", reviewStatus: doc.reviewStatus, sourceType: doc.sourceType }); }} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground/90 transition-colors" title="Edit">
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => reclassifyMut.mutate({ documentId: doc.id })} disabled={reclassifyMut.isPending} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-blue-300 transition-colors" title="Re-classify">
+                      <button onClick={() => reclassifyMut.mutate({ documentId: doc.id })} disabled={reclassifyMut.isPending} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-blue-300 transition-colors" title="Re-classify">
                         {reclassifyMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                       </button>
-                      <button onClick={() => setGoblinDocId(doc.id)} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-amber-300 transition-colors" title="Goblin history">
+                      <button onClick={() => setGoblinDocId(doc.id)} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary/80 transition-colors" title="Goblin history">
                         <History className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => setDeleteId(doc.id)} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-red-400 transition-colors" title="Delete">
+                      <button onClick={() => setDeleteId(doc.id)} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-red-400 transition-colors" title="Delete">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -355,43 +355,43 @@ function DocumentsTab() {
 
       {/* Edit Dialog */}
       <Dialog open={editId !== null} onOpenChange={open => !open && setEditId(null)}>
-        <DialogContent className="max-w-lg bg-zinc-950 border-zinc-800">
+        <DialogContent className="max-w-lg bg-background border-zinc-800">
           <DialogHeader>
             <DialogTitle className="text-sm">Edit Document #{editId}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <FieldRow label="Title">
-              <Input value={editForm.title ?? ""} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" />
+              <Input value={editForm.title ?? ""} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" />
             </FieldRow>
             <FieldRow label="Description">
-              <Textarea value={editForm.description ?? ""} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={3} className="text-xs bg-zinc-900 border-zinc-700" />
+              <Textarea value={editForm.description ?? ""} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={3} className="text-xs bg-card border-zinc-700" />
             </FieldRow>
             <FieldRow label="Case Number">
-              <Input value={editForm.caseNumber ?? ""} onChange={e => setEditForm(f => ({ ...f, caseNumber: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700 font-mono" />
+              <Input value={editForm.caseNumber ?? ""} onChange={e => setEditForm(f => ({ ...f, caseNumber: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700 font-mono" />
             </FieldRow>
             <FieldRow label="Actor Names">
-              <Input value={editForm.actorNames ?? ""} onChange={e => setEditForm(f => ({ ...f, actorNames: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" />
+              <Input value={editForm.actorNames ?? ""} onChange={e => setEditForm(f => ({ ...f, actorNames: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" />
             </FieldRow>
             <FieldRow label="Source Type">
               <Select value={editForm.sourceType} onValueChange={v => setEditForm(f => ({ ...f, sourceType: v }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700">
                   {SOURCE_TYPES.map(t => <SelectItem key={t} value={t} className="text-xs">{t.replace(/_/g, " ")}</SelectItem>)}
                 </SelectContent>
               </Select>
             </FieldRow>
             <FieldRow label="Visibility">
               <Select value={editForm.visibility} onValueChange={v => setEditForm(f => ({ ...f, visibility: v }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700">
                   {VISIBILITY_OPTIONS.map(o => <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </FieldRow>
             <FieldRow label="Review Status">
               <Select value={editForm.reviewStatus} onValueChange={v => setEditForm(f => ({ ...f, reviewStatus: v }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700">
                   {["pending", "approved", "rejected"].map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -408,16 +408,16 @@ function DocumentsTab() {
 
       {/* Delete Dialog */}
       <AlertDialog open={deleteId !== null} onOpenChange={open => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-zinc-950 border-zinc-800">
+        <AlertDialogContent className="bg-background border-zinc-800">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-sm">Delete Document #{deleteId}?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs text-zinc-400">
+            <AlertDialogDescription className="text-xs text-muted-foreground">
               Soft delete hides from public but keeps audit trail. Hard delete is permanent.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="text-xs">Cancel</AlertDialogCancel>
-            <Button variant="outline" size="sm" onClick={() => deleteId && softDeleteMut.mutate({ id: deleteId })} disabled={softDeleteMut.isPending} className="text-xs border-amber-800 text-amber-400 hover:bg-amber-950">
+            <Button variant="outline" size="sm" onClick={() => deleteId && softDeleteMut.mutate({ id: deleteId })} disabled={softDeleteMut.isPending} className="text-xs border-amber-800 text-primary hover:bg-amber-950">
               {softDeleteMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : null} Soft Delete
             </Button>
             <AlertDialogAction               onClick={() => deleteId && hardDeleteMut.mutate({ id: deleteId, confirmPhrase: "PERMANENTLY DELETE" })} className="text-xs bg-red-900 hover:bg-red-800 text-red-100">
@@ -480,24 +480,24 @@ function GoblinHistoryDialog({ documentId, onClose }: { documentId: number; onCl
   const { data, isLoading } = trpc.docketGoblin.listForDocument.useQuery({ documentId });
   return (
     <Dialog open onOpenChange={open => !open && onClose()}>
-      <DialogContent className="max-w-lg bg-zinc-950 border-zinc-800">
+      <DialogContent className="max-w-lg bg-background border-zinc-800">
         <DialogHeader>
-          <DialogTitle className="text-sm flex items-center gap-2"><Zap className="w-4 h-4 text-amber-400" /> Goblin History — Doc #{documentId}</DialogTitle>
+          <DialogTitle className="text-sm flex items-center gap-2"><Zap className="w-4 h-4 text-primary" /> Goblin History — Doc #{documentId}</DialogTitle>
         </DialogHeader>
         {isLoading ? (
-          <div className="flex items-center gap-2 py-4 text-zinc-500 text-xs"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…</div>
+          <div className="flex items-center gap-2 py-4 text-muted-foreground text-xs"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…</div>
         ) : !data || (data as any[]).length === 0 ? (
-          <p className="text-xs text-zinc-500 py-4">No pipeline runs found for this document.</p>
+          <p className="text-xs text-muted-foreground py-4">No pipeline runs found for this document.</p>
         ) : (
           <div className="space-y-2 max-h-80 overflow-y-auto">
             {(data as any[]).map((run: any) => (
-              <div key={run.id} className="p-3 rounded bg-zinc-900 border border-zinc-800 text-xs space-y-1">
+              <div key={run.id} className="p-3 rounded bg-card border border-zinc-800 text-xs space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-zinc-400">{run.taskType ?? "pipeline_run"}</span>
+                  <span className="font-mono text-muted-foreground">{run.taskType ?? "pipeline_run"}</span>
                   <span className={`px-1.5 py-0.5 rounded text-[10px] ${statusColor(run.status ?? "pending")}`}>{run.status}</span>
                 </div>
-                <p className="text-zinc-500">{run.createdAt ? new Date(run.createdAt).toLocaleString() : "—"}</p>
-                {run.resultSummary && <p className="text-zinc-400 line-clamp-2">{run.resultSummary}</p>}
+                <p className="text-muted-foreground">{run.createdAt ? new Date(run.createdAt).toLocaleString() : "—"}</p>
+                {run.resultSummary && <p className="text-muted-foreground line-clamp-2">{run.resultSummary}</p>}
               </div>
             ))}
           </div>
@@ -545,27 +545,27 @@ function TimelineTab() {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search events…" className="pl-8 h-8 text-xs bg-zinc-900 border-zinc-700" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search events…" className="pl-8 h-8 text-xs bg-card border-zinc-700" />
         </div>
         <Button size="sm" onClick={() => setShowCreate(v => !v)} className="text-xs gap-1"><Plus className="w-3 h-3" /> Add Event</Button>
       </div>
 
       {showCreate && (
-        <Card className="p-4 space-y-3 bg-zinc-900/60 border-zinc-700">
-          <p className="text-xs font-semibold text-zinc-300">New Timeline Event</p>
+        <Card className="p-4 space-y-3 bg-card/60 border-zinc-700">
+          <p className="text-xs font-semibold text-foreground/80">New Timeline Event</p>
           <div className="grid grid-cols-2 gap-3">
-            <FieldRow label="Date"><Input type="date" value={createForm.eventDate} onChange={e => setCreateForm(f => ({ ...f, eventDate: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Date"><Input type="date" value={createForm.eventDate} onChange={e => setCreateForm(f => ({ ...f, eventDate: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
             <FieldRow label="Category">
               <Select value={createForm.category} onValueChange={v => setCreateForm(f => ({ ...f, category: v as any }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">{TIMELINE_CATEGORIES.map(c => <SelectItem key={c} value={c} className="text-xs">{c.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700">{TIMELINE_CATEGORIES.map(c => <SelectItem key={c} value={c} className="text-xs">{c.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
               </Select>
             </FieldRow>
           </div>
-          <FieldRow label="Title"><Input value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-          <FieldRow label="Description"><Textarea value={createForm.description} onChange={e => setCreateForm(f => ({ ...f, description: e.target.value }))} rows={2} className="text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-          <FieldRow label="Actor Names"><Input value={createForm.actorNames} onChange={e => setCreateForm(f => ({ ...f, actorNames: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+          <FieldRow label="Title"><Input value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
+          <FieldRow label="Description"><Textarea value={createForm.description} onChange={e => setCreateForm(f => ({ ...f, description: e.target.value }))} rows={2} className="text-xs bg-card border-zinc-700" /></FieldRow>
+          <FieldRow label="Actor Names"><Input value={createForm.actorNames} onChange={e => setCreateForm(f => ({ ...f, actorNames: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
           <div className="flex gap-2 justify-end">
             <Button variant="outline" size="sm" onClick={() => setShowCreate(false)} className="text-xs">Cancel</Button>
             <Button size="sm" onClick={() => createMut.mutate({ ...createForm, eventDate: createForm.eventDate ? new Date(createForm.eventDate) : new Date() } as any)} disabled={createMut.isPending || !createForm.title} className="text-xs gap-1">
@@ -576,40 +576,40 @@ function TimelineTab() {
       )}
 
       {isLoading ? (
-        <div className="flex items-center gap-2 py-8 text-zinc-500 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
+        <div className="flex items-center gap-2 py-8 text-muted-foreground text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
       ) : (
         <div className="rounded-lg border border-zinc-800 overflow-hidden">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900/60">
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-24">Date</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium">Title / Summary</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-28">Category</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-36">Actors</th>
+              <tr className="border-b border-zinc-800 bg-card/60">
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-24">Date</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium">Title / Summary</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-28">Category</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-36">Actors</th>
                 <th className="px-3 py-2 w-20"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((ev, i) => (
                 <>
-                  <tr key={ev.id} className={`border-b border-zinc-800/60 hover:bg-zinc-800/20 transition-colors ${i % 2 === 0 ? "" : "bg-zinc-900/20"}`}>
-                    <td className="px-3 py-2 font-mono text-zinc-400">{ev.eventDate ? new Date(ev.eventDate).toLocaleDateString() : "—"}</td>
+                  <tr key={ev.id} className={`border-b border-zinc-800/60 hover:bg-muted/20 transition-colors ${i % 2 === 0 ? "" : "bg-card/20"}`}>
+                    <td className="px-3 py-2 font-mono text-muted-foreground">{ev.eventDate ? new Date(ev.eventDate).toLocaleDateString() : "—"}</td>
                     <td className="px-3 py-2">
-                      <p className="text-zinc-200 line-clamp-1">{(ev as any).title}</p>
-                      {(ev as any).summary && <p className="text-zinc-600 text-[10px] line-clamp-1 mt-0.5">{(ev as any).summary}</p>}
+                      <p className="text-foreground/90 line-clamp-1">{(ev as any).title}</p>
+                      {(ev as any).summary && <p className="text-muted-foreground text-[10px] line-clamp-1 mt-0.5">{(ev as any).summary}</p>}
                     </td>
-                    <td className="px-3 py-2"><span className="text-[10px] text-zinc-500 font-mono">{((ev as any).category ?? "other").replace(/_/g, " ")}</span></td>
-                    <td className="px-3 py-2 text-zinc-500 text-[10px] line-clamp-1">{((ev as any).actors ?? []).join(", ") || "—"}</td>
+                    <td className="px-3 py-2"><span className="text-[10px] text-muted-foreground font-mono">{((ev as any).category ?? "other").replace(/_/g, " ")}</span></td>
+                    <td className="px-3 py-2 text-muted-foreground text-[10px] line-clamp-1">{((ev as any).actors ?? []).join(", ") || "—"}</td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-1 justify-end">
-                        <button onClick={() => setExpandedTagEventId(expandedTagEventId === (ev as any).id ? null : (ev as any).id)} className={`p-1 rounded hover:bg-zinc-700 transition-colors ${expandedTagEventId === (ev as any).id ? "text-amber-400" : "text-zinc-500 hover:text-amber-400"}`} title="Violation tags"><Tag className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => { setEditId((ev as any).id); setEditForm({ title: (ev as any).title, description: (ev as any).summary ?? "", category: (ev as any).category ?? "other", actorNames: ((ev as any).actors ?? []).join(", "), eventDate: (ev as any).eventDate ? new Date((ev as any).eventDate).toISOString().split("T")[0] : "" }); }} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => setDeleteId((ev as any).id)} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => setExpandedTagEventId(expandedTagEventId === (ev as any).id ? null : (ev as any).id)} className={`p-1 rounded hover:bg-muted transition-colors ${expandedTagEventId === (ev as any).id ? "text-primary" : "text-muted-foreground hover:text-primary"}`} title="Violation tags"><Tag className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => { setEditId((ev as any).id); setEditForm({ title: (ev as any).title, description: (ev as any).summary ?? "", category: (ev as any).category ?? "other", actorNames: ((ev as any).actors ?? []).join(", "), eventDate: (ev as any).eventDate ? new Date((ev as any).eventDate).toISOString().split("T")[0] : "" }); }} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground/90 transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => setDeleteId((ev as any).id)} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </td>
                   </tr>
                   {expandedTagEventId === (ev as any).id && (
-                    <tr key={`tags-${ev.id}`} className="border-b border-zinc-800/60 bg-zinc-900/40">
+                    <tr key={`tags-${ev.id}`} className="border-b border-zinc-800/60 bg-card/40">
                       <td colSpan={5}>
                         <EventTagPanel eventId={(ev as any).id} />
                       </td>
@@ -623,19 +623,19 @@ function TimelineTab() {
       )}
 
       <Dialog open={editId !== null} onOpenChange={open => !open && setEditId(null)}>
-        <DialogContent className="max-w-lg bg-zinc-950 border-zinc-800">
+        <DialogContent className="max-w-lg bg-background border-zinc-800">
           <DialogHeader><DialogTitle className="text-sm">Edit Event #{editId}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
-            <FieldRow label="Date"><Input type="date" value={editForm.eventDate ?? ""} onChange={e => setEditForm(f => ({ ...f, eventDate: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-            <FieldRow label="Title"><Input value={editForm.title ?? ""} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-            <FieldRow label="Description"><Textarea value={editForm.description ?? ""} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={3} className="text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Date"><Input type="date" value={editForm.eventDate ?? ""} onChange={e => setEditForm(f => ({ ...f, eventDate: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
+            <FieldRow label="Title"><Input value={editForm.title ?? ""} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
+            <FieldRow label="Description"><Textarea value={editForm.description ?? ""} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={3} className="text-xs bg-card border-zinc-700" /></FieldRow>
             <FieldRow label="Category">
               <Select value={editForm.category} onValueChange={v => setEditForm(f => ({ ...f, category: v }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">{TIMELINE_CATEGORIES.map(c => <SelectItem key={c} value={c} className="text-xs">{c.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700">{TIMELINE_CATEGORIES.map(c => <SelectItem key={c} value={c} className="text-xs">{c.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
               </Select>
             </FieldRow>
-            <FieldRow label="Actor Names"><Input value={editForm.actorNames ?? ""} onChange={e => setEditForm(f => ({ ...f, actorNames: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Actor Names"><Input value={editForm.actorNames ?? ""} onChange={e => setEditForm(f => ({ ...f, actorNames: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setEditId(null)} className="text-xs">Cancel</Button>
@@ -647,10 +647,10 @@ function TimelineTab() {
       </Dialog>
 
       <AlertDialog open={deleteId !== null} onOpenChange={open => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-zinc-950 border-zinc-800">
+        <AlertDialogContent className="bg-background border-zinc-800">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-sm">Delete Event #{deleteId}?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs text-zinc-400">This is permanent and cannot be undone.</AlertDialogDescription>
+            <AlertDialogDescription className="text-xs text-muted-foreground">This is permanent and cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="text-xs">Cancel</AlertDialogCancel>
@@ -698,27 +698,27 @@ function ActorsTab() {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search actors…" className="pl-8 h-8 text-xs bg-zinc-900 border-zinc-700" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search actors…" className="pl-8 h-8 text-xs bg-card border-zinc-700" />
         </div>
         <Button size="sm" onClick={() => setShowCreate(v => !v)} className="text-xs gap-1"><Plus className="w-3 h-3" /> Add Actor</Button>
       </div>
 
       {showCreate && (
-        <Card className="p-4 space-y-3 bg-zinc-900/60 border-zinc-700">
-          <p className="text-xs font-semibold text-zinc-300">New Actor</p>
+        <Card className="p-4 space-y-3 bg-card/60 border-zinc-700">
+          <p className="text-xs font-semibold text-foreground/80">New Actor</p>
           <div className="grid grid-cols-2 gap-3">
-            <FieldRow label="Name"><Input value={createForm.name} onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-            <FieldRow label="Role"><Input value={createForm.role} onChange={e => setCreateForm(f => ({ ...f, role: e.target.value }))} placeholder="Judge, Prosecutor…" className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-            <FieldRow label="Agency"><Input value={createForm.agency} onChange={e => setCreateForm(f => ({ ...f, agency: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Name"><Input value={createForm.name} onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
+            <FieldRow label="Role"><Input value={createForm.role} onChange={e => setCreateForm(f => ({ ...f, role: e.target.value }))} placeholder="Judge, Prosecutor…" className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
+            <FieldRow label="Agency"><Input value={createForm.agency} onChange={e => setCreateForm(f => ({ ...f, agency: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
             <FieldRow label="Status">
               <Select value={createForm.status} onValueChange={v => setCreateForm(f => ({ ...f, status: v as any }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">{ACTOR_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700">{ACTOR_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}</SelectContent>
               </Select>
             </FieldRow>
           </div>
-          <FieldRow label="Notes"><Textarea value={createForm.notes} onChange={e => setCreateForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+          <FieldRow label="Notes"><Textarea value={createForm.notes} onChange={e => setCreateForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="text-xs bg-card border-zinc-700" /></FieldRow>
           <div className="flex gap-2 justify-end">
             <Button variant="outline" size="sm" onClick={() => setShowCreate(false)} className="text-xs">Cancel</Button>
             <Button size="sm" onClick={() => createMut.mutate(createForm as any)} disabled={createMut.isPending || !createForm.name} className="text-xs gap-1">
@@ -729,36 +729,36 @@ function ActorsTab() {
       )}
 
       {isLoading ? (
-        <div className="flex items-center gap-2 py-8 text-zinc-500 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
+        <div className="flex items-center gap-2 py-8 text-muted-foreground text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
       ) : (
         <div className="rounded-lg border border-zinc-800 overflow-hidden">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900/60">
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium">Name</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-36">Role</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-40">Agency</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-24">Status</th>
+              <tr className="border-b border-zinc-800 bg-card/60">
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium">Name</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-36">Role</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-40">Agency</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-24">Status</th>
                 <th className="px-3 py-2 w-28"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((actor, i) => (
-                <tr key={actor.id} className={`border-b border-zinc-800/60 hover:bg-zinc-800/20 transition-colors ${i % 2 === 0 ? "" : "bg-zinc-900/20"}`}>
+                <tr key={actor.id} className={`border-b border-zinc-800/60 hover:bg-muted/20 transition-colors ${i % 2 === 0 ? "" : "bg-card/20"}`}>
                   <td className="px-3 py-2">
-                    <Link href={`/actors/${actor.slug}`} className="text-zinc-200 hover:text-amber-300 transition-colors">{actor.name}</Link>
-                    <p className="text-zinc-600 text-[10px] font-mono">{actor.slug}</p>
+                    <Link href={`/actors/${actor.slug}`} className="text-foreground/90 hover:text-primary/80 transition-colors">{actor.name}</Link>
+                    <p className="text-muted-foreground text-[10px] font-mono">{actor.slug}</p>
                   </td>
-                  <td className="px-3 py-2 text-zinc-400">{actor.role ?? "—"}</td>
-                  <td className="px-3 py-2 text-zinc-500 text-[10px]">{actor.agency ?? "—"}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{actor.role ?? "—"}</td>
+                  <td className="px-3 py-2 text-muted-foreground text-[10px]">{actor.agency ?? "—"}</td>
                   <td className="px-3 py-2">
                     <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border ${statusColor(actor.status)}`}>{actor.status}</span>
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1 justify-end">
-                      <button onClick={() => { setEditId(actor.id); setEditForm({ name: actor.name, role: actor.role ?? "", agency: actor.agency ?? "", bio: actor.bio ?? "", notes: actor.notes ?? "", status: actor.status }); }} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => setLinkActorId(actor.id)} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-blue-300 transition-colors" title="Link documents"><Link2 className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => setDeleteId(actor.id)} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-red-400 transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => { setEditId(actor.id); setEditForm({ name: actor.name, role: actor.role ?? "", agency: actor.agency ?? "", bio: actor.bio ?? "", notes: actor.notes ?? "", status: actor.status }); }} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground/90 transition-colors" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => setLinkActorId(actor.id)} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-blue-300 transition-colors" title="Link documents"><Link2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => setDeleteId(actor.id)} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-red-400 transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </td>
                 </tr>
@@ -769,20 +769,20 @@ function ActorsTab() {
       )}
 
       <Dialog open={editId !== null} onOpenChange={open => !open && setEditId(null)}>
-        <DialogContent className="max-w-lg bg-zinc-950 border-zinc-800">
+        <DialogContent className="max-w-lg bg-background border-zinc-800">
           <DialogHeader><DialogTitle className="text-sm">Edit Actor #{editId}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
-            <FieldRow label="Name"><Input value={editForm.name ?? ""} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-            <FieldRow label="Role"><Input value={editForm.role ?? ""} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-            <FieldRow label="Agency"><Input value={editForm.agency ?? ""} onChange={e => setEditForm(f => ({ ...f, agency: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Name"><Input value={editForm.name ?? ""} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
+            <FieldRow label="Role"><Input value={editForm.role ?? ""} onChange={e => setEditForm(f => ({ ...f, role: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
+            <FieldRow label="Agency"><Input value={editForm.agency ?? ""} onChange={e => setEditForm(f => ({ ...f, agency: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
             <FieldRow label="Status">
               <Select value={editForm.status} onValueChange={v => setEditForm(f => ({ ...f, status: v }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">{ACTOR_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700">{ACTOR_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}</SelectContent>
               </Select>
             </FieldRow>
-            <FieldRow label="Bio"><Textarea value={editForm.bio ?? ""} onChange={e => setEditForm(f => ({ ...f, bio: e.target.value }))} rows={2} className="text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-            <FieldRow label="Notes"><Textarea value={editForm.notes ?? ""} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Bio"><Textarea value={editForm.bio ?? ""} onChange={e => setEditForm(f => ({ ...f, bio: e.target.value }))} rows={2} className="text-xs bg-card border-zinc-700" /></FieldRow>
+            <FieldRow label="Notes"><Textarea value={editForm.notes ?? ""} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="text-xs bg-card border-zinc-700" /></FieldRow>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setEditId(null)} className="text-xs">Cancel</Button>
@@ -794,10 +794,10 @@ function ActorsTab() {
       </Dialog>
 
       <AlertDialog open={deleteId !== null} onOpenChange={open => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-zinc-950 border-zinc-800">
+        <AlertDialogContent className="bg-background border-zinc-800">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-sm">Delete Actor #{deleteId}?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs text-zinc-400">This is permanent.</AlertDialogDescription>
+            <AlertDialogDescription className="text-xs text-muted-foreground">This is permanent.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="text-xs">Cancel</AlertDialogCancel>
@@ -830,20 +830,20 @@ function ActorDocumentLinkDialog({ actorId, docs, onClose }: { actorId: number; 
 
   return (
     <Dialog open onOpenChange={open => !open && onClose()}>
-      <DialogContent className="max-w-lg bg-zinc-950 border-zinc-800">
+      <DialogContent className="max-w-lg bg-background border-zinc-800">
         <DialogHeader><DialogTitle className="text-sm flex items-center gap-2"><Link2 className="w-4 h-4 text-blue-400" /> Document Links — Actor #{actorId}</DialogTitle></DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <p className="text-xs font-medium text-zinc-400">Add Link</p>
+            <p className="text-xs font-medium text-muted-foreground">Add Link</p>
             <div className="flex gap-2">
               <Select value={selectedDocId} onValueChange={setSelectedDocId}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700 flex-1"><SelectValue placeholder="Select document…" /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700 max-h-48">
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700 flex-1"><SelectValue placeholder="Select document…" /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700 max-h-48">
                   {docs.map((d: any) => <SelectItem key={d.id} value={String(d.id)} className="text-xs">{d.id}: {d.title.slice(0, 50)}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Input value={role} onChange={e => setRole(e.target.value)} placeholder="Role (optional)" className="h-8 text-xs bg-zinc-900 border-zinc-700 w-32" />
+              <Input value={role} onChange={e => setRole(e.target.value)} placeholder="Role (optional)" className="h-8 text-xs bg-card border-zinc-700 w-32" />
               <Button size="sm" onClick={() => selectedDocId && addMut.mutate({ actorId, documentId: Number(selectedDocId), role: role || undefined })} disabled={!selectedDocId || addMut.isPending} className="text-xs gap-1 flex-shrink-0">
                 {addMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} Link
               </Button>
@@ -851,19 +851,19 @@ function ActorDocumentLinkDialog({ actorId, docs, onClose }: { actorId: number; 
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs font-medium text-zinc-400">Existing Links ({(existingLinks as any[]).length})</p>
+            <p className="text-xs font-medium text-muted-foreground">Existing Links ({(existingLinks as any[]).length})</p>
             {(existingLinks as any[]).length === 0 ? (
-              <p className="text-xs text-zinc-600 py-2">No document links yet.</p>
+              <p className="text-xs text-muted-foreground py-2">No document links yet.</p>
             ) : (
               <div className="space-y-1 max-h-48 overflow-y-auto">
                 {(existingLinks as any[]).map((link: any) => (
-                  <div key={link.id} className="flex items-center justify-between p-2 rounded bg-zinc-900 border border-zinc-800 text-xs">
+                  <div key={link.id} className="flex items-center justify-between p-2 rounded bg-card border border-zinc-800 text-xs">
                     <div>
-                      <span className="text-zinc-300">Doc #{link.documentId}</span>
-                      {link.role && <span className="text-zinc-500 ml-2">— {link.role}</span>}
-                      <span className={`ml-2 text-[10px] ${link.addedBy === "goblin" ? "text-amber-400" : "text-blue-400"}`}>{link.addedBy}</span>
+                      <span className="text-foreground/80">Doc #{link.documentId}</span>
+                      {link.role && <span className="text-muted-foreground ml-2">— {link.role}</span>}
+                      <span className={`ml-2 text-[10px] ${link.addedBy === "goblin" ? "text-primary" : "text-blue-400"}`}>{link.addedBy}</span>
                     </div>
-                    <button onClick={() => removeMut.mutate({ id: link.id })} disabled={removeMut.isPending} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-red-400 transition-colors"><X className="w-3 h-3" /></button>
+                    <button onClick={() => removeMut.mutate({ id: link.id })} disabled={removeMut.isPending} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-red-400 transition-colors"><X className="w-3 h-3" /></button>
                   </div>
                 ))}
               </div>
@@ -913,27 +913,27 @@ function PRRsTab() {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search PRRs…" className="pl-8 h-8 text-xs bg-zinc-900 border-zinc-700" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search PRRs…" className="pl-8 h-8 text-xs bg-card border-zinc-700" />
         </div>
         <Button size="sm" onClick={() => setShowCreate(v => !v)} className="text-xs gap-1"><Plus className="w-3 h-3" /> Add PRR</Button>
       </div>
 
       {showCreate && (
-        <Card className="p-4 space-y-3 bg-zinc-900/60 border-zinc-700">
-          <p className="text-xs font-semibold text-zinc-300">New Public Records Request</p>
+        <Card className="p-4 space-y-3 bg-card/60 border-zinc-700">
+          <p className="text-xs font-semibold text-foreground/80">New Public Records Request</p>
           <div className="grid grid-cols-2 gap-3">
-            <FieldRow label="Title"><Input value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-            <FieldRow label="Agency"><Input value={createForm.agency} onChange={e => setCreateForm(f => ({ ...f, agency: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Title"><Input value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
+            <FieldRow label="Agency"><Input value={createForm.agency} onChange={e => setCreateForm(f => ({ ...f, agency: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
             <FieldRow label="Status">
               <Select value={createForm.status} onValueChange={v => setCreateForm(f => ({ ...f, status: v as any }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">{PRR_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700">{PRR_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
               </Select>
             </FieldRow>
-            <FieldRow label="Date Sent"><Input type="date" value={createForm.dateSent} onChange={e => setCreateForm(f => ({ ...f, dateSent: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Date Sent"><Input type="date" value={createForm.dateSent} onChange={e => setCreateForm(f => ({ ...f, dateSent: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
           </div>
-          <FieldRow label="Description"><Textarea value={createForm.description} onChange={e => setCreateForm(f => ({ ...f, description: e.target.value }))} rows={2} className="text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+          <FieldRow label="Description"><Textarea value={createForm.description} onChange={e => setCreateForm(f => ({ ...f, description: e.target.value }))} rows={2} className="text-xs bg-card border-zinc-700" /></FieldRow>
           <div className="flex gap-2 justify-end">
             <Button variant="outline" size="sm" onClick={() => setShowCreate(false)} className="text-xs">Cancel</Button>
             <Button size="sm" onClick={() => createMut.mutate({ ...createForm, dateSent: createForm.dateSent ? new Date(createForm.dateSent) : undefined } as any)} disabled={createMut.isPending || !createForm.title || !createForm.agency} className="text-xs gap-1">
@@ -944,30 +944,30 @@ function PRRsTab() {
       )}
 
       {isLoading ? (
-        <div className="flex items-center gap-2 py-8 text-zinc-500 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
+        <div className="flex items-center gap-2 py-8 text-muted-foreground text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
       ) : (
         <div className="rounded-lg border border-zinc-800 overflow-hidden">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900/60">
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium">Title</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-40">Agency</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-28">Status</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-24">Sent</th>
+              <tr className="border-b border-zinc-800 bg-card/60">
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium">Title</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-40">Agency</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-28">Status</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-24">Sent</th>
                 <th className="px-3 py-2 w-20"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((prr, i) => (
-                <tr key={prr.id} className={`border-b border-zinc-800/60 hover:bg-zinc-800/20 transition-colors ${i % 2 === 0 ? "" : "bg-zinc-900/20"}`}>
-                  <td className="px-3 py-2 text-zinc-200 line-clamp-1">{prr.title}</td>
-                  <td className="px-3 py-2 text-zinc-400 text-[10px]">{prr.agency}</td>
+                <tr key={prr.id} className={`border-b border-zinc-800/60 hover:bg-muted/20 transition-colors ${i % 2 === 0 ? "" : "bg-card/20"}`}>
+                  <td className="px-3 py-2 text-foreground/90 line-clamp-1">{prr.title}</td>
+                  <td className="px-3 py-2 text-muted-foreground text-[10px]">{prr.agency}</td>
                   <td className="px-3 py-2"><span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border ${statusColor(prr.status)}`}>{prr.status.replace(/_/g, " ")}</span></td>
-                  <td className="px-3 py-2 text-zinc-500 font-mono">{prr.dateSent ? new Date(prr.dateSent).toLocaleDateString() : "—"}</td>
+                  <td className="px-3 py-2 text-muted-foreground font-mono">{prr.dateSent ? new Date(prr.dateSent).toLocaleDateString() : "—"}</td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1 justify-end">
-                      <button onClick={() => { setEditId(prr.id); setEditForm({ title: prr.title, agency: prr.agency, description: prr.description ?? "", status: prr.status }); }} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => setDeleteId(prr.id)} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => { setEditId(prr.id); setEditForm({ title: prr.title, agency: prr.agency, description: prr.description ?? "", status: prr.status }); }} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground/90 transition-colors"><Pencil className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => setDeleteId(prr.id)} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </td>
                 </tr>
@@ -978,18 +978,18 @@ function PRRsTab() {
       )}
 
       <Dialog open={editId !== null} onOpenChange={open => !open && setEditId(null)}>
-        <DialogContent className="max-w-lg bg-zinc-950 border-zinc-800">
+        <DialogContent className="max-w-lg bg-background border-zinc-800">
           <DialogHeader><DialogTitle className="text-sm">Edit PRR #{editId}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
-            <FieldRow label="Title"><Input value={editForm.title ?? ""} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-            <FieldRow label="Agency"><Input value={editForm.agency ?? ""} onChange={e => setEditForm(f => ({ ...f, agency: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Title"><Input value={editForm.title ?? ""} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
+            <FieldRow label="Agency"><Input value={editForm.agency ?? ""} onChange={e => setEditForm(f => ({ ...f, agency: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
             <FieldRow label="Status">
               <Select value={editForm.status} onValueChange={v => setEditForm(f => ({ ...f, status: v }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">{PRR_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700">{PRR_STATUSES.map(s => <SelectItem key={s} value={s} className="text-xs">{s.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
               </Select>
             </FieldRow>
-            <FieldRow label="Description"><Textarea value={editForm.description ?? ""} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={3} className="text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Description"><Textarea value={editForm.description ?? ""} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} rows={3} className="text-xs bg-card border-zinc-700" /></FieldRow>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setEditId(null)} className="text-xs">Cancel</Button>
@@ -1001,10 +1001,10 @@ function PRRsTab() {
       </Dialog>
 
       <AlertDialog open={deleteId !== null} onOpenChange={open => !open && setDeleteId(null)}>
-        <AlertDialogContent className="bg-zinc-950 border-zinc-800">
+        <AlertDialogContent className="bg-background border-zinc-800">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-sm">Delete PRR #{deleteId}?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs text-zinc-400">This is permanent.</AlertDialogDescription>
+            <AlertDialogDescription className="text-xs text-muted-foreground">This is permanent.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="text-xs">Cancel</AlertDialogCancel>
@@ -1046,16 +1046,16 @@ function AgenciesTab() {
   return (
     <div className="space-y-4">
       {isLoading ? (
-        <div className="flex items-center gap-2 py-8 text-zinc-500 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
+        <div className="flex items-center gap-2 py-8 text-muted-foreground text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
       ) : (
         <div className="rounded-lg border border-zinc-800 overflow-hidden">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900/60">
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium">Name</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-28">Type</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium w-28">Jurisdiction</th>
-                <th className="text-left px-3 py-2 text-zinc-500 font-medium">Actor Roles</th>
+              <tr className="border-b border-zinc-800 bg-card/60">
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium">Name</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-28">Type</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium w-28">Jurisdiction</th>
+                <th className="text-left px-3 py-2 text-muted-foreground font-medium">Actor Roles</th>
                 <th className="px-3 py-2 w-24"></th>
               </tr>
             </thead>
@@ -1064,22 +1064,22 @@ function AgenciesTab() {
                 if (!agencyRoles[ag.id]) loadRoles(ag.id);
                 const roles = agencyRoles[ag.id] ?? null;
                 return (
-                <tr key={ag.id} className={`border-b border-zinc-800/60 hover:bg-zinc-800/20 transition-colors ${i % 2 === 0 ? "" : "bg-zinc-900/20"}`}>
+                <tr key={ag.id} className={`border-b border-zinc-800/60 hover:bg-muted/20 transition-colors ${i % 2 === 0 ? "" : "bg-card/20"}`}>
                   <td className="px-3 py-2">
-                    <p className="text-zinc-200">{ag.name}</p>
-                    <p className="text-zinc-600 text-[10px] font-mono">{ag.slug}</p>
+                    <p className="text-foreground/90">{ag.name}</p>
+                    <p className="text-muted-foreground text-[10px] font-mono">{ag.slug}</p>
                   </td>
-                  <td className="px-3 py-2 text-zinc-400 text-[10px]">{(ag.agencyType ?? "—").replace(/_/g, " ")}</td>
-                  <td className="px-3 py-2 text-zinc-500 text-[10px]">{ag.jurisdictionName ?? "—"}</td>
+                  <td className="px-3 py-2 text-muted-foreground text-[10px]">{(ag.agencyType ?? "—").replace(/_/g, " ")}</td>
+                  <td className="px-3 py-2 text-muted-foreground text-[10px]">{ag.jurisdictionName ?? "—"}</td>
                   <td className="px-3 py-2">
                     {roles === null ? (
                       <span className="text-[10px] text-zinc-700">Loading…</span>
                     ) : roles.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
                         {roles.slice(0, 3).map((r: any) => (
-                          <span key={r.id} className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border ${r.isCurrent ? "border-green-800/40 text-green-400" : "border-zinc-700 text-zinc-500"}`}>{r.actorName ?? `Actor #${r.actorId}`}: {r.title}</span>
+                          <span key={r.id} className={`inline-flex px-1.5 py-0.5 rounded text-[10px] border ${r.isCurrent ? "border-green-800/40 text-green-400" : "border-zinc-700 text-muted-foreground"}`}>{r.actorName ?? `Actor #${r.actorId}`}: {r.title}</span>
                         ))}
-                        {roles.length > 3 && <span className="text-[10px] text-zinc-600">+{roles.length - 3} more</span>}
+                        {roles.length > 3 && <span className="text-[10px] text-muted-foreground">+{roles.length - 3} more</span>}
                       </div>
                     ) : (
                       <span className="text-[10px] text-zinc-700">No roles assigned</span>
@@ -1087,8 +1087,8 @@ function AgenciesTab() {
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1 justify-end">
-                      <button onClick={() => { setEditId(ag.id); setEditForm({ name: ag.name, agencyType: ag.agencyType ?? "other", websiteUrl: ag.websiteUrl ?? "", notes: ag.notes ?? "" }); }} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => setAddRoleAgencyId(ag.id)} className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-green-300 transition-colors" title="Add actor role"><Users className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => { setEditId(ag.id); setEditForm({ name: ag.name, agencyType: ag.agencyType ?? "other", websiteUrl: ag.websiteUrl ?? "", notes: ag.notes ?? "" }); }} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground/90 transition-colors" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => setAddRoleAgencyId(ag.id)} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-green-300 transition-colors" title="Add actor role"><Users className="w-3.5 h-3.5" /></button>
                     </div>
                   </td>
                 </tr>
@@ -1100,18 +1100,18 @@ function AgenciesTab() {
       )}
 
       <Dialog open={editId !== null} onOpenChange={open => !open && setEditId(null)}>
-        <DialogContent className="max-w-md bg-zinc-950 border-zinc-800">
+        <DialogContent className="max-w-md bg-background border-zinc-800">
           <DialogHeader><DialogTitle className="text-sm">Edit Agency #{editId}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
-            <FieldRow label="Name"><Input value={editForm.name ?? ""} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Name"><Input value={editForm.name ?? ""} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
             <FieldRow label="Type">
               <Select value={editForm.agencyType} onValueChange={v => setEditForm(f => ({ ...f, agencyType: v }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">{AGENCY_TYPES.map(t => <SelectItem key={t} value={t} className="text-xs">{t.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700">{AGENCY_TYPES.map(t => <SelectItem key={t} value={t} className="text-xs">{t.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
               </Select>
             </FieldRow>
-            <FieldRow label="Website"><Input value={editForm.websiteUrl ?? ""} onChange={e => setEditForm(f => ({ ...f, websiteUrl: e.target.value }))} className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
-            <FieldRow label="Notes"><Textarea value={editForm.notes ?? ""} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Website"><Input value={editForm.websiteUrl ?? ""} onChange={e => setEditForm(f => ({ ...f, websiteUrl: e.target.value }))} className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
+            <FieldRow label="Notes"><Textarea value={editForm.notes ?? ""} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="text-xs bg-card border-zinc-700" /></FieldRow>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setEditId(null)} className="text-xs">Cancel</Button>
@@ -1123,22 +1123,22 @@ function AgenciesTab() {
       </Dialog>
 
       <Dialog open={addRoleAgencyId !== null} onOpenChange={open => !open && setAddRoleAgencyId(null)}>
-        <DialogContent className="max-w-md bg-zinc-950 border-zinc-800">
+        <DialogContent className="max-w-md bg-background border-zinc-800">
           <DialogHeader><DialogTitle className="text-sm">Add Actor Role — Agency #{addRoleAgencyId}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
             <FieldRow label="Actor">
               <Select value={roleForm.actorId} onValueChange={v => setRoleForm(f => ({ ...f, actorId: v }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue placeholder="Select actor…" /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700 max-h-48">
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue placeholder="Select actor…" /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700 max-h-48">
                   {(actors as any[]).map((a: any) => <SelectItem key={a.id} value={String(a.id)} className="text-xs">{a.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </FieldRow>
-            <FieldRow label="Title"><Input value={roleForm.title} onChange={e => setRoleForm(f => ({ ...f, title: e.target.value }))} placeholder="Deputy District Attorney" className="h-8 text-xs bg-zinc-900 border-zinc-700" /></FieldRow>
+            <FieldRow label="Title"><Input value={roleForm.title} onChange={e => setRoleForm(f => ({ ...f, title: e.target.value }))} placeholder="Deputy District Attorney" className="h-8 text-xs bg-card border-zinc-700" /></FieldRow>
             <FieldRow label="Current?">
               <Select value={roleForm.isCurrent} onValueChange={v => setRoleForm(f => ({ ...f, isCurrent: v }))}>
-                <SelectTrigger className="h-8 text-xs bg-zinc-900 border-zinc-700"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-700">
+                <SelectTrigger className="h-8 text-xs bg-card border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-card border-zinc-700">
                   <SelectItem value="true" className="text-xs">Yes — current role</SelectItem>
                   <SelectItem value="false" className="text-xs">No — historical</SelectItem>
                 </SelectContent>
@@ -1165,7 +1165,7 @@ export default function AdminHub() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -1173,9 +1173,9 @@ export default function AdminHub() {
   if (!user || user.role !== "admin") {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-3">
-        <AlertTriangle className="w-8 h-8 text-amber-400" />
-        <p className="text-sm text-zinc-400">Admin access required.</p>
-        <Link href="/" className="text-xs text-zinc-600 hover:text-zinc-400">← Back to home</Link>
+        <AlertTriangle className="w-8 h-8 text-primary" />
+        <p className="text-sm text-muted-foreground">Admin access required.</p>
+        <Link href="/" className="text-xs text-muted-foreground hover:text-muted-foreground">← Back to home</Link>
       </div>
     );
   }
@@ -1185,29 +1185,29 @@ export default function AdminHub() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
-          <FolderOpen className="w-5 h-5 text-amber-400" />
-          <h1 className="text-2xl font-bold text-zinc-100">Admin Hub</h1>
+          <FolderOpen className="w-5 h-5 text-primary" />
+          <h1 className="text-2xl font-bold text-foreground">Admin Hub</h1>
         </div>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-muted-foreground">
           Full CRUD over every record type. All previously-unexposed backend procedures wired here.
         </p>
       </div>
 
       <Tabs defaultValue="documents">
-        <TabsList className="mb-6 flex-wrap h-auto gap-1 bg-zinc-900/60 border border-zinc-800 p-1">
-          <TabsTrigger value="documents" className="text-xs gap-1.5 data-[state=active]:bg-zinc-800">
+        <TabsList className="mb-6 flex-wrap h-auto gap-1 bg-card/60 border border-zinc-800 p-1">
+          <TabsTrigger value="documents" className="text-xs gap-1.5 data-[state=active]:bg-muted">
             <FileText className="w-3.5 h-3.5" /> Documents
           </TabsTrigger>
-          <TabsTrigger value="timeline" className="text-xs gap-1.5 data-[state=active]:bg-zinc-800">
+          <TabsTrigger value="timeline" className="text-xs gap-1.5 data-[state=active]:bg-muted">
             <Clock className="w-3.5 h-3.5" /> Timeline
           </TabsTrigger>
-          <TabsTrigger value="actors" className="text-xs gap-1.5 data-[state=active]:bg-zinc-800">
+          <TabsTrigger value="actors" className="text-xs gap-1.5 data-[state=active]:bg-muted">
             <Users className="w-3.5 h-3.5" /> Actors
           </TabsTrigger>
-          <TabsTrigger value="prrs" className="text-xs gap-1.5 data-[state=active]:bg-zinc-800">
+          <TabsTrigger value="prrs" className="text-xs gap-1.5 data-[state=active]:bg-muted">
             <FolderOpen className="w-3.5 h-3.5" /> PRRs
           </TabsTrigger>
-          <TabsTrigger value="agencies" className="text-xs gap-1.5 data-[state=active]:bg-zinc-800">
+          <TabsTrigger value="agencies" className="text-xs gap-1.5 data-[state=active]:bg-muted">
             <Building2 className="w-3.5 h-3.5" /> Agencies
           </TabsTrigger>
         </TabsList>

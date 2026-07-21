@@ -371,7 +371,7 @@ const ACCESS_CONFIG: Record<AccessLevel, { label: string; color: string; icon: R
   },
   protectedProcedure: {
     label: "Authenticated",
-    color: "text-amber-400 bg-amber-900/20 border-amber-800/40",
+    color: "text-primary bg-amber-900/20 border-amber-800/40",
     icon: <Lock className="w-3 h-3" />,
   },
   publicProcedure: {
@@ -382,15 +382,15 @@ const ACCESS_CONFIG: Record<AccessLevel, { label: string; color: string; icon: R
 };
 
 const STATUS_CONFIG: Record<Status, { label: string; color: string }> = {
-  dormant: { label: "Dormant", color: "text-zinc-400 bg-zinc-800/60" },
-  partial: { label: "Partial", color: "text-amber-400 bg-amber-900/20" },
+  dormant: { label: "Dormant", color: "text-muted-foreground bg-muted/60" },
+  partial: { label: "Partial", color: "text-primary bg-amber-900/20" },
   "api-only": { label: "API Only", color: "text-blue-400 bg-blue-900/20" },
 };
 
 const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; dot: string }> = {
   high: { label: "High", color: "text-red-300", dot: "bg-red-500" },
-  medium: { label: "Medium", color: "text-amber-300", dot: "bg-amber-500" },
-  low: { label: "Low", color: "text-zinc-400", dot: "bg-zinc-500" },
+  medium: { label: "Medium", color: "text-primary/80", dot: "bg-amber-500" },
+  low: { label: "Low", color: "text-muted-foreground", dot: "bg-zinc-500" },
 };
 
 const NAMESPACE_ICONS: Record<string, React.ReactNode> = {
@@ -427,14 +427,14 @@ function ProcedureCard({ proc }: { proc: Procedure }) {
     <div className="border border-zinc-800 rounded-lg overflow-hidden">
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full text-left px-4 py-3 hover:bg-zinc-800/40 transition-colors"
+        className="w-full text-left px-4 py-3 hover:bg-muted/40 transition-colors"
       >
         <div className="flex items-start gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <code className="text-sm font-mono text-zinc-100">
-                <span className="text-zinc-500">{proc.namespace}.</span>
-                <span className="text-amber-300">{proc.name}</span>
+              <code className="text-sm font-mono text-foreground">
+                <span className="text-muted-foreground">{proc.namespace}.</span>
+                <span className="text-primary/80">{proc.name}</span>
               </code>
               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium ${access.color}`}>
                 {access.icon}
@@ -444,46 +444,46 @@ function ProcedureCard({ proc }: { proc: Procedure }) {
                 {status.label}
               </span>
             </div>
-            <p className="text-xs text-zinc-400 line-clamp-1">{proc.description}</p>
+            <p className="text-xs text-muted-foreground line-clamp-1">{proc.description}</p>
             {!expanded && (
               <div className="flex items-center gap-3 mt-1.5">
                 <span className={`inline-flex items-center gap-1 text-[10px] ${priority.color}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`} />
                   {priority.label} priority
                 </span>
-                <span className="text-[10px] text-zinc-600">~{proc.buildEstimate}</span>
+                <span className="text-[10px] text-muted-foreground">~{proc.buildEstimate}</span>
               </div>
             )}
           </div>
-          <div className="flex-shrink-0 text-zinc-600 mt-0.5">
+          <div className="flex-shrink-0 text-muted-foreground mt-0.5">
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
         </div>
       </button>
 
       {expanded && (
-        <div className="border-t border-zinc-800 bg-zinc-900/40 px-4 py-4 space-y-4">
+        <div className="border-t border-zinc-800 bg-card/40 px-4 py-4 space-y-4">
           <div>
-            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Description</p>
-            <p className="text-sm text-zinc-300">{proc.description}</p>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Description</p>
+            <p className="text-sm text-foreground/80">{proc.description}</p>
           </div>
 
           <div>
-            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Input Schema</p>
-            <code className="block text-xs text-green-300 bg-zinc-950 rounded px-3 py-2 font-mono leading-relaxed">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Input Schema</p>
+            <code className="block text-xs text-green-300 bg-background rounded px-3 py-2 font-mono leading-relaxed">
               {proc.inputSchema}
             </code>
           </div>
 
           <div>
-            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Potential Use</p>
-            <p className="text-sm text-zinc-300">{proc.potentialUse}</p>
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Potential Use</p>
+            <p className="text-sm text-foreground/80">{proc.potentialUse}</p>
           </div>
 
           {proc.notes && (
             <div className="flex items-start gap-2 p-3 rounded bg-amber-950/30 border border-amber-900/40">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-300">{proc.notes}</p>
+              <AlertTriangle className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-primary/80">{proc.notes}</p>
             </div>
           )}
 
@@ -492,7 +492,7 @@ function ProcedureCard({ proc }: { proc: Procedure }) {
               <span className={`w-2 h-2 rounded-full ${priority.dot}`} />
               {priority.label} priority
             </span>
-            <span className="text-xs text-zinc-500 flex items-center gap-1">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Clock className="w-3 h-3" />
               Build estimate: {proc.buildEstimate}
             </span>
@@ -533,10 +533,10 @@ export default function ApiSurfaceMap() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2">
-          <Code2 className="w-5 h-5 text-amber-400" />
-          <h1 className="text-2xl font-bold text-zinc-100">API Surface Map</h1>
+          <Code2 className="w-5 h-5 text-primary" />
+          <h1 className="text-2xl font-bold text-foreground">API Surface Map</h1>
         </div>
-        <p className="text-sm text-zinc-400 max-w-2xl">
+        <p className="text-sm text-muted-foreground max-w-2xl">
           22 tRPC procedures exist in the backend with no frontend UI wired. These are fully
           implemented, type-safe, and callable — they just have no page, button, or hook consuming
           them yet.
@@ -546,14 +546,14 @@ export default function ApiSurfaceMap() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
-          { label: "Total Unexposed", value: PROCEDURES.length, color: "text-zinc-100", bg: "bg-zinc-800/60" },
+          { label: "Total Unexposed", value: PROCEDURES.length, color: "text-foreground", bg: "bg-muted/60" },
           { label: "High Priority", value: highCount, color: "text-red-300", bg: "bg-red-950/30 border border-red-900/40" },
-          { label: "Admin-only", value: adminCount, color: "text-amber-300", bg: "bg-amber-950/30 border border-amber-900/40" },
+          { label: "Admin-only", value: adminCount, color: "text-primary/80", bg: "bg-amber-950/30 border border-amber-900/40" },
           { label: "Public", value: publicCount, color: "text-green-300", bg: "bg-green-950/30 border border-green-900/40" },
         ].map((s) => (
           <div key={s.label} className={`rounded-lg px-4 py-3 ${s.bg}`}>
             <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-zinc-500 mt-0.5">{s.label}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
           </div>
         ))}
       </div>
@@ -561,12 +561,12 @@ export default function ApiSurfaceMap() {
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
         <div className="relative flex-1 min-w-48 max-w-72">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search procedures…"
-            className="pl-8 h-8 text-xs bg-zinc-900 border-zinc-700"
+            className="pl-8 h-8 text-xs bg-card border-zinc-700"
           />
         </div>
 
@@ -577,8 +577,8 @@ export default function ApiSurfaceMap() {
               onClick={() => setPriorityFilter(p)}
               className={`px-2.5 py-1 rounded text-xs transition-colors ${
                 priorityFilter === p
-                  ? "bg-zinc-700 text-zinc-100"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:text-foreground/80"
               }`}
             >
               {p === "all" ? "All priorities" : p.charAt(0).toUpperCase() + p.slice(1)}
@@ -593,8 +593,8 @@ export default function ApiSurfaceMap() {
               onClick={() => setAccessFilter(a)}
               className={`px-2.5 py-1 rounded text-xs transition-colors ${
                 accessFilter === a
-                  ? "bg-zinc-700 text-zinc-100"
-                  : "text-zinc-500 hover:text-zinc-300"
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:text-foreground/80"
               }`}
             >
               {a === "all" ? "All access" : a === "adminProcedure" ? "Admin" : "Public"}
@@ -602,14 +602,14 @@ export default function ApiSurfaceMap() {
           ))}
         </div>
 
-        <span className="ml-auto text-xs text-zinc-600 self-center">
+        <span className="ml-auto text-xs text-muted-foreground self-center">
           {filtered.length} of {PROCEDURES.length} procedures
         </span>
       </div>
 
       {/* Grouped by namespace */}
       {namespaces.length === 0 ? (
-        <div className="text-center py-12 text-zinc-600">
+        <div className="text-center py-12 text-muted-foreground">
           <Code2 className="w-8 h-8 mx-auto mb-2 opacity-40" />
           <p className="text-sm">No procedures match the current filters.</p>
         </div>
@@ -620,11 +620,11 @@ export default function ApiSurfaceMap() {
             return (
               <div key={ns}>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-zinc-500">{NAMESPACE_ICONS[ns]}</span>
-                  <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">
+                  <span className="text-muted-foreground">{NAMESPACE_ICONS[ns]}</span>
+                  <h2 className="text-sm font-semibold text-foreground/80 uppercase tracking-wider">
                     {NAMESPACE_LABELS[ns] ?? ns}
                   </h2>
-                  <span className="text-xs text-zinc-600">
+                  <span className="text-xs text-muted-foreground">
                     {procs.length} procedure{procs.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -641,7 +641,7 @@ export default function ApiSurfaceMap() {
 
       {/* Build priority summary */}
       <div className="mt-10 pt-6 border-t border-zinc-800">
-        <h3 className="text-sm font-semibold text-zinc-400 mb-4">Recommended Build Order</h3>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-4">Recommended Build Order</h3>
         <div className="space-y-2">
           {[
             {
@@ -671,12 +671,12 @@ export default function ApiSurfaceMap() {
             },
           ].map((item) => (
             <div key={item.rank} className="flex items-start gap-3 text-sm">
-              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-zinc-800 text-zinc-400 text-xs flex items-center justify-center font-mono mt-0.5">
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-muted text-muted-foreground text-xs flex items-center justify-center font-mono mt-0.5">
                 {item.rank}
               </span>
               <div>
-                <code className="text-amber-300 text-xs">{item.item}</code>
-                <p className="text-zinc-500 text-xs mt-0.5">{item.reason}</p>
+                <code className="text-primary/80 text-xs">{item.item}</code>
+                <p className="text-muted-foreground text-xs mt-0.5">{item.reason}</p>
               </div>
             </div>
           ))}

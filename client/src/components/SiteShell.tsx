@@ -291,7 +291,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
                   </Button>
                 </Link>
                 <Link href="/admin-hub">
-                  <Button variant="outline" size="sm" className="gap-1.5 border-amber-800 text-amber-400 hover:bg-amber-950">
+                  <Button variant="outline" size="sm" className="gap-1.5 border-amber-800 text-primary hover:bg-amber-950">
                     <FolderOpen className="h-3.5 w-3.5" /> Hub
                   </Button>
                 </Link>

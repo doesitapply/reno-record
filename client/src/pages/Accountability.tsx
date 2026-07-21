@@ -226,10 +226,10 @@ export default function Accountability() {
         </div>
 
         {/* ── pro se callout ── */}
-        <div className="border-b border-amber-500/20 bg-amber-500/5">
+        <div className="border-b border-primary/20 bg-primary/5">
           <div className="max-w-5xl mx-auto px-4 py-6">
             <div className="flex items-start gap-4">
-              <Scale className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
+              <Scale className="w-5 h-5 text-primary mt-0.5 shrink-0" />
               <div>
                 <p className="text-amber-200 font-semibold mb-1">
                   None of this was found by a lawyer.
@@ -350,7 +350,7 @@ export default function Accountability() {
                   <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">{item.desc}</p>
                   <Link href={item.link}>
-                    <span className="inline-flex items-center gap-1.5 text-xs font-mono text-amber-400 hover:text-amber-300 transition-colors cursor-pointer">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-mono text-primary hover:text-primary/80 transition-colors cursor-pointer">
                       {item.linkLabel}
                       <ChevronRight className="w-3 h-3" />
                     </span>
